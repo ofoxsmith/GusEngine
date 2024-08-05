@@ -12,8 +12,6 @@
 #include <cstdlib>
 #include "utils/file_helpers.h"
 
-#define print_line(text) std::cout << text << std::endl;
-
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 const int MAX_FRAMES_IN_FLIGHT = 2;
