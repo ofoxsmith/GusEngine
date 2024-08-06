@@ -3,7 +3,6 @@
 
 std::vector<char> file_helpers::read_file(const std::string& filename) {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
     if (!file.is_open()) {
         throw std::runtime_error("failed to open file!");
     }
@@ -14,4 +13,9 @@ std::vector<char> file_helpers::read_file(const std::string& filename) {
     file.close();
 
     return buffer;
+}
+
+bool file_helpers::file_exists(const std::string& filename) {
+    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+    return file.is_open();
 }

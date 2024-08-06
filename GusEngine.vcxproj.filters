@@ -18,7 +18,10 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="utils\file_helpers.cpp">
+    <ClCompile Include="filesystem\file_helpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\project.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="utils\logger.cpp">
@@ -26,7 +29,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="utils\file_helpers.h">
+    <ClInclude Include="filesystem\file_helpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\project.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="utils\logger.h">

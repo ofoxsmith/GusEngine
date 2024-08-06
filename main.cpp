@@ -10,8 +10,8 @@
 #include <vector>
 #include <cstring>
 #include <cstdlib>
-#include "utils/file_helpers.h"
 #include "utils/logger.h"
+#include "filesystem/file_helpers.h"
 
 Logger Log;
 const uint32_t WIDTH = 800;
@@ -922,9 +922,10 @@ class MainApplication {
 	}
 };
 
-int main() {
+int main(int argc, char* argv[]) {
 	MainApplication app;
-
+	std::cout << std::to_string(argc) << ": " << std::string(argv) << std::endl;
+	return 1;
 	try {
 		app.run();
 	}
