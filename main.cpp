@@ -11,7 +11,9 @@
 #include <cstring>
 #include <cstdlib>
 #include "utils/file_helpers.h"
+#include "utils/logger.h"
 
+Logger Log;
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -153,7 +155,7 @@ class MainApplication {
 			return;
 		}
 		else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-			throw std::runtime_error("failed to acquire swap chain image!");
+			Log.FatalError("Vulkan", "Failed to acquire swap chain image.");
 		}
 		vkResetFences(logicalDevice, 1, &inFlightFences[currentFrame]);
 		vkResetCommandBuffer(commandBuffers[currentFrame], 0);
@@ -176,7 +178,7 @@ class MainApplication {
 		submitInfo.pSignalSemaphores = signalSemaphores;
 
 		if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
-			throw std::runtime_error("failed to submit draw command buffer!");
+			Log.FatalError("Vulkan", "Failed to submit draw command buffer.");
 		}
 
 		VkPresentInfoKHR presentInfo{};
@@ -196,7 +198,7 @@ class MainApplication {
 			recreateSwapChain();
 		}
 		else if (result != VK_SUCCESS) {
-			throw std::runtime_error("failed to present swap chain image!");
+			Log.FatalError("Vulkan", "Failed to present swap chain image!");
 		}
 
 
@@ -229,7 +231,7 @@ class MainApplication {
 
 	void createSurface() {
 		if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create window surface!");
+			Log.FatalError("Vulkan", "Failed to create window surface.");
 		}
 	}
 
@@ -271,7 +273,7 @@ class MainApplication {
 		}
 
 		if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &logicalDevice) != VK_SUCCESS) {
-			throw std::runtime_error("Vulkan failed to create logical device.");
+			Log.FatalError("Vulkan", "Failed to create logical device.");
 		}
 
 		vkGetDeviceQueue(logicalDevice, indices.graphicsFamily.value(), 0, &graphicsQueue);
@@ -322,7 +324,7 @@ class MainApplication {
 		createInfo.oldSwapchain = VK_NULL_HANDLE;
 
 		if (vkCreateSwapchainKHR(logicalDevice, &createInfo, nullptr, &swapChain) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create swap chain.");
+			Log.FatalError("Vulkan", "Failed to create swap chain.");
 		}
 
 		vkGetSwapchainImagesKHR(logicalDevice, swapChain, &imageCount, nullptr);
@@ -347,6 +349,7 @@ class MainApplication {
 
 
 	void recreateSwapChain() {
+		Log.Info("Vulkan", "Recreating suboptimal swapchain.");
 		int width = 0, height = 0;
 		glfwGetFramebufferSize(window, &width, &height);
 		while (width == 0 || height == 0) {
@@ -384,7 +387,7 @@ class MainApplication {
 			createInfo.subresourceRange.layerCount = 1;
 
 			if (vkCreateImageView(logicalDevice, &createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS) {
-				throw std::runtime_error("Failed to create swapchain image views.");
+				Log.FatalError("Vulkan", "Failed to create swapchain image views.");
 			}
 		}
 
@@ -428,7 +431,7 @@ class MainApplication {
 		renderPassInfo.pDependencies = &dependency;
 
 		if (vkCreateRenderPass(logicalDevice, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create render pass!");
+			Log.FatalError("Vulkan", "Failed to create render pass.");
 		}
 	}
 
@@ -503,7 +506,7 @@ class MainApplication {
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 
 		if (vkCreatePipelineLayout(logicalDevice, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
-			throw std::runtime_error("Failed to create pipeline layout!");
+			Log.FatalError("Vulkan", "Failed to create pipeline layout.");
 		}
 
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
@@ -522,7 +525,7 @@ class MainApplication {
 		pipelineInfo.subpass = 0;
 
 		if (vkCreateGraphicsPipelines(logicalDevice, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
-			throw std::runtime_error("Failed to create graphics pipeline!");
+			Log.FatalError("Vulkan", "Failed to create graphics pipeline.");
 		}
 
 		vkDestroyShaderModule(logicalDevice, fragShaderModule, nullptr);
@@ -546,7 +549,7 @@ class MainApplication {
 			framebufferInfo.layers = 1;
 
 			if (vkCreateFramebuffer(logicalDevice, &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS) {
-				throw std::runtime_error("failed to create framebuffer!");
+				Log.FatalError("Vulkan", "Failed to create framebuffer.");
 			}
 		}
 	}
@@ -560,7 +563,7 @@ class MainApplication {
 		poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
 
 		if (vkCreateCommandPool(logicalDevice, &poolInfo, nullptr, &commandPool) != VK_SUCCESS) {
-			throw std::runtime_error("Failed to create command pool!");
+			Log.FatalError("Vulkan", "Failed to create command pool.");
 		}
 	}
 
@@ -575,7 +578,7 @@ class MainApplication {
 		allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
 
 		if (vkAllocateCommandBuffers(logicalDevice, &allocInfo, commandBuffers.data()) != VK_SUCCESS) {
-			throw std::runtime_error("failed to allocate command buffers!");
+			Log.FatalError("Vulkan", "Failed to allocate command buffers.");
 		}
 	}
 
@@ -583,7 +586,7 @@ class MainApplication {
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
-			throw std::runtime_error("failed to begin recording command buffer!");
+			Log.FatalError("Vulkan", "Failed to begin recording command buffer.");
 		}
 
 		VkRenderPassBeginInfo renderPassInfo{};
@@ -617,7 +620,7 @@ class MainApplication {
 		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 		vkCmdEndRenderPass(commandBuffer);
 		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
-			throw std::runtime_error("failed to record command buffer!");
+			Log.FatalError("Vulkan", "Failed to record command buffer.");
 		}
 	}
 
@@ -638,7 +641,7 @@ class MainApplication {
 				vkCreateSemaphore(logicalDevice, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
 				vkCreateFence(logicalDevice, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS) {
 
-				throw std::runtime_error("failed to create synchronization objects for a frame!");
+				Log.FatalError("Vulkan", "Failed to create frame synchronization objects.");
 			}
 		}
 	}
@@ -649,7 +652,7 @@ class MainApplication {
 		createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 		VkShaderModule shaderModule;
 		if (vkCreateShaderModule(logicalDevice, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create shader module!");
+			Log.FatalError("Vulkan", "Failed to create shader module.");
 		}
 		return shaderModule;
 	}
@@ -711,7 +714,7 @@ class MainApplication {
 
 	void createInstance() {
 		if (_USE_VK_VALIDATION_LAYERS && !checkValidationLayerSupport()) {
-			throw std::runtime_error("Vulkan validation layers requested, but not available.");
+			Log.FatalError("Vulkan", "Validation layers requested, but not available.");
 		}
 
 		VkApplicationInfo appInfo{};
@@ -745,7 +748,7 @@ class MainApplication {
 		}
 
 		if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create instance!");
+			Log.FatalError("Vulkan", "Failed to create instance.");
 		}
 	}
 
@@ -823,7 +826,7 @@ class MainApplication {
 		uint32_t deviceCount = 0;
 		vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 		if (deviceCount == 0) {
-			throw std::runtime_error("Failed to find GPU(s) with Vulkan support.");
+			Log.FatalError("Vulkan", "Failed to find GPU(s) with Vulkan support.");
 		}
 
 		std::vector<VkPhysicalDevice> devices(deviceCount);
@@ -838,7 +841,7 @@ class MainApplication {
 		}
 
 		if (physicalDevice == VK_NULL_HANDLE) {
-			throw std::runtime_error("failed to find a suitable GPU.");
+			Log.FatalError("Vulkan", "Failed to find a suitable GPU.");
 		}
 	}
 
@@ -857,7 +860,7 @@ class MainApplication {
 		populateDebugMessengerCreateInfo(createInfo);
 
 		if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
-			throw std::runtime_error("Vulkan failed to set up debug messenger.");
+			Log.FatalError("Vulkan", "Failed to set up debug messenger.");
 		}
 	}
 
@@ -901,25 +904,20 @@ class MainApplication {
 	}
 
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
-		std::string severity;
 		switch (messageSeverity) {
 			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-				severity = "DEBUG";
-				break;
+				Log.Debug("Vulkan", pCallbackData->pMessage);
+				return VK_FALSE;
 			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-				severity = "INFO";
-				break;
+				Log.Info("Vulkan", pCallbackData->pMessage);
+				return VK_FALSE;
 			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-				severity = "WARN";
-				break;
+				Log.Warn("Vulkan", pCallbackData->pMessage);
+				return VK_FALSE;
 			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-				severity = "ERROR";
-				break;
-			default: 
-				severity = "UNKNOWN";
+				Log.Error("Vulkan", pCallbackData->pMessage);
+				return VK_FALSE;
 		}
-		std::cerr << "Validation[" << severity << "] " << pCallbackData->pMessage << std::endl;
-
 		return VK_FALSE;
 	}
 };

@@ -21,9 +21,15 @@
     <ClCompile Include="utils\file_helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="utils\logger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utils\file_helpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\logger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
