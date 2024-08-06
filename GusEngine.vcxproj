@@ -104,7 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\ofoxs\source\modules\VulkanSDK\1.3.283.0\Include\;C:\Users\ofoxs\source\modules\glfw-3.4.bin.WIN64\include;C:\Users\ofoxs\source\modules\glm-1.0.1;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\ofoxs\source\modules\VulkanSDK\1.3.283.0\Include\;C:\Users\ofoxs\source\modules\glfw-3.4.bin.WIN64\include;C:\Users\ofoxs\source\modules\glm-1.0.1;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -124,7 +124,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\ofoxs\source\modules\VulkanSDK\1.3.283.0\Include\;C:\Users\ofoxs\source\modules\glfw-3.4.bin.WIN64\include;C:\Users\ofoxs\source\modules\glm-1.0.1;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\ofoxs\source\modules\VulkanSDK\1.3.283.0\Include\;C:\Users\ofoxs\source\modules\glfw-3.4.bin.WIN64\include;C:\Users\ofoxs\source\modules\glm-1.0.1;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -139,13 +139,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="core\globals.cpp" />
+    <ClCompile Include="core\vkGraphics.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="filesystem\file_helpers.cpp" />
     <ClCompile Include="project\project.cpp" />
+    <ClCompile Include="utils\logger.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="core\globals.h" />
+    <ClInclude Include="core\vkGraphics.h" />
     <ClInclude Include="filesystem\file_helpers.h" />
     <ClInclude Include="project\project.h" />
+    <ClInclude Include="utils\logger.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
