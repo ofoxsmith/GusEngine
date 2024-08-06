@@ -140,10 +140,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="utils\file_helpers.cpp" />
+    <ClCompile Include="filesystem\file_helpers.cpp" />
+    <ClCompile Include="project\project.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="utils\file_helpers.h" />
+    <ClInclude Include="filesystem\file_helpers.h" />
+    <ClInclude Include="project\project.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -10,7 +10,7 @@
 #include <vector>
 #include <cstring>
 #include <cstdlib>
-#include "utils/file_helpers.h"
+#include "filesystem/file_helpers.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -924,9 +924,9 @@ class MainApplication {
 	}
 };
 
-int main() {
+int main(int argc, char* argv[]) {
 	MainApplication app;
-
+	return 1;
 	try {
 		app.run();
 	}
