@@ -926,6 +926,7 @@ class MainApplication {
 
 int main(int argc, char* argv[]) {
 	MainApplication app;
+	std::cout << std::to_string(argc) << ": " << std::string(argv) << std::endl;
 	return 1;
 	try {
 		app.run();
