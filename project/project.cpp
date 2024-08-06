@@ -1,18 +1,27 @@
 #include "project.h"
-#include "../filesystem/file_helpers.h"
-
-bool Project::FindProjectFileInDir(std::string specificPath = "")
+#include "core/globals.h"
+#include "filesystem/file_helpers.h"
+using namespace std;
+bool Project::FindProjectFileInDir(string specificPath)
 {
+	string path = "";
 	if (specificPath != "" && file_helpers::file_exists(specificPath)) {
-		projectFile = specificPath;
+		path = specificPath;
 		return true;
 	}
 	if (file_helpers::file_exists(".gproj")) {
-		projectFile = specificPath;
+		path = specificPath;
 		return true;
 	}
-	// TODO search for any .gproj file if not found
-	return false;
+	std::vector<fs::path> files = file_helpers::get_files_in_dir();
+	for (const auto& entry : files) {
+		if (entry.has_extension() && entry.extension() == "gproj") {
+			path = entry.string();
+		}
+	}
+	
+	if (path == "") return false;
+	return true;
 }
 
 bool Project::InitProject()

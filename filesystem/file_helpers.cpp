@@ -1,4 +1,5 @@
 #include "file_helpers.h"
+#include "core/globals.h"
 #include <fstream>
 
 std::vector<char> file_helpers::read_file(const std::string& filename) {
@@ -16,6 +17,14 @@ std::vector<char> file_helpers::read_file(const std::string& filename) {
 }
 
 bool file_helpers::file_exists(const std::string& filename) {
-    std::ifstream file(filename, std::ios::ate | std::ios::binary);
-    return file.is_open();
+    return fs::exists(filename);
+}
+
+vector<fs::path> file_helpers::get_files_in_dir(const string& dir)
+{
+    vector<fs::path> files;
+    for (const auto& entry : fs::directory_iterator(dir)) {
+        files.push_back(entry.path());
+    }
+    return files;
 }

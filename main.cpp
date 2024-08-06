@@ -2,6 +2,8 @@
 #include "filesystem/file_helpers.h"
 #include "core/vkGraphics.h"
 #include "core/globals.h"
+#include "project/project.h"
+
 
 int main(int argc, char* argv[]) {
 	std::string current_exec = argv[0];
@@ -11,6 +13,10 @@ int main(int argc, char* argv[]) {
 	}
 
 	MainApplication app;
+	Project project;
+
+	if (project.FindProjectFileInDir() == false) Log.FatalError("Couldn't find a .gproj file.");
+	project.InitProject();
 
 	try {
 		app.Run();
