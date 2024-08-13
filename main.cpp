@@ -1,6 +1,6 @@
 #include "utils/logger.h"
 #include "filesystem/file_helpers.h"
-#include "core/vkGraphics.h"
+#include "core/engine.h"
 #include "core/globals.h"
 #include "project/project.h"
 
@@ -12,14 +12,14 @@ int main(int argc, char* argv[]) {
 		args.assign(argv + 1, argv + argc);
 	}
 
-	MainApplication app;
+	Engine engine;
 	Project project;
 
 	if (project.FindProjectFileInDir() == false) Log.FatalError("Couldn't find a .gproj file.");
 	project.InitProject();
 
 	try {
-		app.Run();
+		engine.Run();
 	}
 	catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;

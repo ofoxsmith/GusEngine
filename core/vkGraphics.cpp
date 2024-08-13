@@ -19,18 +19,15 @@ static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMesse
 	}
 }
 
-void MainApplication::Run() {
+void VkGraphics::Init() {
 	initWindow();
 	Log.Info("Core", "GLFW: Window Init Done");
 	initVulkan();
 	Log.Info("Core", "Vulkan: Init Done");
-	mainLoop();
-	Log.Info("Core", "Cleaning up resources");
-	cleanup();
-	Log.Info("Core", "Cleanup complete. Exiting");
 }
 
-void MainApplication::initWindow() {
+
+void VkGraphics::initWindow() {
 	glfwInit();
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -41,14 +38,14 @@ void MainApplication::initWindow() {
 	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 }
 
-void MainApplication::framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-	auto app = reinterpret_cast<MainApplication*>(glfwGetWindowUserPointer(window));
+void VkGraphics::framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+	auto app = reinterpret_cast<VkGraphics*>(glfwGetWindowUserPointer(window));
 	app->framebufferResized = true;
 }
 
 
 
-void MainApplication::initVulkan() {
+void VkGraphics::initVulkan() {
 	createInstance();
 	setupDebugMessenger();
 	createSurface();
@@ -67,7 +64,7 @@ void MainApplication::initVulkan() {
 
 }
 
-void MainApplication::mainLoop() {
+void VkGraphics::MainLoop() {
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 		drawFrame();
@@ -75,7 +72,7 @@ void MainApplication::mainLoop() {
 	vkDeviceWaitIdle(logicalDevice);
 }
 
-void MainApplication::drawFrame() {
+void VkGraphics::drawFrame() {
 	vkWaitForFences(logicalDevice, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
 	uint32_t imageIndex;
@@ -137,7 +134,7 @@ void MainApplication::drawFrame() {
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void MainApplication::cleanup() {
+void VkGraphics::Cleanup() {
 	if (_USE_VK_VALIDATION_LAYERS) {
 		DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 	}
@@ -167,13 +164,13 @@ void MainApplication::cleanup() {
 	glfwTerminate();
 }
 
-void MainApplication::createSurface() {
+void VkGraphics::createSurface() {
 	if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
 		Log.FatalError("Vulkan", "Failed to create window surface.");
 	}
 }
 
-void MainApplication::createLogicalDevice() {
+void VkGraphics::createLogicalDevice() {
 	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -219,7 +216,7 @@ void MainApplication::createLogicalDevice() {
 
 }
 
-void MainApplication::createSwapChain() {
+void VkGraphics::createSwapChain() {
 	SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
 
 	VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
@@ -273,7 +270,7 @@ void MainApplication::createSwapChain() {
 	swapChainExtent = extent;
 }
 
-void MainApplication::cleanupSwapChain() {
+void VkGraphics::cleanupSwapChain() {
 	for (auto framebuffer : swapChainFramebuffers) {
 		vkDestroyFramebuffer(logicalDevice, framebuffer, nullptr);
 	}
@@ -286,7 +283,7 @@ void MainApplication::cleanupSwapChain() {
 }
 
 
-void MainApplication::recreateSwapChain() {
+void VkGraphics::recreateSwapChain() {
 	Log.Info("Vulkan", "Recreating suboptimal swapchain.");
 	int width = 0, height = 0;
 	glfwGetFramebufferSize(window, &width, &height);
@@ -305,7 +302,7 @@ void MainApplication::recreateSwapChain() {
 }
 
 
-void MainApplication::createImageViews() {
+void VkGraphics::createImageViews() {
 	swapChainImageViews.resize(swapChainImages.size());
 
 	for (size_t i = 0; i < swapChainImages.size(); i++) {
@@ -331,7 +328,7 @@ void MainApplication::createImageViews() {
 
 }
 
-void MainApplication::createRenderPass() {
+void VkGraphics::createRenderPass() {
 	VkAttachmentDescription colorAttachment{};
 	colorAttachment.format = swapChainImageFormat;
 	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -373,7 +370,7 @@ void MainApplication::createRenderPass() {
 	}
 }
 
-void MainApplication::createGraphicsPipeline() {
+void VkGraphics::createGraphicsPipeline() {
 	auto vertShaderCode = file_helpers::read_file("shaders/vert.spv");
 	auto fragShaderCode = file_helpers::read_file("shaders/frag.spv");
 
@@ -476,7 +473,7 @@ void MainApplication::createGraphicsPipeline() {
 	vkDestroyShaderModule(logicalDevice, vertShaderModule, nullptr);
 }
 
-void MainApplication::createFramebuffers() {
+void VkGraphics::createFramebuffers() {
 	swapChainFramebuffers.resize(swapChainImageViews.size());
 	for (size_t i = 0; i < swapChainImageViews.size(); i++) {
 		VkImageView attachments[] = {
@@ -498,7 +495,7 @@ void MainApplication::createFramebuffers() {
 	}
 }
 
-void MainApplication::createCommandPool() {
+void VkGraphics::createCommandPool() {
 	QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice);
 
 	VkCommandPoolCreateInfo poolInfo{};
@@ -511,7 +508,7 @@ void MainApplication::createCommandPool() {
 	}
 }
 
-void MainApplication::createCommandBuffers() {
+void VkGraphics::createCommandBuffers() {
 	commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 
 	VkCommandBufferAllocateInfo allocInfo{};
@@ -526,7 +523,7 @@ void MainApplication::createCommandBuffers() {
 	}
 }
 
-void MainApplication::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
+void VkGraphics::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
 	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
@@ -576,7 +573,7 @@ void MainApplication::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_
 	}
 }
 
-void MainApplication::createSyncObjects() {
+void VkGraphics::createSyncObjects() {
 	imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 	renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 	inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
@@ -597,7 +594,7 @@ void MainApplication::createSyncObjects() {
 		}
 	}
 }
-VkShaderModule MainApplication::createShaderModule(const std::vector<char>& code) {
+VkShaderModule VkGraphics::createShaderModule(const std::vector<char>& code) {
 	VkShaderModuleCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 	createInfo.codeSize = code.size();
@@ -609,7 +606,7 @@ VkShaderModule MainApplication::createShaderModule(const std::vector<char>& code
 	return shaderModule;
 }
 
-QueueFamilyIndices MainApplication::findQueueFamilies(VkPhysicalDevice device) const {
+QueueFamilyIndices VkGraphics::findQueueFamilies(VkPhysicalDevice device) const {
 	QueueFamilyIndices indices;
 
 	uint32_t queueFamilyCount = 0;
@@ -640,7 +637,7 @@ QueueFamilyIndices MainApplication::findQueueFamilies(VkPhysicalDevice device) c
 	return indices;
 }
 
-SwapChainSupportDetails MainApplication::querySwapChainSupport(VkPhysicalDevice device) const {
+SwapChainSupportDetails VkGraphics::querySwapChainSupport(VkPhysicalDevice device) const {
 	SwapChainSupportDetails details;
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
 
@@ -664,7 +661,7 @@ SwapChainSupportDetails MainApplication::querySwapChainSupport(VkPhysicalDevice 
 }
 
 
-void MainApplication::createInstance() {
+void VkGraphics::createInstance() {
 	if (_USE_VK_VALIDATION_LAYERS && !checkValidationLayerSupport()) {
 		Log.FatalError("Vulkan", "Validation layers requested, but not available.");
 	}
@@ -704,7 +701,7 @@ void MainApplication::createInstance() {
 	}
 }
 
-bool MainApplication::isDeviceSuitable(VkPhysicalDevice device) {
+bool VkGraphics::isDeviceSuitable(VkPhysicalDevice device) {
 	QueueFamilyIndices indices = findQueueFamilies(device);
 	bool extensionsSupported = checkDeviceExtensionSupport(device);
 	bool swapChainAdequate = false;
@@ -716,7 +713,7 @@ bool MainApplication::isDeviceSuitable(VkPhysicalDevice device) {
 	return indices.isComplete() && extensionsSupported && swapChainAdequate;
 }
 
-VkSurfaceFormatKHR MainApplication::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
+VkSurfaceFormatKHR VkGraphics::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
 	for (const auto& availableFormat : availableFormats) {
 		if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
 			return availableFormat;
@@ -726,7 +723,7 @@ VkSurfaceFormatKHR MainApplication::chooseSwapSurfaceFormat(const std::vector<Vk
 	return availableFormats[0];
 }
 
-VkPresentModeKHR MainApplication::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
+VkPresentModeKHR VkGraphics::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
 	for (const auto& availablePresentMode : availablePresentModes) {
 		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
 			return availablePresentMode;
@@ -736,7 +733,7 @@ VkPresentModeKHR MainApplication::chooseSwapPresentMode(const std::vector<VkPres
 	return VK_PRESENT_MODE_FIFO_KHR;
 }
 
-VkExtent2D MainApplication::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
+VkExtent2D VkGraphics::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
 	if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
 		return capabilities.currentExtent;
 	}
@@ -757,7 +754,7 @@ VkExtent2D MainApplication::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& cap
 }
 
 
-bool MainApplication::checkDeviceExtensionSupport(VkPhysicalDevice device) {
+bool VkGraphics::checkDeviceExtensionSupport(VkPhysicalDevice device) {
 	uint32_t extensionCount;
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
@@ -774,7 +771,7 @@ bool MainApplication::checkDeviceExtensionSupport(VkPhysicalDevice device) {
 
 };
 
-void MainApplication::selectPhysicalDevice() {
+void VkGraphics::selectPhysicalDevice() {
 	uint32_t deviceCount = 0;
 	vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 	if (deviceCount == 0) {
@@ -797,7 +794,7 @@ void MainApplication::selectPhysicalDevice() {
 	}
 }
 
-void MainApplication::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
+void VkGraphics::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
 	createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 	createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
@@ -805,7 +802,7 @@ void MainApplication::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCrea
 	createInfo.pfnUserCallback = debugCallback;
 }
 
-void MainApplication::setupDebugMessenger() {
+void VkGraphics::setupDebugMessenger() {
 	if (!_USE_VK_VALIDATION_LAYERS) return;
 
 	VkDebugUtilsMessengerCreateInfoEXT createInfo;
@@ -816,7 +813,7 @@ void MainApplication::setupDebugMessenger() {
 	}
 }
 
-std::vector<const char*> MainApplication::getRequiredExtensions() {
+std::vector<const char*> VkGraphics::getRequiredExtensions() {
 	uint32_t glfwExtensionCount = 0;
 	const char** glfwExtensions;
 	glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
@@ -830,7 +827,7 @@ std::vector<const char*> MainApplication::getRequiredExtensions() {
 	return extensions;
 }
 
-bool MainApplication::checkValidationLayerSupport() {
+bool VkGraphics::checkValidationLayerSupport() {
 	uint32_t layerCount;
 	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
@@ -855,7 +852,7 @@ bool MainApplication::checkValidationLayerSupport() {
 	return true;
 }
 
-unsigned int MainApplication::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+unsigned int VkGraphics::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
 {
 	VkPhysicalDeviceMemoryProperties memProperties;
 	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
@@ -869,7 +866,7 @@ unsigned int MainApplication::findMemoryType(uint32_t typeFilter, VkMemoryProper
 
 }
 
-void MainApplication::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
+void VkGraphics::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
 	VkBufferCreateInfo bufferInfo{};
 	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	bufferInfo.size = size;
@@ -895,7 +892,7 @@ void MainApplication::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, 
 	vkBindBufferMemory(logicalDevice, buffer, bufferMemory, 0);
 }
 
-void MainApplication::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+void VkGraphics::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
 {
 	VkCommandBufferAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -929,7 +926,7 @@ void MainApplication::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDevic
 	vkFreeCommandBuffers(logicalDevice, commandPool, 1, &commandBuffer);
 }
 
-void MainApplication::createVertexBuffer() {
+void VkGraphics::createVertexBuffer() {
 	VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
 	VkBuffer stagingBuffer;
@@ -949,7 +946,7 @@ void MainApplication::createVertexBuffer() {
 	vkFreeMemory(logicalDevice, stagingBufferMemory, nullptr);
 }
 
-void MainApplication::createIndexBuffer() {
+void VkGraphics::createIndexBuffer() {
 	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
 	VkBuffer stagingBuffer;
@@ -969,7 +966,7 @@ void MainApplication::createIndexBuffer() {
 	vkFreeMemory(logicalDevice, stagingBufferMemory, nullptr);
 }
 
-VKAPI_ATTR VkBool32 VKAPI_CALL MainApplication::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
+VKAPI_ATTR VkBool32 VKAPI_CALL VkGraphics::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
 	switch (messageSeverity) {
 	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
 		Log.Debug("Vulkan", pCallbackData->pMessage);
@@ -983,6 +980,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL MainApplication::debugCallback(VkDebugUtilsMessag
 	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
 		Log.Error("Vulkan", pCallbackData->pMessage);
 		return VK_FALSE;
+
 	}
 	return VK_FALSE;
 }
