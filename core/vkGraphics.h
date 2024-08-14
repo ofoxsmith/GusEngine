@@ -14,7 +14,9 @@
 #include "filesystem/file_helpers.h"
 #include "core/globals.h"
 #include <glm/glm.hpp>
-
+#include <glm/gtc/matrix_transform.hpp>
+#include <chrono>
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
 
@@ -33,6 +35,11 @@ const bool _USE_VK_VALIDATION_LAYERS = false;
 const bool _USE_VK_VALIDATION_LAYERS = true;
 #endif
 
+struct UniformBufferObject {
+	glm::mat4 model;
+	glm::mat4 view;
+	glm::mat4 proj;
+};
 
 struct QueueFamilyIndices {
 	std::optional<uint32_t> graphicsFamily;
@@ -104,33 +111,39 @@ class VkGraphics {
 	VkSurfaceKHR surface = nullptr;
 	VkQueue presentQueue = nullptr;
 	VkSwapchainKHR swapChain = nullptr;
-	std::vector<VkImage> swapChainImages;
 	VkFormat swapChainImageFormat = VK_FORMAT_UNDEFINED;
 	VkExtent2D swapChainExtent{};
-	std::vector<VkImageView> swapChainImageViews;
+	VkDescriptorSetLayout descriptorSetLayout;
 	VkPipelineLayout pipelineLayout = nullptr;
 	VkRenderPass renderPass = nullptr;
 	VkPipeline graphicsPipeline = nullptr;
-	std::vector<VkFramebuffer> swapChainFramebuffers;
 	VkCommandPool commandPool = nullptr;
-	std::vector<VkCommandBuffer> commandBuffers;
-	std::vector<VkSemaphore> imageAvailableSemaphores;
-	std::vector<VkSemaphore> renderFinishedSemaphores;
-	std::vector<VkFence> inFlightFences;
 	uint32_t currentFrame = 0;
 	VkBuffer vertexBuffer;
 	VkDeviceMemory vertexBufferMemory;
 	VkBuffer indexBuffer;
 	VkDeviceMemory indexBufferMemory;
+	VkDescriptorPool descriptorPool;
+
+	std::vector<VkImage> swapChainImages;
+	std::vector<VkImageView> swapChainImageViews;
+	std::vector<VkFramebuffer> swapChainFramebuffers;
+	std::vector<VkDescriptorSet> descriptorSets;
+	std::vector<VkBuffer> uniformBuffers;
+	std::vector<VkDeviceMemory> uniformBuffersMemory;
+	std::vector<void*> uniformBuffersMapped;
+
+	std::vector<VkCommandBuffer> commandBuffers;
+	std::vector<VkSemaphore> imageAvailableSemaphores;
+	std::vector<VkSemaphore> renderFinishedSemaphores;
+	std::vector<VkFence> inFlightFences;
 
 	bool framebufferResized = false;
 
 	void initWindow();
 	static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 	void initVulkan();
-	void mainLoop();
 	void drawFrame();
-	void cleanup();
 	void createSurface();
 	void createLogicalDevice();
 	void createSwapChain();
@@ -146,7 +159,11 @@ class VkGraphics {
 	void createSyncObjects();
 	void createVertexBuffer();
 	void createIndexBuffer();
-
+	void createUniformBuffers();
+	void updateUniformBuffer(uint32_t currentImage);
+	void createDescriptorPool();
+	void createDescriptorSets();
+	void createDescriptorSetLayout();
 	VkShaderModule createShaderModule(const std::vector<char>& code);
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) const;
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) const;
