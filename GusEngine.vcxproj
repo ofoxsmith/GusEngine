@@ -110,7 +110,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\ofoxs\source\modules\VulkanSDK\1.3.283.0\Include\;C:\Users\ofoxs\source\modules\glfw-3.4.bin.WIN64\include;C:\Users\ofoxs\source\modules\glm-1.0.1;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\ofoxs\source\modules\VulkanSDK\1.3.283.0\Include\;C:\Users\ofoxs\source\modules\glfw-3.4.bin.WIN64\include;C:\Users\ofoxs\source\modules\glm-1.0.1;$(ProjectDir);C:\Users\ofoxs\source\modules\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -130,7 +130,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\ofoxs\source\modules\VulkanSDK\1.3.283.0\Include\;C:\Users\ofoxs\source\modules\glfw-3.4.bin.WIN64\include;C:\Users\ofoxs\source\modules\glm-1.0.1;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\ofoxs\source\modules\VulkanSDK\1.3.283.0\Include\;C:\Users\ofoxs\source\modules\glfw-3.4.bin.WIN64\include;C:\Users\ofoxs\source\modules\glm-1.0.1;$(ProjectDir);C:\Users\ofoxs\source\modules\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -152,6 +152,8 @@
     <ClCompile Include="filesystem\file_helpers.cpp" />
     <ClCompile Include="project\project.cpp" />
     <ClCompile Include="filesystem\project_file.cpp" />
+    <ClCompile Include="project\resources\resource.cpp" />
+    <ClCompile Include="filesystem\resource_loader.cpp" />
     <ClCompile Include="utils\logger.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -161,6 +163,8 @@
     <ClInclude Include="filesystem\file_helpers.h" />
     <ClInclude Include="project\project.h" />
     <ClInclude Include="filesystem\project_file.h" />
+    <ClInclude Include="project\resources\resource.h" />
+    <ClInclude Include="filesystem\resource_loader.h" />
     <ClInclude Include="utils\logger.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
