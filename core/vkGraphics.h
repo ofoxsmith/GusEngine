@@ -119,11 +119,11 @@ class VkGraphics {
 	VkPipeline graphicsPipeline = nullptr;
 	VkCommandPool commandPool = nullptr;
 	uint32_t currentFrame = 0;
-	VkBuffer vertexBuffer;
-	VkDeviceMemory vertexBufferMemory;
-	VkBuffer indexBuffer;
-	VkDeviceMemory indexBufferMemory;
-	VkDescriptorPool descriptorPool;
+	VkBuffer vertexBuffer = nullptr;
+	VkDeviceMemory vertexBufferMemory = nullptr;
+	VkBuffer indexBuffer = nullptr;
+	VkDeviceMemory indexBufferMemory = nullptr;
+	VkDescriptorPool descriptorPool = nullptr;
 
 	std::vector<VkImage> swapChainImages;
 	std::vector<VkImageView> swapChainImageViews;

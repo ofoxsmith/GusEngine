@@ -151,9 +151,9 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="filesystem\file_helpers.cpp" />
     <ClCompile Include="project\project.cpp" />
-    <ClCompile Include="filesystem\project_file.cpp" />
     <ClCompile Include="project\resources\resource.cpp" />
     <ClCompile Include="filesystem\resource_loader.cpp" />
+    <ClCompile Include="project\resources\shader.cpp" />
     <ClCompile Include="utils\logger.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -162,7 +162,7 @@
     <ClInclude Include="core\engine.h" />
     <ClInclude Include="filesystem\file_helpers.h" />
     <ClInclude Include="project\project.h" />
-    <ClInclude Include="filesystem\project_file.h" />
+    <ClInclude Include="project\resources\shader.h" />
     <ClInclude Include="project\resources\resource.h" />
     <ClInclude Include="filesystem\resource_loader.h" />
     <ClInclude Include="utils\logger.h" />

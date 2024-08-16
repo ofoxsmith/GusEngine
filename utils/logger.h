@@ -25,14 +25,14 @@ class Logger {
         return "UNKNOWN";
     }
     public:
-    void Debug(string msg) { Write(DEBUG, msg); }
-    void Debug(string source, string msg) { Write(DEBUG, msg, source); }
-    void Info(string msg) { Write(INFO, msg); }
-    void Info(string source, string msg) { Write(INFO, msg, source); }
-    void Warn(string msg) { Write(WARN, msg); }
-    void Warn(string source, string msg) { Write(WARN, msg, source); }
-    void Error(string msg) { Write(ERROR, msg); }
-    void Error(string source, string msg) { Write(ERROR, msg, source); }
-    void FatalError(string msg) { Write(FATAL, msg); }
-    void FatalError(string source, string msg) { Write(FATAL, msg, source); }
+    inline void Debug(string msg) { Write(DEBUG, msg); }
+    inline void Debug(string source, string msg) { Write(DEBUG, msg, source); }
+    inline void Info(string msg) { Write(INFO, msg); }
+    inline void Info(string source, string msg) { Write(INFO, msg, source); }
+    inline void Warn(string msg) { Write(WARN, msg); }
+    inline void Warn(string source, string msg) { Write(WARN, msg, source); }
+    inline void Error(string msg) { Write(ERROR, msg); }
+    inline void Error(string source, string msg) { Write(ERROR, msg, source); }
+    inline void FatalError(string msg) { Write(FATAL, msg); }
+    inline void FatalError(string source, string msg) { Write(FATAL, msg, source); }
 };

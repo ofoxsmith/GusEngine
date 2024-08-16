@@ -395,8 +395,8 @@ void VkGraphics::createRenderPass() {
 }
 
 void VkGraphics::createGraphicsPipeline() {
-	auto vertShaderCode = file_helpers::read_file("shaders/vert.spv");
-	auto fragShaderCode = file_helpers::read_file("shaders/frag.spv");
+	auto vertShaderCode = file_helpers::read_file("://shaders/vert.spv");
+	auto fragShaderCode = file_helpers::read_file("://shaders/frag.spv");
 
 	VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
 	VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);

@@ -36,13 +36,13 @@
     <ClCompile Include="core\engine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="filesystem\project_file.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="project\resources\resource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="filesystem\resource_loader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\resources\shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -65,13 +65,13 @@
     <ClInclude Include="core\engine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="filesystem\project_file.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="project\resources\resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="filesystem\resource_loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\resources\shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

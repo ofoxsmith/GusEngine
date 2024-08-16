@@ -1,6 +1,6 @@
 #include "engine.h"
 
-void Engine::Run() {
+void Engine::Run(vector<string> args) {
 	Init();
 	MainLoop();
 	Cleanup();

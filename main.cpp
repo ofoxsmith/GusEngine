@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
 	Engine engine;
 
 	try {
-		engine.Run();
+		engine.Run(args);
 	}
 	catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;
