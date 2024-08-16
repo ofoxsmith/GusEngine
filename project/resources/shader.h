@@ -1,16 +1,13 @@
 #pragma once
 #include "project/resources/resource.h"
+#include <vector>
 namespace resources {
 	class Shader: public Resource {
 		private:
-		vector<char> compiledCode;
+		std::vector<char> compiledCode;
 		public:
-		Shader(const string path) : Resource("Shader", path) {
-			std::cout << path << endl;
-			compiledCode = file_helpers::read_file(path);
-		}
-
-		vector<char> GetShaderSPIRV() {
+		Shader(const string path);
+		std::vector<char> GetShaderSPIRV() {
 			return compiledCode;
 		}
 	};

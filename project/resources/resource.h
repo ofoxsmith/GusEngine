@@ -1,5 +1,4 @@
 #pragma once
-#include "filesystem/file_helpers.h"
 #include "core/globals.h"
 #include <string>
 namespace resources {

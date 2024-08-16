@@ -11,12 +11,12 @@
 #include <vector>
 #include <cstring>
 #include <cstdlib>
-#include "filesystem/file_helpers.h"
+#include "filesystem/resource_loader.h"
 #include "core/globals.h"
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
 

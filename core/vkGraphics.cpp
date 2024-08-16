@@ -1,6 +1,4 @@
 #include "vkGraphics.h"
-#include "utils/logger.h"
-#include "filesystem/file_helpers.h"
 
 static VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
 	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
@@ -395,11 +393,11 @@ void VkGraphics::createRenderPass() {
 }
 
 void VkGraphics::createGraphicsPipeline() {
-	auto vertShaderCode = file_helpers::read_file("://shaders/vert.spv");
-	auto fragShaderCode = file_helpers::read_file("://shaders/frag.spv");
+	resources::Shader* vertShaderCode = ResourceLoader::Load<resources::Shader>("://shaders/vert.spv");
+	resources::Shader* fragShaderCode = ResourceLoader::Load<resources::Shader>("://shaders/frag.spv");
 
-	VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
-	VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+	VkShaderModule vertShaderModule = createShaderModule(vertShaderCode->GetShaderSPIRV());
+	VkShaderModule fragShaderModule = createShaderModule(fragShaderCode->GetShaderSPIRV());
 	VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 	vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;

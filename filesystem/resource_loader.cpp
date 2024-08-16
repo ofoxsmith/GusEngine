@@ -1,4 +1,5 @@
 #include "resource_loader.h"
+#include "file_helpers.h"
 
 
 Shader* ResourceLoader::loadShaderFile(const string filePath)
@@ -7,7 +8,7 @@ Shader* ResourceLoader::loadShaderFile(const string filePath)
 	return loaded;
 }
 
-Resource* ResourceLoader::Load(const string filePath) {
+Resource* ResourceLoader::_load(const string filePath) {
 	if (!file_helpers::file_exists(filePath)) {
 		Log.Error("ResourceLoader", filePath + " does not exist.");
 		return nullptr;
