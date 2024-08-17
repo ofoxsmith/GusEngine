@@ -10,7 +10,7 @@ using namespace resources;
 class ResourceLoader
 {
 	private:
-	static Shader* loadShaderFile(const string filePath);
+	static Shader* loadShaderFile(const string filePath, const string type);
 	static Resource* _load(const string filePath);
 	public:
 	template <typename T>

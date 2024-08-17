@@ -2,6 +2,7 @@
 
 void Engine::Run(vector<string> args) {
 	Init();
+	ResourceLoader::Load("://shaders/shader.vert");
 	MainLoop();
 	Cleanup();
 }

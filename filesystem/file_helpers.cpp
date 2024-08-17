@@ -12,13 +12,34 @@ inline void file_helpers::remove_path_prefix(string& path)
     return;
 }
 
-std::vector<char> file_helpers::read_file(std::string filename) {
+string file_helpers::get_file_name(string filepath)
+{
+    file_helpers::remove_path_prefix(filepath);
+    return fs::path(filepath).filename().string();
+    
+}
+
+string file_helpers::read_file_text(string filepath)
+{
+    Log.Debug("I/O", "Reading file " + filepath);
+    file_helpers::remove_path_prefix(filepath);
+    std::ifstream inFile;
+    inFile.open(filepath); 
+
+    std::stringstream strStream;
+    strStream << inFile.rdbuf();
+    std::string str = strStream.str();
+    inFile.close();
+    return str;
+}
+
+std::vector<char> file_helpers::read_file_binary(std::string filename) {
 
     Log.Debug("I/O", "Reading file " + filename);
     file_helpers::remove_path_prefix(filename);
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
     if (!file.is_open()) {
-        throw std::runtime_error("failed to open file!");
+        Log.Error("I/O", "Failed to open file " + filename);
     }
     size_t fileSize = (size_t)file.tellg();
     std::vector<char> buffer(fileSize);

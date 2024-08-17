@@ -1,11 +1,48 @@
 #include "resource_loader.h"
 #include "file_helpers.h"
+#include <shaderc/shaderc.hpp>
 
+static std::string compile_file_to_assembly(const std::string& source_name, string type, const std::string& source) {
+	shaderc::Compiler compiler;
+	shaderc::CompileOptions options;
+	shaderc_shader_kind kind(shaderc_glsl_default_vertex_shader);
+	if (type == "vert") kind = shaderc_vertex_shader;
+	if (type == "frag") kind = shaderc_fragment_shader;
+	if (type == "tesc") kind = shaderc_tess_control_shader;
+	if (type == "tese") kind = shaderc_tess_evaluation_shader;
+	if (type == "geom") kind = shaderc_geometry_shader;
+	if (type == "comp") kind = shaderc_compute_shader;
+	auto name = file_helpers::get_file_name(source_name);
 
-Shader* ResourceLoader::loadShaderFile(const string filePath)
+	options.SetGenerateDebugInfo();
+	shaderc::AssemblyCompilationResult result = compiler.CompileGlslToSpvAssembly(
+		source, kind, name.c_str(), options);
+
+	if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
+		std::cerr << result.GetErrorMessage();
+		return "";
+	}
+
+	return { result.cbegin(), result.cend() };
+}
+
+Shader* ResourceLoader::loadShaderFile(const string filePath, const string type)
 {
-	Shader* loaded = new Shader(filePath);
-	return loaded;
+	if (file_helpers::get_file_type(filePath) == "spv") {
+		Shader* loaded = new Shader(file_helpers::read_file_binary(filePath), filePath);
+		return loaded;
+	}
+	else {
+		//Compile the shader using shaderc
+
+		string data = file_helpers::read_file_text(filePath);
+
+		string output = compile_file_to_assembly(filePath, type, data);
+		std::vector<char> outputvec(output.begin(), output.end());
+
+		Shader* loaded = new Shader(outputvec, filePath);
+		return loaded;
+	}
 }
 
 Resource* ResourceLoader::_load(const string filePath) {
@@ -30,8 +67,8 @@ Resource* ResourceLoader::_load(const string filePath) {
 
 	}
 
-	if (resourceType == "glsl" || resourceType == "vert" || resourceType == "frag" || resourceType == "spv") {
-		return loadShaderFile(filePath);
+	if (resourceType == "glsl" || resourceType == "vert" || resourceType == "frag" || resourceType == "tesc" || resourceType == "tese" || resourceType == "geom" || resourceType == "comp" || resourceType == "spv") {
+		return loadShaderFile(filePath, resourceType);
 	}
 
 	Log.Error("ResourceLoader", filePath + " is not a valid resource type.");

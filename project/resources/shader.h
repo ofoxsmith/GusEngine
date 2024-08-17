@@ -6,7 +6,7 @@ namespace resources {
 		private:
 		std::vector<char> compiledCode;
 		public:
-		Shader(const string path);
+		Shader(std::vector<char> source, const string path);
 		std::vector<char> GetShaderSPIRV() {
 			return compiledCode;
 		}

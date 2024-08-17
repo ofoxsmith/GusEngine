@@ -393,8 +393,8 @@ void VkGraphics::createRenderPass() {
 }
 
 void VkGraphics::createGraphicsPipeline() {
-	resources::Shader* vertShaderCode = ResourceLoader::Load<resources::Shader>("://shaders/vert.spv");
-	resources::Shader* fragShaderCode = ResourceLoader::Load<resources::Shader>("://shaders/frag.spv");
+	resources::Shader* vertShaderCode = ResourceLoader::Load<resources::Shader>("://shaders/shader.vert");
+	resources::Shader* fragShaderCode = ResourceLoader::Load<resources::Shader>("://shaders/shader.frag");
 
 	VkShaderModule vertShaderModule = createShaderModule(vertShaderCode->GetShaderSPIRV());
 	VkShaderModule fragShaderModule = createShaderModule(fragShaderCode->GetShaderSPIRV());
