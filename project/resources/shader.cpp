@@ -1,4 +1,4 @@
 #include "shader.h"
-resources::Shader::Shader(std::vector<char> source, const string path): Resource("Shader", path) {
+resources::Shader::Shader(vector<uint32_t> source, const string path, const string sourceFilepath): Resource("Shader", path, sourceFilepath) {
 	compiledCode = source;
 }

@@ -619,11 +619,11 @@ void VkGraphics::createSyncObjects() {
 		}
 	}
 }
-VkShaderModule VkGraphics::createShaderModule(const std::vector<char>& code) {
+VkShaderModule VkGraphics::createShaderModule(const vector<uint32_t>& code) {
 	VkShaderModuleCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	createInfo.codeSize = code.size();
-	createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+	createInfo.codeSize = 4*code.size();
+	createInfo.pCode = code.data();
 	VkShaderModule shaderModule;
 	if (vkCreateShaderModule(logicalDevice, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
 		Log.FatalError("Vulkan", "Failed to create shader module.");
@@ -696,8 +696,7 @@ void VkGraphics::createInstance() {
 	appInfo.pApplicationName = "GusEngine";
 	appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 	appInfo.pEngineName = "NA";
-	appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-	appInfo.apiVersion = VK_API_VERSION_1_0;
+	appInfo.apiVersion = VK_API_VERSION_1_3;
 
 	VkInstanceCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;

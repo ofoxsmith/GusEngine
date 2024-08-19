@@ -33,7 +33,7 @@ string file_helpers::read_file_text(string filepath)
     return str;
 }
 
-std::vector<char> file_helpers::read_file_binary(std::string filename) {
+std::vector<uint32_t> file_helpers::read_file_binary(std::string filename) {
 
     Log.Debug("I/O", "Reading file " + filename);
     file_helpers::remove_path_prefix(filename);
@@ -47,7 +47,7 @@ std::vector<char> file_helpers::read_file_binary(std::string filename) {
     file.read(buffer.data(), fileSize);
     file.close();
 
-    return buffer;
+    return {buffer.begin(), buffer.end()};
 }
 
 bool file_helpers::file_exists(std::string filename) {

@@ -4,10 +4,10 @@
 namespace resources {
 	class Shader: public Resource {
 		private:
-		std::vector<char> compiledCode;
+		vector<uint32_t> compiledCode;
 		public:
-		Shader(std::vector<char> source, const string path);
-		std::vector<char> GetShaderSPIRV() {
+		Shader(vector<uint32_t> source, const string path, const string sourceFilepath);
+		vector<uint32_t> GetShaderSPIRV() const {
 			return compiledCode;
 		}
 	};

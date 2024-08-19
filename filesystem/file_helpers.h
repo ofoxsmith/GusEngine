@@ -11,7 +11,7 @@ class file_helpers {
 public:
 	static string get_file_name(string filepath);
 	static string read_file_text(string filepath);
-	static vector<char> read_file_binary(string filepath);
+	static vector<uint32_t> read_file_binary(string filepath);
 	static bool file_exists(string filepath);
 	static string get_file_type(string filepath);
 	static vector<fs::path> get_files_in_dir(string dir = ".");
