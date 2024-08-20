@@ -149,12 +149,14 @@
     <ClCompile Include="core\globals.cpp" />
     <ClCompile Include="core\vkGraphics.cpp" />
     <ClCompile Include="core\engine.cpp" />
+    <ClCompile Include="filesystem\res_fileparser.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="filesystem\file_helpers.cpp" />
     <ClCompile Include="project\project.cpp" />
     <ClCompile Include="project\resources\resource.cpp" />
     <ClCompile Include="filesystem\resource_loader.cpp" />
     <ClCompile Include="project\resources\shader.cpp" />
+    <ClCompile Include="project\resources\propertyResource.cpp" />
     <ClCompile Include="utils\logger.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -162,7 +164,9 @@
     <ClInclude Include="core\vkGraphics.h" />
     <ClInclude Include="core\engine.h" />
     <ClInclude Include="filesystem\file_helpers.h" />
+    <ClInclude Include="filesystem\res_fileparser.h" />
     <ClInclude Include="project\project.h" />
+    <ClInclude Include="project\resources\propertyResource.h" />
     <ClInclude Include="project\resources\shader.h" />
     <ClInclude Include="project\resources\resource.h" />
     <ClInclude Include="filesystem\resource_loader.h" />

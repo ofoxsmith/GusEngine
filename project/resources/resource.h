@@ -9,18 +9,16 @@ namespace resources {
 		string _name;
 		string _type;
 		bool _saved = false;
-		bool _hasSource = false;
+		bool _isSource = false;
 		string _resourcePath;
-		string _resourceSourcePath;
 		protected:
-		Resource(string type, string path="", string sourcePath="");
+		Resource(string type, bool isProp, string path = "");
 		public:
 		string Name() { return _name; }
 		void SetName(string newName) { _name = newName; }
 		bool IsSaved() const { return _saved; }
-		bool HasSourceFile() const { return _hasSource; }
+		bool IsSourceResource() const { return _isSource; }
 		string GetPath() { return _resourcePath; }
-		string GetSourcePath() { return _resourceSourcePath; }
 		string Type() { return _type;  }
 
 		virtual ~Resource() {}

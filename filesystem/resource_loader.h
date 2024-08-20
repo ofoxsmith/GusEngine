@@ -9,8 +9,14 @@ using namespace resources;
 
 class ResourceLoader
 {
+	enum propertyResourceLoadMode {
+		propResLoad,
+		propResLoadFromSrc,
+		propResLoadSrcOnly,
+	};
+
 	private:
-	static Shader* loadShaderFile(const string filePath, const string type);
+	static Resource* _loadPropertyResource(propertyResourceLoadMode mode, const string sourcePath);
 	static Resource* _load(const string filePath);
 	public:
 	template <typename T>
