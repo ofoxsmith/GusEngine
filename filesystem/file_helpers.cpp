@@ -23,14 +23,17 @@ string file_helpers::read_file_text(string filepath)
 {
     Log.Debug("I/O", "Reading file " + filepath);
     file_helpers::remove_path_prefix(filepath);
-    std::ifstream inFile;
-    inFile.open(filepath); 
+    std::ifstream file(filepath, std::ios::ate);
+    if (!file.is_open()) {
+        Log.Error("I/O", "Failed to open file " + filepath);
+    }
+    size_t fileSize = (size_t)file.tellg();
+    std::vector<char> buffer(fileSize);
+    file.seekg(0);
+    file.read(buffer.data(), fileSize);
+    file.close();
 
-    std::stringstream strStream;
-    strStream << inFile.rdbuf();
-    std::string str = strStream.str();
-    inFile.close();
-    return str;
+    return string(buffer.data());
 }
 
 std::vector<uint32_t> file_helpers::read_file_binary(std::string filename) {
