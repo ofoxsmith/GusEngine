@@ -5,9 +5,9 @@
 #include <map>
 class ResourceFileParser {
 	struct PropertyResourceSourceLoader {
-		string type;
-		unsigned int start;
-		unsigned int end;
+		string type{};
+		unsigned int start{};
+		unsigned int end{};
 	};
 	struct ParsedPropertyResourceFile {
 		string resourceName;
