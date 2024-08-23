@@ -11,7 +11,6 @@ class ResourceLoader
 {
 	enum propertyResourceLoadMode {
 		propResLoad,
-		propResLoadFromSrc,
 		propResLoadSrcOnly,
 	};
 

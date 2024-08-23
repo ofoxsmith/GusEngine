@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 class ResourceFileParser {
+public:
 	struct PropertyResourceSourceLoader {
 		string type{};
 		unsigned int start{};
@@ -21,7 +22,6 @@ class ResourceFileParser {
 		// Values which must be specifically parsed by a resource constructor, stored as [key: value]
 		map<string, string> mainSectionUnprocessedData;
 	};
-	public:
 	static void LoadResource(const string filePath);
 	static ParsedPropertyResourceFile LoadPropResource(const string filePath);
 	void LoadSceneResource() { throw new runtime_error("not implemented"); }

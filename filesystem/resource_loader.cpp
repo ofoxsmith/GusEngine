@@ -1,23 +1,22 @@
 #include "resource_loader.h"
 #include "file_helpers.h"
-
+#include "filesystem/res_fileparser.h"
 
 Resource* ResourceLoader::_loadPropertyResource(propertyResourceLoadMode mode, const string path) {
 	// Determine the type of the data file
 	string sourcePath;
 	string resourcePath;
+	ResourceFileParser::ParsedPropertyResourceFile resourceData;
 	if (mode == propResLoad) {
 		resourcePath = path;
 		sourcePath = path.substr(0, path.length() - 5);
+		resourceData = ResourceFileParser::LoadPropResource(resourcePath);
 	}
-	else if (mode == propResLoadFromSrc) {
-		resourcePath = path + ".pres";
-		sourcePath = path;
-	}
-	else {
+	else if (mode == propResLoadSrcOnly) {
 		resourcePath = "";
 		sourcePath = path;
 	}
+
 
 	string sourceType = file_helpers::get_file_type(sourcePath);
 	if (sourceType == "jpg" || sourceType == "jpeg" || sourceType == "png" || sourceType == "bmp" || sourceType == "psd" || sourceType == "tga"
@@ -52,7 +51,7 @@ Resource* ResourceLoader::_load(const string filePath) {
 	// The file is external data, and must be encapsulated in a property resource
 	bool fileExists = file_helpers::file_exists(filePath + ".pres");
 	if (fileExists) {
-		return ResourceLoader::_loadPropertyResource(propResLoadFromSrc, filePath);
+		return ResourceLoader::_loadPropertyResource(propResLoad, filePath + ".pres");
 	}
 	else {
 		return ResourceLoader::_loadPropertyResource(propResLoadSrcOnly, filePath);
