@@ -1,24 +1,20 @@
 #include "resource_loader.h"
 #include "file_helpers.h"
 #include "filesystem/res_fileparser.h"
+#include "project/resources/propertyResource.h"
 
 Resource* ResourceLoader::_loadPropertyResource(propertyResourceLoadMode mode, const string path) {
 	// Determine the type of the data file
-	string sourcePath;
-	string resourcePath;
-	ResourceFileParser::ParsedPropertyResourceFile resourceData;
+	resources::PropertyResource::ParsedPropertyResourceFile resourceData;
 	if (mode == propResLoad) {
-		resourcePath = path;
-		sourcePath = path.substr(0, path.length() - 5);
-		resourceData = ResourceFileParser::LoadPropResource(resourcePath);
+		resourceData = ResourceFileParser::LoadPropResource(path);
 	}
 	else if (mode == propResLoadSrcOnly) {
-		resourcePath = "";
-		sourcePath = path;
+		resourceData.dataPath = path;
 	}
 
+	string sourceType = file_helpers::get_file_type(resourceData.dataPath);
 
-	string sourceType = file_helpers::get_file_type(sourcePath);
 	if (sourceType == "jpg" || sourceType == "jpeg" || sourceType == "png" || sourceType == "bmp" || sourceType == "psd" || sourceType == "tga"
 		|| sourceType == "gif" || sourceType == "hdr" || sourceType == "pic" || sourceType == "ppm" || sourceType == "pgm") {
 
@@ -26,11 +22,12 @@ Resource* ResourceLoader::_loadPropertyResource(propertyResourceLoadMode mode, c
 	}
 
 	if (sourceType == "vert" || sourceType == "frag" || sourceType == "tesc" || sourceType == "tese" || sourceType == "geom" || sourceType == "comp" || sourceType == "spv") {
-		Shader* s = new Shader(resourcePath, sourcePath);
+		Shader* s = new Shader(resourceData);
 		s->Init();
 		return s;
 	}
-
+	Log.Error("ResourceLoader", "Invalid resource filepath: " + resourceData.dataPath);
+	return nullptr;
 }
 
 Resource* ResourceLoader::_load(const string filePath) {

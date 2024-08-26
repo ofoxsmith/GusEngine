@@ -3,7 +3,8 @@
 #include <glslang/SPIRV/GlslangToSpv.h>
 #include <glslang/Public/ResourceLimits.h>
 
-resources::Shader::Shader(const string path, const string sourceFilepath): PropertyResource("Shader", sourceFilepath, path) {
+resources::Shader::Shader(ParsedPropertyResourceFile data): PropertyResource("Shader", data) {
+
 }
 
 void resources::Shader::Init() {

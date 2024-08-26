@@ -26,6 +26,7 @@ string file_helpers::read_file_text(string filepath)
     std::ifstream file(filepath, std::ios::ate);
     if (!file.is_open()) {
         Log.Error("I/O", "Failed to open file " + filepath);
+        return "";
     }
     size_t fileSize = (size_t)file.tellg();
     std::vector<char> buffer(fileSize + 1);
@@ -60,6 +61,7 @@ bool file_helpers::file_exists(std::string filename) {
 
 string file_helpers::get_file_type(string filename) {
     file_helpers::remove_path_prefix(filename);
+    if (!fs::exists(filename)) return "";
     string extension = fs::path(filename).extension().string();
     if (extension.size() > 2) extension.erase(0, 1);
     return extension;

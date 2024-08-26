@@ -5,10 +5,10 @@ void ResourceFileParser::LoadResource(const string filePath)
 }
 
 // Probably highly inefficient but it works
-ResourceFileParser::ParsedPropertyResourceFile ResourceFileParser::LoadPropResource(const string filePath)
+resources::PropertyResource::ParsedPropertyResourceFile ResourceFileParser::LoadPropResource(const string filePath)
 {
-	ParsedPropertyResourceFile output;
-
+	resources::PropertyResource::ParsedPropertyResourceFile output;
+	output.resourcePath = filePath;
 	string data = file_helpers::read_file_text(filePath);
 	
 	if (!data.starts_with("[PRES]\n")) throw new runtime_error("Invalid PRES file data");
@@ -44,7 +44,7 @@ ResourceFileParser::ParsedPropertyResourceFile ResourceFileParser::LoadPropResou
 			output.dataPath = value;
 		}
 		if (propName == "loader") {
-			PropertyResourceSourceLoader loader;
+			resources::PropertyResource::PropertyResourceSourceLoader loader;
 			loader.type = m_metaProps[3];
 			loader.start = std::stoi(m_metaProps[4]);
 			loader.end = m_metaProps[5] == "EOF" ? INT32_MAX : std::stoi(m_metaProps[5]);
@@ -59,7 +59,6 @@ ResourceFileParser::ParsedPropertyResourceFile ResourceFileParser::LoadPropResou
 
 	// Consume all key value pairs
 	while (std::regex_search(mainData, m_mainProps, mainProps)) {
-		std::cout << "eee" << endl;
 		string key = m_mainProps[1];
 		string value = m_mainProps[2];
 		if (std::regex_match(value, std::regex{ R"("[^"]*")" })) {

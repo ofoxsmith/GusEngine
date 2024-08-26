@@ -1,5 +1,5 @@
 #include "propertyResource.h"
 
-resources::PropertyResource::PropertyResource(string type, string sourcePath, string path): Resource("Shader", true, path) {
-	_sourcePath = sourcePath;
+resources::PropertyResource::PropertyResource(string type, ParsedPropertyResourceFile data): Resource(type, true, data.resourcePath) {
+	_sourcePath = data.dataPath;
 }
