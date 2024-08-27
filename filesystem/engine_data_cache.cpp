@@ -190,34 +190,33 @@ namespace md5 {
 // char[] filename
 // 32 byte MD5 hash
 std::unordered_map<string, std::tuple<int, string>> EngineDataCache::savedHashes{};
-std::fstream EngineDataCache::hashFile{};
+std::fstream EngineDataCache::hashFile = fstream();
 
 void EngineDataCache::Init() {
-    // Hacky way to create a file if it doesn't exist
-    auto createIfNotExists = std::ofstream(".gusengine/currentCachedData");
-    createIfNotExists.close();
-
-    hashFile.open(".gusengine/currentCachedData", std::ios::ate | std::ios::binary);
-    auto len = hashFile.tellg();
-    hashFile.seekg(0);
-    int itemIndex = 0;
-
+    hashFile.open(".gusengine/currentCachedData", std::ios::in | std::ios::out | std::fstream::app | std::ios::binary);
+    if (!hashFile.is_open()) {
+        Log.Error("EngineCacheData", "Failed to load engine cache hash data");
+        return;
+    }
+    hashFile.seekg(0, std::ios::end);
+    int len = hashFile.tellg();
     if (len < 34) {
         return;
     }
-    
-    while (hashFile.tellg() <= len) {
-        auto currentPos = hashFile.tellg();
+
+    hashFile.seekg(0, std::ios::beg);
+    int itemIndex = 0;
+    while ((int)hashFile.tellg() <= (len - 34)) {
+        int currentPos = hashFile.tellg();
 
         // Get the length of the filename char[]
         char numChars[2]{};
-        hashFile.read(numChars, 2);
-        short int filenameSize = atoi(numChars);
-        delete[] &numChars;
-
-        vector<char> fileName(filenameSize);
+        hashFile.read(&numChars[0], 2);
+        // Assuming bytes are little-endian
+        short int filenameSize = (static_cast<unsigned char>(numChars[1]) << 8) | static_cast<unsigned char>(numChars[0]);
+        vector<char> fileName = vector<char>(filenameSize);
         hashFile.read(fileName.data(), filenameSize);
-
+        fileName.push_back('\0');
         string md5Hash;
         md5Hash.resize(32);
         hashFile.read(md5Hash.data(), 32);
@@ -225,7 +224,11 @@ void EngineDataCache::Init() {
         savedHashes[string(fileName.data())] = { currentPos, md5Hash };
     }
 
-    hashFile.seekg(0);
+    hashFile.seekg(0, std::ios::beg);
+}
+
+void EngineDataCache::Cleanup() {
+    hashFile.close();
 }
 
 void EngineDataCache::SaveMD5Hash(string filePath, string hash) {
@@ -239,14 +242,14 @@ void EngineDataCache::SaveMD5Hash(string filePath, string hash) {
     }
 
     hashFile.seekg(0, std::ios::end);
-    savedHashes[filePath] = { hashFile.tellg(), hash };
+    savedHashes[filePath] = { (int)hashFile.tellg(), hash };
 
     short int nameSize = (short int)filePath.size();
     hashFile.write((char*)&nameSize, 2);
     hashFile.write(filePath.data(), nameSize);
     hashFile.write(hash.data(), 32);
+    hashFile.flush();
     hashFile.seekg(0, std::ios::beg);
-
     return;
 }
 
@@ -255,8 +258,10 @@ string EngineDataCache::GetFileMD5Hash(string filePath) {
     return md5::hash(data.data(), data.size() * 4);
 }
 
-bool EngineDataCache::HasMD5HashChanged(string filePath) {
-    return false;
+bool EngineDataCache::HasMD5HashChanged(string filePath, string newHash) {
+    if (!savedHashes.contains(filePath)) return true;
+    string oldVal = std::get<1>(savedHashes[filePath]);
+    return newHash != oldVal;
 }
 
 bool EngineDataCache::LoadFileFromCacheOnly(string filePath) {
@@ -266,12 +271,18 @@ bool EngineDataCache::LoadFileFromCacheOnly(string filePath) {
 
 vector<uint32_t> EngineDataCache::LoadFileBinary(string filePath) {
     auto data = file_helpers::read_file_binary(filePath);
-    Log.Info("EngineDataCache", "Loading: " + filePath);
+    auto newHash = GetFileMD5Hash(filePath);
+    if (HasMD5HashChanged(filePath, newHash)) {
+        EngineDataCache::SaveMD5Hash(filePath, newHash);
+    }
     return data;
 }
 
 string EngineDataCache::LoadFileText(string filePath) {
     auto data = file_helpers::read_file_text(filePath);
-    Log.Info("EngineDataCache", "Loading: " + filePath);
+    auto newHash = GetFileMD5Hash(filePath);
+    if (HasMD5HashChanged(filePath, newHash)) {
+        EngineDataCache::SaveMD5Hash(filePath, newHash);
+    }
     return data;
 }

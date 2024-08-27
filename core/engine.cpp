@@ -17,7 +17,9 @@ void Engine::MainLoop() {
 }
 
 void Engine::Cleanup() {
-	Log.Info("Core", "Cleaning up resources");
+	Log.Info("Core", "Cleaning up vulkan");
 	graphics.Cleanup();
+	Log.Info("Core", "Cleaning up resources");
+	EngineDataCache::Cleanup();
 	Log.Info("Core", "Exiting");
 }

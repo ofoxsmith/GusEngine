@@ -8,6 +8,7 @@
 class EngineDataCache {
 	public:
 		static void Init();
+		static void Cleanup();
 		static vector<uint32_t> LoadFileBinary(string filePath);
 		static string LoadFileText(string filePath);
 		static bool LoadFileFromCacheOnly(string filePath);
@@ -19,5 +20,5 @@ private:
 	static std::fstream hashFile;
 	static void SaveMD5Hash(string filePath, string hash);
     static string GetFileMD5Hash(std::string fileName);
-	static bool HasMD5HashChanged(std::string filePath);
+	static bool HasMD5HashChanged(std::string filePath, std::string newHash);
 };
