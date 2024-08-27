@@ -147,6 +147,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="core\globals.cpp" />
+    <ClCompile Include="core\type_registry.cpp" />
     <ClCompile Include="core\vkGraphics.cpp" />
     <ClCompile Include="core\engine.cpp" />
     <ClCompile Include="filesystem\res_fileparser.cpp" />
@@ -162,6 +163,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\globals.h" />
+    <ClInclude Include="core\type_registry.h" />
     <ClInclude Include="core\vkGraphics.h" />
     <ClInclude Include="core\engine.h" />
     <ClInclude Include="filesystem\file_helpers.h" />

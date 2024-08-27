@@ -9,6 +9,7 @@ namespace resources {
 	};
 
 	class PropertyResource : public Resource {
+		friend void engine_type_registry::type_registry::_all_types();
 		public:
 		PropertyResource(PropertyResourceOptions opts = {}) : Resource(opts) {
 			_type = "PropertyResource";
@@ -35,10 +36,11 @@ namespace resources {
 			map<string, string> mainSectionUnprocessedData;
 		};
 
-		
+		void SetSourceFilepath(string path) { _sourcePath = path; }
 		string GetSourceFilepath() { return _sourcePath; }
 
 		private:
+		static void _register_resource();
 
 		protected:
 		// The path to the data file encapsulated in this resource.

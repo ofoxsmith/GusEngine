@@ -20,12 +20,13 @@ namespace resources {
 		};
 
 		std::vector<uint32_t> spirvBinary{};
-		string shaderCode = "";
-		ShaderLanguage shaderLanguage = LanguageGLSL;
-		ShaderStage shaderStage = StageUnknown;
+		string shaderTextCode = "";
+		ShaderLanguage language = LanguageGLSL;
+		ShaderStage stage = StageUnknown;
 	};
 
 	class Shader: public PropertyResource {
+		friend void engine_type_registry::type_registry::_all_types();
 		public:
 
 		static vector<uint32_t> CompileGLSLtoSPIRV(const std::string& source, ShaderResourceOptions::ShaderLanguage lang, ShaderResourceOptions::ShaderStage stage);
@@ -37,7 +38,13 @@ namespace resources {
 			return compiledCode;
 		}
 
+		void SetLanguage(ShaderResourceOptions::ShaderLanguage lng) { lang = lng; };
+		ShaderResourceOptions::ShaderLanguage GetLanguage() const { return lang; };
+		void SetStage(ShaderResourceOptions::ShaderStage stg) { stage = stg; };
+		ShaderResourceOptions::ShaderStage GetStage() const { return stage; };
+
 		private:
+		static void _register_resource();
 
 		vector<uint32_t> compiledCode;
 		ShaderResourceOptions::ShaderLanguage lang = ShaderResourceOptions::LanguageGLSL;

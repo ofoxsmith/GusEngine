@@ -17,7 +17,7 @@ Resource* ResourceLoader::_loadPropertyResource(propertyResourceLoadMode mode, c
 	resources::PropertyResource::ParsedPropertyResourceFile resourceData;
 
 	if (mode == propResLoad) {
-		resourceData = ResourceFileParser::LoadPropResource(path);
+		resourceData = resource_file_parser::load_prop_resource(path);
 	}
 	else if (mode == propResLoadSrcOnly) {
 		resourceData.dataPath = path;
@@ -36,14 +36,14 @@ Resource* ResourceLoader::_loadPropertyResource(propertyResourceLoadMode mode, c
 		shaderOpts.resourceName = resourceData.resourceName;
 		shaderOpts.resourceSavedPath = resourceData.resourcePath;
 		shaderOpts.sourceFilePath = resourceData.dataPath;
-		shaderOpts.shaderLanguage = shaderOpts.LanguageGLSL;
-		if (sourceType == "vert") shaderOpts.shaderStage = shaderOpts.StageVert;
-		if (sourceType == "frag") shaderOpts.shaderStage = shaderOpts.StageFrag;
-		if (sourceType == "tesc") shaderOpts.shaderStage = shaderOpts.StageTessControl;
-		if (sourceType == "tese") shaderOpts.shaderStage = shaderOpts.StageTessEval;
-		if (sourceType == "geom") shaderOpts.shaderStage = shaderOpts.StageGeom;
-		if (sourceType == "comp") shaderOpts.shaderStage = shaderOpts.StageComp;
-		shaderOpts.spirvBinary = Shader::CompileGLSLtoSPIRV(file_helpers::read_file_text(shaderOpts.sourceFilePath), shaderOpts.shaderLanguage, shaderOpts.shaderStage);
+		shaderOpts.language = shaderOpts.LanguageGLSL;
+		if (sourceType == "vert") shaderOpts.stage = shaderOpts.StageVert;
+		if (sourceType == "frag") shaderOpts.stage = shaderOpts.StageFrag;
+		if (sourceType == "tesc") shaderOpts.stage = shaderOpts.StageTessControl;
+		if (sourceType == "tese") shaderOpts.stage = shaderOpts.StageTessEval;
+		if (sourceType == "geom") shaderOpts.stage = shaderOpts.StageGeom;
+		if (sourceType == "comp") shaderOpts.stage = shaderOpts.StageComp;
+		shaderOpts.spirvBinary = Shader::CompileGLSLtoSPIRV(file_helpers::read_file_text(shaderOpts.sourceFilePath), shaderOpts.language, shaderOpts.stage);
 		Shader* s = new Shader(shaderOpts);
 		return s;
 	}

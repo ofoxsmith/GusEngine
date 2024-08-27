@@ -2,20 +2,21 @@
 #include <glslang/Public/ShaderLang.h>
 #include <glslang/SPIRV/GlslangToSpv.h>
 #include <glslang/Public/ResourceLimits.h>
+#include "core/type_registry.h"
 
 resources::Shader::Shader(ShaderResourceOptions opts): PropertyResource(opts) {
 	_type = "Shader";
 
-	if (opts.shaderCode == "" && opts.spirvBinary.empty()) {
-		throw new runtime_error("Failed to create shader resource: Both opts.shaderCode and opts.spirvBinary were empty.");
+	if (opts.shaderTextCode == "" && opts.spirvBinary.empty()) {
+		throw new runtime_error("Failed to create shader resource: Both opts.shaderTextCode and opts.spirvBinary were empty.");
 	}
-	stage = opts.shaderStage;
-	lang = opts.shaderLanguage;
+	stage = opts.stage;
+	lang = opts.language;
 	if (!opts.spirvBinary.empty()) {
 		compiledCode = opts.spirvBinary;
 	}
 	else {
-		compiledCode = CompileGLSLtoSPIRV(opts.shaderCode, opts.shaderLanguage, opts.shaderStage);
+		compiledCode = CompileGLSLtoSPIRV(opts.shaderTextCode, opts.language, opts.stage);
 	}
 }
 
@@ -31,6 +32,15 @@ VkShaderModule resources::Shader::GetShaderModule(VkDevice device)
 	}
 	return shaderModule;
 
+}
+
+void resources::Shader::_register_resource() {
+	using namespace engine_type_registry;
+	class_id cId = type_registry::register_new_resource("Shader", type_registry::get_registered_resource("PropertyResource"));
+	type_registry::resource_register_enum(cId, "ShaderLanguage");
+	type_registry::resource_register_enum(cId, "ShaderStage");
+	type_registry::resource_define_property(cId, "language", "ShaderLanguage", &Shader::SetLanguage);
+	type_registry::resource_define_property(cId, "stage", "ShaderStage", &Shader::SetStage);
 }
 
 vector<uint32_t> resources::Shader::CompileGLSLtoSPIRV(const std::string& source, ShaderResourceOptions::ShaderLanguage lang, ShaderResourceOptions::ShaderStage type)

@@ -1,12 +1,12 @@
 #include "res_fileparser.h"
 #include <regex>
 #include "filesystem/engine_data_cache.h"
-void ResourceFileParser::LoadResource(const string filePath)
+void resource_file_parser::load_resource(const string filePath)
 {
 }
 
 // Probably highly inefficient but it works
-resources::PropertyResource::ParsedPropertyResourceFile ResourceFileParser::LoadPropResource(const string filePath)
+resources::PropertyResource::ParsedPropertyResourceFile resource_file_parser::load_prop_resource(const string filePath)
 {
 	resources::PropertyResource::ParsedPropertyResourceFile output;
 	output.resourcePath = filePath;
