@@ -5,6 +5,8 @@
 namespace resources {
 	class PropertyResource : public Resource {
 		public:
+		
+		// Intermediate structure used when reading a property resource from disk.
 		struct PropertyResourceSourceLoader {
 			string type{};
 			unsigned int start{};

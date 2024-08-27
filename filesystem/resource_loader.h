@@ -15,6 +15,7 @@ class ResourceLoader
 	};
 
 	private:
+	static std::unordered_map<string, Resource*> resourceCache;
 	static Resource* _loadPropertyResource(propertyResourceLoadMode mode, const string sourcePath);
 	static Resource* _load(const string filePath);
 	public:

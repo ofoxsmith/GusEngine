@@ -7,6 +7,20 @@ resources::Shader::Shader(ParsedPropertyResourceFile data): PropertyResource("Sh
 
 }
 
+VkShaderModule resources::Shader::GetShaderModule(VkDevice device)
+{
+	VkShaderModuleCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+	createInfo.codeSize = 4 * compiledCode.size();
+	createInfo.pCode = compiledCode.data();
+	VkShaderModule shaderModule;
+	if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+		Log.FatalError("Vulkan", "Failed to create shader module.");
+	}
+	return shaderModule;
+
+}
+
 void resources::Shader::Init() {
 	if (file_helpers::get_file_type(_sourcePath) == "spv") {
 		auto spv = EngineDataCache::LoadFileBinary(_sourcePath);

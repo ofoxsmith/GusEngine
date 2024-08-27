@@ -3,6 +3,8 @@
 #include "filesystem/res_fileparser.h"
 #include "project/resources/propertyResource.h"
 #include "filesystem/engine_data_cache.h"
+
+std::unordered_map<string, Resource*> ResourceLoader::resourceCache;
 Resource* ResourceLoader::_loadPropertyResource(propertyResourceLoadMode mode, const string path) {
 	// Determine the type of the data file
 	resources::PropertyResource::ParsedPropertyResourceFile resourceData;
@@ -29,27 +31,38 @@ Resource* ResourceLoader::_loadPropertyResource(propertyResourceLoadMode mode, c
 }
 
 Resource* ResourceLoader::_load(const string filePath) {
+	if (resourceCache.contains(filePath)) {
+		return resourceCache[filePath];
+	}
+
 	if (!file_helpers::file_exists(filePath)) {
 		Log.Error("ResourceLoader", filePath + " does not exist.");
 		return nullptr;
 	}
 	string resourceType = file_helpers::get_file_type(filePath);
+	Resource* res;
 	if (resourceType == "res") {
 		// The file is a standard resource, and can be converted directly to a resource
 	}
 
 	if (resourceType == "pres") {
 		// The file is a property resource, and contains engine settings for an external data file.
-		return ResourceLoader::_loadPropertyResource(propResLoad, filePath);
+		res = ResourceLoader::_loadPropertyResource(propResLoad, filePath);
 	}
 
 	// The file is external data, and must be encapsulated in a property resource
 	bool fileExists = file_helpers::file_exists(filePath + ".pres");
 	if (fileExists) {
-		return ResourceLoader::_loadPropertyResource(propResLoad, filePath + ".pres");
+		res = ResourceLoader::_loadPropertyResource(propResLoad, filePath + ".pres");
+	} else {
+		res = ResourceLoader::_loadPropertyResource(propResLoadSrcOnly, filePath);
 	}
-	else {
-		return ResourceLoader::_loadPropertyResource(propResLoadSrcOnly, filePath);
+	if (res == nullptr) {
+		Log.Error("ResourceLoader", "Failed to load resource from filepath: " + filePath);
+		return nullptr;
 	}
+
+	resourceCache[filePath] = res;
+	return res;
 }
 

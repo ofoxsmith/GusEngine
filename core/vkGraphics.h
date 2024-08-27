@@ -164,7 +164,6 @@ class VkGraphics {
 	void createDescriptorPool();
 	void createDescriptorSets();
 	void createDescriptorSetLayout();
-	VkShaderModule createShaderModule(const vector<uint32_t>& code);
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) const;
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) const;
 	void createInstance();

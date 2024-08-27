@@ -393,20 +393,18 @@ void VkGraphics::createRenderPass() {
 }
 
 void VkGraphics::createGraphicsPipeline() {
-	resources::Shader* vertShaderCode = ResourceLoader::Load<resources::Shader>("://shaders/shader.vert");
-	resources::Shader* fragShaderCode = ResourceLoader::Load<resources::Shader>("://shaders/shader.frag");
+	resources::Shader* vertShader = ResourceLoader::Load<resources::Shader>("://shaders/shader.vert");
+	resources::Shader* fragShader = ResourceLoader::Load<resources::Shader>("://shaders/shader.frag");
 
-	VkShaderModule vertShaderModule = createShaderModule(vertShaderCode->GetShaderSPIRV());
-	VkShaderModule fragShaderModule = createShaderModule(fragShaderCode->GetShaderSPIRV());
 	VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 	vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-	vertShaderStageInfo.module = vertShaderModule;
+	vertShaderStageInfo.module = vertShader->GetShaderModule(logicalDevice);
 	vertShaderStageInfo.pName = "main";
 	VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
 	fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	fragShaderStageInfo.module = fragShaderModule;
+	fragShaderStageInfo.module = fragShader->GetShaderModule(logicalDevice);
 	fragShaderStageInfo.pName = "main";
 	VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
@@ -492,9 +490,6 @@ void VkGraphics::createGraphicsPipeline() {
 	if (vkCreateGraphicsPipelines(logicalDevice, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
 		Log.FatalError("Vulkan", "Failed to create graphics pipeline.");
 	}
-
-	vkDestroyShaderModule(logicalDevice, fragShaderModule, nullptr);
-	vkDestroyShaderModule(logicalDevice, vertShaderModule, nullptr);
 }
 
 void VkGraphics::createFramebuffers() {
@@ -618,17 +613,6 @@ void VkGraphics::createSyncObjects() {
 			Log.FatalError("Vulkan", "Failed to create frame synchronization objects.");
 		}
 	}
-}
-VkShaderModule VkGraphics::createShaderModule(const vector<uint32_t>& code) {
-	VkShaderModuleCreateInfo createInfo{};
-	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	createInfo.codeSize = 4*code.size();
-	createInfo.pCode = code.data();
-	VkShaderModule shaderModule;
-	if (vkCreateShaderModule(logicalDevice, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
-		Log.FatalError("Vulkan", "Failed to create shader module.");
-	}
-	return shaderModule;
 }
 
 QueueFamilyIndices VkGraphics::findQueueFamilies(VkPhysicalDevice device) const {
