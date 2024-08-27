@@ -2,18 +2,18 @@
 #include <glslang/Public/ShaderLang.h>
 #include <glslang/SPIRV/GlslangToSpv.h>
 #include <glslang/Public/ResourceLimits.h>
-
+#include "filesystem/engine_data_cache.h"
 resources::Shader::Shader(ParsedPropertyResourceFile data): PropertyResource("Shader", data) {
 
 }
 
 void resources::Shader::Init() {
 	if (file_helpers::get_file_type(_sourcePath) == "spv") {
-		auto spv = file_helpers::read_file_binary(_sourcePath);
+		auto spv = EngineDataCache::LoadFileBinary(_sourcePath);
 		compiledCode = spv;
 	}
 	else {
-		string data = file_helpers::read_file_text(_sourcePath);
+		string data = EngineDataCache::LoadFileText(_sourcePath);
 		vector<uint32_t> output = _compileGLSLtoSPIRV(data, file_helpers::get_file_type(_sourcePath));
 		compiledCode = output;
 	}

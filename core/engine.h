@@ -1,7 +1,6 @@
 #pragma once
 #include "globals.h"
 #include "vkGraphics.h"
-#include "filesystem/resource_loader.h"
 
 class Engine
 {

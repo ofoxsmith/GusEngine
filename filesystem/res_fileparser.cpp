@@ -1,5 +1,6 @@
 #include "res_fileparser.h"
 #include <regex>
+#include "filesystem/engine_data_cache.h"
 void ResourceFileParser::LoadResource(const string filePath)
 {
 }
@@ -9,7 +10,7 @@ resources::PropertyResource::ParsedPropertyResourceFile ResourceFileParser::Load
 {
 	resources::PropertyResource::ParsedPropertyResourceFile output;
 	output.resourcePath = filePath;
-	string data = file_helpers::read_file_text(filePath);
+	string data = EngineDataCache::LoadFileText(filePath);
 	
 	if (!data.starts_with("[PRES]\n")) throw new runtime_error("Invalid PRES file data");
 	// Remove lines with only whitespace
@@ -28,7 +29,7 @@ resources::PropertyResource::ParsedPropertyResourceFile ResourceFileParser::Load
 	
 	// Read metadata section first
 
-	std::regex const metaProps{ R"---(([a-zA-Z]+) (?:(?:"([^"]+)")|(?:\(([a-zA-Z]+), ?([0-9]+), ? ([0-9]+|EOF)\)))\n)---" };
+	std::regex const metaProps{ R"---(([a-zA-Z]+) ([^\n]+)\n)---" };
 	std::smatch m_metaProps;
 
 	// Consume all key value pairs until metaData is empty
@@ -44,10 +45,13 @@ resources::PropertyResource::ParsedPropertyResourceFile ResourceFileParser::Load
 			output.dataPath = value;
 		}
 		if (propName == "loader") {
+			std::regex const loaderRegex{ R"--(\(([^,()]+), ([^,()]+), ([^,()]+)\))--" };
+			std::smatch m_loader;
+			std::regex_search(value, m_loader, loaderRegex);
 			resources::PropertyResource::PropertyResourceSourceLoader loader;
-			loader.type = m_metaProps[3];
-			loader.start = std::stoi(m_metaProps[4]);
-			loader.end = m_metaProps[5] == "EOF" ? INT32_MAX : std::stoi(m_metaProps[5]);
+			loader.type = m_loader[1];
+			loader.start = std::stoi(m_loader[2]);
+			loader.end = m_loader[3] == "EOF" ? INT32_MAX : std::stoi(m_loader[3]);
 			output.dataLoader = loader;
 		}
 

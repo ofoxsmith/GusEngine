@@ -21,7 +21,7 @@ string file_helpers::get_file_name(string filepath)
 
 string file_helpers::read_file_text(string filepath)
 {
-    Log.Debug("I/O", "Reading file " + filepath);
+    Log.Debug("I/O", "Reading file (text): " + filepath);
     file_helpers::remove_path_prefix(filepath);
     std::ifstream file(filepath, std::ios::ate);
     if (!file.is_open()) {
@@ -39,7 +39,7 @@ string file_helpers::read_file_text(string filepath)
 
 std::vector<uint32_t> file_helpers::read_file_binary(std::string filename) {
 
-    Log.Debug("I/O", "Reading file " + filename);
+    Log.Debug("I/O", "Reading file (binary): " + filename);
     file_helpers::remove_path_prefix(filename);
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
     if (!file.is_open()) {

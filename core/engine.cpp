@@ -1,5 +1,6 @@
 #include "engine.h"
-
+#include "filesystem/resource_loader.h"
+#include "filesystem/engine_data_cache.h"
 void Engine::Run(vector<string> args) {
 	Init();
 	MainLoop();
@@ -7,6 +8,7 @@ void Engine::Run(vector<string> args) {
 }
 
 void Engine::Init() {
+	EngineDataCache::Init();
 	graphics.Init();
 }
 

@@ -2,7 +2,7 @@
 #include "file_helpers.h"
 #include "filesystem/res_fileparser.h"
 #include "project/resources/propertyResource.h"
-
+#include "filesystem/engine_data_cache.h"
 Resource* ResourceLoader::_loadPropertyResource(propertyResourceLoadMode mode, const string path) {
 	// Determine the type of the data file
 	resources::PropertyResource::ParsedPropertyResourceFile resourceData;
@@ -12,9 +12,7 @@ Resource* ResourceLoader::_loadPropertyResource(propertyResourceLoadMode mode, c
 	else if (mode == propResLoadSrcOnly) {
 		resourceData.dataPath = path;
 	}
-
 	string sourceType = file_helpers::get_file_type(resourceData.dataPath);
-
 	if (sourceType == "jpg" || sourceType == "jpeg" || sourceType == "png" || sourceType == "bmp" || sourceType == "psd" || sourceType == "tga"
 		|| sourceType == "gif" || sourceType == "hdr" || sourceType == "pic" || sourceType == "ppm" || sourceType == "pgm") {
 
