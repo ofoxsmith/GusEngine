@@ -4,20 +4,43 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 namespace resources {
+	struct ShaderResourceOptions : public PropertyResourceOptions {
+		enum ShaderLanguage {
+			LanguageGLSL,
+			LanguageHLSL
+		};
+		enum ShaderStage {
+			StageUnknown,
+			StageVert,
+			StageFrag,
+			StageTessControl,
+			StageTessEval,
+			StageGeom,
+			StageComp
+		};
+
+		std::vector<uint32_t> spirvBinary{};
+		string shaderCode = "";
+		ShaderLanguage shaderLanguage = LanguageGLSL;
+		ShaderStage shaderStage = StageUnknown;
+	};
+
 	class Shader: public PropertyResource {
-		private:
-
-		static vector<uint32_t> _compileGLSLtoSPIRV(const std::string& source, string type);
-
-		vector<uint32_t> compiledCode;
 		public:
 
-		Shader(ParsedPropertyResourceFile data);
+		static vector<uint32_t> CompileGLSLtoSPIRV(const std::string& source, ShaderResourceOptions::ShaderLanguage lang, ShaderResourceOptions::ShaderStage stage);
+		
+		Shader(ShaderResourceOptions options = {});
+
 		VkShaderModule GetShaderModule(VkDevice device);
 		vector<uint32_t> GetShaderSPIRV() const {
 			return compiledCode;
 		}
 
-		void Init();
+		private:
+
+		vector<uint32_t> compiledCode;
+		ShaderResourceOptions::ShaderLanguage lang = ShaderResourceOptions::LanguageGLSL;
+		ShaderResourceOptions::ShaderStage stage = ShaderResourceOptions::StageUnknown;
 	};
 }

@@ -3,9 +3,18 @@
 #include "project/resources/resource.h"
 #include <map>
 namespace resources {
+
+	struct PropertyResourceOptions: public ResourceOptions {
+		string sourceFilePath = "";
+	};
+
 	class PropertyResource : public Resource {
 		public:
-		
+		PropertyResource(PropertyResourceOptions opts = {}) : Resource(opts) {
+			_type = "PropertyResource";
+			_sourcePath = opts.sourceFilePath;
+		}
+
 		// Intermediate structure used when reading a property resource from disk.
 		struct PropertyResourceSourceLoader {
 			string type{};
@@ -26,14 +35,14 @@ namespace resources {
 			map<string, string> mainSectionUnprocessedData;
 		};
 
+		
 		string GetSourceFilepath() { return _sourcePath; }
-		virtual void Init() = 0;
 
 		private:
 
 		protected:
-		string _sourcePath;
-		PropertyResource(string type, ParsedPropertyResourceFile data);
+		// The path to the data file encapsulated in this resource.
+		string _sourcePath = "";
 
 	};
 

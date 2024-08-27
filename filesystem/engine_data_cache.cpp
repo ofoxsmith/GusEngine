@@ -189,9 +189,6 @@ namespace md5 {
 // 2 byte short int denoting the number of characters in the filename
 // char[] filename
 // 32 byte MD5 hash
-std::unordered_map<string, std::tuple<int, string>> EngineDataCache::savedHashes{};
-std::fstream EngineDataCache::hashFile = fstream();
-
 void EngineDataCache::Init() {
     hashFile.open(".gusengine/currentCachedData", std::ios::in | std::ios::out | std::fstream::app | std::ios::binary);
     if (!hashFile.is_open()) {
@@ -268,11 +265,12 @@ bool EngineDataCache::LoadFileFromCacheOnly(string filePath) {
 }
 
 
+
 vector<uint32_t> EngineDataCache::LoadFileBinary(string filePath) {
     auto data = file_helpers::read_file_binary(filePath);
     auto newHash = GetFileMD5Hash(filePath);
     if (HasMD5HashChanged(filePath, newHash)) {
-        EngineDataCache::SaveMD5Hash(filePath, newHash);
+        SaveMD5Hash(filePath, newHash);
     }
     return data;
 }
@@ -281,7 +279,7 @@ string EngineDataCache::LoadFileText(string filePath) {
     auto data = file_helpers::read_file_text(filePath);
     auto newHash = GetFileMD5Hash(filePath);
     if (HasMD5HashChanged(filePath, newHash)) {
-        EngineDataCache::SaveMD5Hash(filePath, newHash);
+        SaveMD5Hash(filePath, newHash);
     }
     return data;
 }

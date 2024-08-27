@@ -2,9 +2,21 @@
 #include <glslang/Public/ShaderLang.h>
 #include <glslang/SPIRV/GlslangToSpv.h>
 #include <glslang/Public/ResourceLimits.h>
-#include "filesystem/engine_data_cache.h"
-resources::Shader::Shader(ParsedPropertyResourceFile data): PropertyResource("Shader", data) {
 
+resources::Shader::Shader(ShaderResourceOptions opts): PropertyResource(opts) {
+	_type = "Shader";
+
+	if (opts.shaderCode == "" && opts.spirvBinary.empty()) {
+		throw new runtime_error("Failed to create shader resource: Both opts.shaderCode and opts.spirvBinary were empty.");
+	}
+	stage = opts.shaderStage;
+	lang = opts.shaderLanguage;
+	if (!opts.spirvBinary.empty()) {
+		compiledCode = opts.spirvBinary;
+	}
+	else {
+		compiledCode = CompileGLSLtoSPIRV(opts.shaderCode, opts.shaderLanguage, opts.shaderStage);
+	}
 }
 
 VkShaderModule resources::Shader::GetShaderModule(VkDevice device)
@@ -21,19 +33,7 @@ VkShaderModule resources::Shader::GetShaderModule(VkDevice device)
 
 }
 
-void resources::Shader::Init() {
-	if (file_helpers::get_file_type(_sourcePath) == "spv") {
-		auto spv = EngineDataCache::LoadFileBinary(_sourcePath);
-		compiledCode = spv;
-	}
-	else {
-		string data = EngineDataCache::LoadFileText(_sourcePath);
-		vector<uint32_t> output = _compileGLSLtoSPIRV(data, file_helpers::get_file_type(_sourcePath));
-		compiledCode = output;
-	}
-}
-
-vector<uint32_t> resources::Shader::_compileGLSLtoSPIRV(const std::string& source, string type)
+vector<uint32_t> resources::Shader::CompileGLSLtoSPIRV(const std::string& source, ShaderResourceOptions::ShaderLanguage lang, ShaderResourceOptions::ShaderStage type)
 {
 
 	std::vector<uint32_t> spirv;
@@ -44,12 +44,12 @@ vector<uint32_t> resources::Shader::_compileGLSLtoSPIRV(const std::string& sourc
 
 	EShLanguage stage{};
 
-	if (type == "vert") stage = EShLangVertex;
-	if (type == "frag") stage = EShLangFragment;
-	if (type == "tesc") stage = EShLangTessControl;
-	if (type == "tese") stage = EShLangTessEvaluation;
-	if (type == "geom") stage = EShLangGeometry;
-	if (type == "comp") stage = EShLangCompute;
+	if (type == ShaderResourceOptions::StageVert) stage = EShLangVertex;
+	if (type == ShaderResourceOptions::StageFrag) stage = EShLangFragment;
+	if (type == ShaderResourceOptions::StageTessControl) stage = EShLangTessControl;
+	if (type == ShaderResourceOptions::StageTessEval) stage = EShLangTessEvaluation;
+	if (type == ShaderResourceOptions::StageGeom) stage = EShLangGeometry;
+	if (type == ShaderResourceOptions::StageComp) stage = EShLangCompute;
 
 	const char* shader_source = reinterpret_cast<const char*>(source.data());
 

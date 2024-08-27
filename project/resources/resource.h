@@ -2,32 +2,36 @@
 #include "core/globals.h"
 #include <string>
 namespace resources {
+	struct ResourceOptions {
+		string resourceName = "";
+		string resourceSavedPath = "";
+	};
 
 	class Resource
 	{
-		private:
-
-		string _name;
-		string _type;
-		string _resourcePath;
-
-		bool _saved = false;
-		bool _isPropertyResource;
-
 		protected:
-
-		Resource(string type, bool isProp, string path = "");
+		// The name of the resource.
+		string _name = "";
+		// The resource type.
+		string _type = "Resource";
+		// The path to a .res or .pres file if this resource is saved on disk.
+		string _resourcePath = "";
+		// If this resource is saved on disk.
+		bool _saved = false;
 
 		public:
 
 		string Name() { return _name; }
 		void SetName(string newName) { _name = newName; }
 		bool IsSaved() const { return _saved; }
-		bool IsPropertyResource() const { return _isPropertyResource; }
 		string GetPath() { return _resourcePath; }
-		string Type() { return _type;  }
+		string Type() { return _type; }
 
+		Resource(ResourceOptions opts = {}) {
+			_name = opts.resourceName;
+			_resourcePath = opts.resourceSavedPath;
+			_saved = opts.resourceSavedPath != "";
+		}
 		virtual ~Resource() {}
 	};
-
 }

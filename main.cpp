@@ -3,7 +3,6 @@
 #include "core/engine.h"
 #include "core/globals.h"
 
-
 int main(int argc, char* argv[]) {
 	std::string current_exec = argv[0];
 	std::vector<std::string> args;

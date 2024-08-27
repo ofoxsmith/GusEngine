@@ -1,6 +1,6 @@
 #include "engine.h"
 #include "filesystem/resource_loader.h"
-#include "filesystem/engine_data_cache.h"
+
 void Engine::Run(vector<string> args) {
 	Init();
 	MainLoop();
@@ -8,7 +8,7 @@ void Engine::Run(vector<string> args) {
 }
 
 void Engine::Init() {
-	EngineDataCache::Init();
+	ResourceLoader::Init();
 	graphics.Init();
 }
 
@@ -20,6 +20,6 @@ void Engine::Cleanup() {
 	Log.Info("Core", "Cleaning up vulkan");
 	graphics.Cleanup();
 	Log.Info("Core", "Cleaning up resources");
-	EngineDataCache::Cleanup();
+	ResourceLoader::Cleanup();
 	Log.Info("Core", "Exiting");
 }

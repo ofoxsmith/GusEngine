@@ -10,7 +10,7 @@ resources::PropertyResource::ParsedPropertyResourceFile ResourceFileParser::Load
 {
 	resources::PropertyResource::ParsedPropertyResourceFile output;
 	output.resourcePath = filePath;
-	string data = EngineDataCache::LoadFileText(filePath);
+	string data = file_helpers::read_file_text(filePath);
 	
 	if (!data.starts_with("[PRES]\n")) throw new runtime_error("Invalid PRES file data");
 	// Remove lines with only whitespace
