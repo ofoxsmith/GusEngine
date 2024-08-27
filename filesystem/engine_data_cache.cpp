@@ -205,7 +205,6 @@ void EngineDataCache::Init() {
     }
 
     hashFile.seekg(0, std::ios::beg);
-    int itemIndex = 0;
     while ((int)hashFile.tellg() <= (len - 34)) {
         int currentPos = hashFile.tellg();
 
