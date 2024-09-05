@@ -1,15 +1,15 @@
 #pragma once
 #include "core/globals.h"
+#include "core/types/object.h"
 #include <string>
 namespace resources {
 	struct ResourceOptions {
 		string resourceName = "";
 		string resourceSavedPath = "";
 	};
-	class Resource
+	class Resource : public Object
 	{
-		friend void engine_type_registry::type_registry::_all_types();
-		static void _register_resource();
+		GUS_CLASS(Resource)
 		protected:
 		// The name of the resource.
 		string _name = "";

@@ -147,7 +147,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="core\globals.cpp" />
-    <ClCompile Include="core\type_registry.cpp" />
+    <ClCompile Include="core\types\object.cpp" />
+    <ClCompile Include="core\types\primitive_variant.cpp" />
+    <ClCompile Include="core\types\type_registry.cpp" />
     <ClCompile Include="core\vkGraphics.cpp" />
     <ClCompile Include="core\engine.cpp" />
     <ClCompile Include="filesystem\res_fileparser.cpp" />
@@ -163,7 +165,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\globals.h" />
-    <ClInclude Include="core\type_registry.h" />
+    <ClInclude Include="core\types\primitive_variant.h" />
+    <ClInclude Include="core\types\object.h" />
+    <ClInclude Include="core\types\type_registry.h" />
     <ClInclude Include="core\vkGraphics.h" />
     <ClInclude Include="core\engine.h" />
     <ClInclude Include="filesystem\file_helpers.h" />
@@ -175,6 +179,9 @@
     <ClInclude Include="project\resources\resource.h" />
     <ClInclude Include="filesystem\resource_loader.h" />
     <ClInclude Include="utils\logger.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

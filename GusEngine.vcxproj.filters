@@ -54,6 +54,15 @@
     <ClCompile Include="filesystem\engine_data_cache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="core\types\type_registry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="core\types\object.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="core\types\primitive_variant.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="filesystem\file_helpers.h">
@@ -92,5 +101,17 @@
     <ClInclude Include="filesystem\engine_data_cache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="core\types\type_registry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="core\types\object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="core\types\primitive_variant.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
   </ItemGroup>
 </Project>

@@ -2,7 +2,7 @@
 #include <glslang/Public/ShaderLang.h>
 #include <glslang/SPIRV/GlslangToSpv.h>
 #include <glslang/Public/ResourceLimits.h>
-#include "core/type_registry.h"
+#include "core/types/type_registry.h"
 
 resources::Shader::Shader(ShaderResourceOptions opts): PropertyResource(opts) {
 	_type = "Shader";
@@ -34,13 +34,13 @@ VkShaderModule resources::Shader::GetShaderModule(VkDevice device)
 
 }
 
-void resources::Shader::_register_resource() {
+void resources::Shader::_register_resource(engine_type_registry::class_id cId) {
 	using namespace engine_type_registry;
-	class_id cId = type_registry::register_new_resource("Shader", type_registry::get_registered_resource("PropertyResource"));
-	type_registry::resource_register_enum(cId, "ShaderLanguage");
-	type_registry::resource_register_enum(cId, "ShaderStage");
-	type_registry::resource_define_property(cId, "language", "ShaderLanguage", &Shader::SetLanguage);
-	type_registry::resource_define_property(cId, "stage", "ShaderStage", &Shader::SetStage);
+	type_registry::class_expose_method(cId, "GetShaderSPIRV", "vector<uint32_t>", &Shader::GetShaderSPIRV);
+	type_registry::class_expose_method(cId, "SetLanguage", "ShaderResourceOptions::ShaderLanguage", &Shader::SetLanguage);
+	type_registry::class_expose_method(cId, "GetLanguage", "ShaderResourceOptions::ShaderLanguage", &Shader::GetLanguage);
+	type_registry::class_expose_method(cId, "SetStage", "ShaderResourceOptions::ShaderStage", &Shader::SetStage);
+	type_registry::class_expose_method(cId, "GetStage", "ShaderResourceOptions::ShaderStage", &Shader::GetStage);
 }
 
 vector<uint32_t> resources::Shader::CompileGLSLtoSPIRV(const std::string& source, ShaderResourceOptions::ShaderLanguage lang, ShaderResourceOptions::ShaderStage type)

@@ -26,7 +26,7 @@ namespace resources {
 	};
 
 	class Shader: public PropertyResource {
-		friend void engine_type_registry::type_registry::_all_types();
+		GUS_CLASS_DERIVED(Shader, PropertyResource)
 		public:
 
 		static vector<uint32_t> CompileGLSLtoSPIRV(const std::string& source, ShaderResourceOptions::ShaderLanguage lang, ShaderResourceOptions::ShaderStage stage);
@@ -44,7 +44,6 @@ namespace resources {
 		ShaderResourceOptions::ShaderStage GetStage() const { return stage; };
 
 		private:
-		static void _register_resource();
 
 		vector<uint32_t> compiledCode;
 		ShaderResourceOptions::ShaderLanguage lang = ShaderResourceOptions::LanguageGLSL;

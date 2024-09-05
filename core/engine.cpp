@@ -1,7 +1,9 @@
 #include "engine.h"
 #include "filesystem/resource_loader.h"
-
+#include "types/type_registry.h"
 void Engine::Run(vector<string> args) {
+	engine_type_registry::type_registry::register_all_types();
+	engine_type_registry::type_registry::get_registered_class_name("e");
 	Init();
 	MainLoop();
 	Cleanup();

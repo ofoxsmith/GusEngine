@@ -9,13 +9,14 @@ namespace resources {
 	};
 
 	class PropertyResource : public Resource {
-		friend void engine_type_registry::type_registry::_all_types();
+		GUS_CLASS_DERIVED(PropertyResource, Resource)
 		public:
 		PropertyResource(PropertyResourceOptions opts = {}) : Resource(opts) {
 			_type = "PropertyResource";
 			_sourcePath = opts.sourceFilePath;
 		}
 
+	
 		// Intermediate structure used when reading a property resource from disk.
 		struct PropertyResourceSourceLoader {
 			string type{};
@@ -40,12 +41,10 @@ namespace resources {
 		string GetSourceFilepath() { return _sourcePath; }
 
 		private:
-		static void _register_resource();
-
 		protected:
 		// The path to the data file encapsulated in this resource.
 		string _sourcePath = "";
 
 	};
 
-}
+} 

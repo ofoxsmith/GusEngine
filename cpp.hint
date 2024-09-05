@@ -1,0 +1,8 @@
+// Hint files help the Visual Studio IDE interpret Visual C++ identifiers
+// such as names of functions and macros.
+// For more information see https://go.microsoft.com/fwlink/?linkid=865984
+#define GUS_CLASS_DERIVED(NAME, DERIVED) friend void engine_type_registry::type_registry::register_all_types(); static void _register_resource(engine_type_registry::class_id cId); static string _get_type() {return #NAME; } static string _get_parent_type() {return #DERIVED; } static void _register_type() { engine_type_registry::class_id cId = engine_type_registry::type_registry::register_new_resource(#NAME, #DERIVED);_register_resource(cId);}
+// Hint files help the Visual Studio IDE interpret Visual C++ identifiers
+// such as names of functions and macros.
+// For more information see https://go.microsoft.com/fwlink/?linkid=865984
+#define GUS_CLASS(NAME) friend void engine_type_registry::type_registry::register_all_types(); static void _register_resource(engine_type_registry::class_id cId); static string _get_type() {return #NAME; } static string _get_parent_type() {return ""; } static void _register_type() { engine_type_registry::class_id cId = engine_type_registry::type_registry::register_new_resource(#NAME);_register_resource(cId);}
