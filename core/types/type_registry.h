@@ -64,7 +64,7 @@ namespace engine_type_registry {
 		R(T::* method)(Args...) = nullptr;
 		
 		virtual void Call(Object* obj) override {
-			_callHelper(dynamic_cast<T*>(obj));
+			//_callHelper(dynamic_cast<T*>(obj));
 		}
 
 		BindedObjectMethodDefinition(R(T::* met)(Args...) const) {

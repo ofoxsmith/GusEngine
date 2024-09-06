@@ -60,7 +60,7 @@
     <ClCompile Include="core\types\object.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="core\types\primitive_variant.cpp">
+    <ClCompile Include="core\types\variant_type.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -107,7 +107,7 @@
     <ClInclude Include="core\types\object.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="core\types\primitive_variant.h">
+    <ClInclude Include="core\types\variant_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
