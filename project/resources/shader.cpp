@@ -36,11 +36,13 @@ VkShaderModule resources::Shader::GetShaderModule(VkDevice device)
 
 void resources::Shader::_register_resource(engine_type_registry::class_id cId) {
 	using namespace engine_type_registry;
+	/*
 	type_registry::class_expose_method(cId, "GetShaderSPIRV", "vector<uint32_t>", &Shader::GetShaderSPIRV);
 	type_registry::class_expose_method(cId, "SetLanguage", "ShaderResourceOptions::ShaderLanguage", &Shader::SetLanguage);
 	type_registry::class_expose_method(cId, "GetLanguage", "ShaderResourceOptions::ShaderLanguage", &Shader::GetLanguage);
 	type_registry::class_expose_method(cId, "SetStage", "ShaderResourceOptions::ShaderStage", &Shader::SetStage);
 	type_registry::class_expose_method(cId, "GetStage", "ShaderResourceOptions::ShaderStage", &Shader::GetStage);
+	*/
 }
 
 vector<uint32_t> resources::Shader::CompileGLSLtoSPIRV(const std::string& source, ShaderResourceOptions::ShaderLanguage lang, ShaderResourceOptions::ShaderStage type)

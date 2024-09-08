@@ -387,13 +387,16 @@ struct Variant {
 	void CastToStrict(StoredType newType);
 	std::string Stringify();
 	static Variant FromString(std::string str);
-
 	//// Operators and constructors
 
 	Variant() { 
 		_primitiveData._int = 0; 
 		_currentType = StoredType::Empty; 
 	};
+	Variant(StoredType type) {
+		_primitiveData._int = 0;
+		_currentType = type;
+	}
 	Variant(bool data);
 	Variant(int data);
 	Variant(unsigned int data);

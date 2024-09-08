@@ -9,7 +9,7 @@ namespace resources {
 	};
 	class Resource : public Object
 	{
-		GUS_CLASS(Resource)
+		GUS_CLASS_DERIVED(Resource, Object);
 		protected:
 		// The name of the resource.
 		string _name = "";

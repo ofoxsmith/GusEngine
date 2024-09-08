@@ -4,7 +4,12 @@
 #include <vector>
 #include <functional>
 #include <concepts>
+#include <utility>
+#include <type_traits>
+#include <array>
 #include "object.h"
+#include "variant_type.h"
+
 using namespace std;
 
 // This namespace contains macros, methods, and classes used to provide detailed runtime type information (RTTI) to the engine.
@@ -23,19 +28,70 @@ engine_type_registry::class_id cId = engine_type_registry::type_registry::regist
 _register_resource(cId);\
 } \
 
-
-#define GUS_CLASS(NAME) \
-friend void engine_type_registry::type_registry::register_all_types(); \
-static void _register_resource(engine_type_registry::class_id cId); \
-static string _get_type() {return #NAME; } \
-static string _get_parent_type() {return ""; } \
-static void _register_type() { \
-engine_type_registry::class_id cId = engine_type_registry::type_registry::register_new_resource(#NAME);\
-_register_resource(cId);\
-} \
-
 template <class Type>
 concept IsDerivedFromObject = std::is_base_of<Object, Type>::value;
+
+template <typename R, typename T, typename... Args, std::size_t... Is> requires IsDerivedFromObject<T>
+static Variant call_class_method_helper_impl(T* obj, R(T::* method)(Args...), const Variant resolvedArgs[], std::index_sequence<Is...>) {
+	if constexpr (std::is_void_v<R>) {
+		(obj->*method)(static_cast<Args>(resolvedArgs[Is])...);
+		return Variant(Variant::Void);
+	}
+	else {
+		return (obj->*method)(static_cast<Args>(resolvedArgs[Is])...);
+	}
+}
+
+template <typename R, typename T, typename... Args, std::size_t... Is> requires IsDerivedFromObject<T>
+static Variant call_class_method_helper_impl(T* obj, R(T::* method)(Args...)const, const Variant resolvedArgs[], std::index_sequence<Is...>) {
+	if constexpr (std::is_void_v<R>) {
+		(obj->*method)(static_cast<Args>(resolvedArgs[Is])...);
+		return Variant(Variant::Void);
+	}
+	else {
+		return (obj->*method)(static_cast<Args>(resolvedArgs[Is])...);
+	}
+}
+
+template <typename R, typename T, typename... Args> requires IsDerivedFromObject<T>
+static Variant call_class_method_helper(T* obj, R(T::* method)(Args...), const vector<Variant> args, int requiredArgCount, const vector<Variant>& defaultArgs, bool& callSuccessfull) {
+	if (args.size() < requiredArgCount) {
+		callSuccessfull = false;
+		return Variant(Variant::Void);
+	}
+
+	Variant resolvedArgs[sizeof...(Args) == 0 ? 1 : sizeof...(Args)]{};
+	for (int i = 0; i < (int)sizeof...(Args); i++) {
+		if (args.size() < i) {
+			resolvedArgs[i] = args[i];
+		}
+		else {
+			resolvedArgs[i] = defaultArgs[i];
+		}
+	}
+
+	return call_class_method_helper_impl(obj, method, resolvedArgs, std::index_sequence_for<Args...>());
+}
+
+template <typename R, typename T, typename... Args> requires IsDerivedFromObject<T>
+static Variant call_class_method_helper(T* obj, R(T::* method)(Args...) const, const vector<Variant> args, int requiredArgCount, const vector<Variant>& defaultArgs, bool& callSuccessfull) {
+	if (args.size() < requiredArgCount) {
+		callSuccessfull = false;
+		return Variant(Variant::Void);
+	}
+
+	Variant resolvedArgs[sizeof...(Args) == 0 ? 1 : sizeof...(Args)]{};
+	for (int i = 0; i < (int)sizeof...(Args); i++) {
+		if (args.size() < i) {
+			resolvedArgs[i] = args[i];
+		}
+		else {
+			resolvedArgs[i] = defaultArgs[i];
+		}
+	}
+
+	return call_class_method_helper_impl(obj, method, resolvedArgs, std::index_sequence_for<Args...>());
+}
 
 namespace engine_type_registry {
 
@@ -43,28 +99,30 @@ namespace engine_type_registry {
 		public:
 		class_id object;
 		string methodName;
-		virtual void Call(Object* obj) = 0;
+		int requiredArgCount;
+		vector<Variant> defaultArgs;
+		virtual Variant Call(Object* obj, std::vector<Variant> args) const = 0;
 	};
 
 	template <typename R, typename T, typename... Args> requires IsDerivedFromObject<T>
 	class BindedObjectMethodDefinition : public ObjectMethodDefinition {
 		private:
 		bool _isConst;
-		void _callHelper(T* obj, Args... a) {
-			if (_isConst) {
-				(obj->*constMethod)(a...);
-			}
-			else {
-				(obj->*method)(a...);
-			}
-		}
 
 		public:
 		R(T::* constMethod)(Args...) const = nullptr;
 		R(T::* method)(Args...) = nullptr;
 		
-		virtual void Call(Object* obj) override {
-			//_callHelper(dynamic_cast<T*>(obj));
+		virtual Variant Call(Object* obj, std::vector<Variant> args) const override {
+			bool success = false;
+			Variant result;
+			if (_isConst) {
+				result = call_class_method_helper<R, T, Args...>(static_cast<T*>(obj), constMethod, args, requiredArgCount, defaultArgs, success);
+			}
+			else {
+				result = call_class_method_helper<R, T, Args...>(static_cast<T*>(obj), method, args, requiredArgCount, defaultArgs, success);
+			}
+			return result;
 		}
 
 		BindedObjectMethodDefinition(R(T::* met)(Args...) const) {
