@@ -4,12 +4,12 @@ using namespace engine_type_registry;
 using namespace resources;
 void Resource::_register_resource(class_id cId)
 {
-	type_registry::class_expose_method(cId, "Name", "string", &Resource::Name);
-	type_registry::class_expose_method(cId, "SetName", "string", &Resource::SetName);
-	type_registry::class_expose_method(cId, "SetPath", "string", &Resource::SetPath);
-	type_registry::class_expose_method(cId, "IsSaved", "bool", &Resource::IsSaved);
-	type_registry::class_expose_method(cId, "GetPath", "string", &Resource::GetPath);
-	type_registry::class_expose_method(cId, "SetPath", "string", &Resource::SetPath);
-	type_registry::class_expose_method(cId, "Type", "string", &Resource::Type);
+	type_registry::class_expose_method(cId, ObjectMethodDescription("Name", Variant::String, 0), &Resource::Name);
+	type_registry::class_expose_method(cId, ObjectMethodDescription("SetName", Variant::Void, 1), &Resource::SetName);
+	type_registry::class_expose_method(cId, ObjectMethodDescription("SetPath", Variant::Void, 1), &Resource::SetPath);
+	type_registry::class_expose_method(cId, ObjectMethodDescription("IsSaved", Variant::Bool, 0), &Resource::IsSaved);
+	type_registry::class_expose_method(cId, ObjectMethodDescription("GetPath", Variant::String, 0), &Resource::GetPath);
+	type_registry::class_expose_method(cId, ObjectMethodDescription("SetPath", Variant::Void, 1), &Resource::SetPath);
+	type_registry::class_expose_method(cId, ObjectMethodDescription("Type", Variant::String, 0), &Resource::Type);
 
 }

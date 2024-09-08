@@ -95,12 +95,27 @@ static Variant call_class_method_helper(T* obj, R(T::* method)(Args...) const, c
 
 namespace engine_type_registry {
 
+	struct ObjectMethodDescription {
+		string methodName = "";
+		Variant::StoredType returnType = Variant::Void;
+		int requiredArgCount = 0;
+		vector<Variant> defaultArgValues{};
+		ObjectMethodDescription() {}
+		ObjectMethodDescription(string name, Variant::StoredType rType, int reqArgCount = 0, vector<Variant> defaultArgs = {}) {
+			methodName = name;
+			returnType = rType;
+			reqArgCount = reqArgCount;
+			defaultArgValues = defaultArgs;
+		}
+	};
+
 	class ObjectMethodDefinition {
 		public:
-		class_id object;
-		string methodName;
-		int requiredArgCount;
-		vector<Variant> defaultArgs;
+		ObjectMethodDescription methodMetadata;
+		ObjectMethodDefinition(ObjectMethodDescription methodInfo) {
+			methodMetadata = methodInfo;
+		}
+
 		virtual Variant Call(Object* obj, std::vector<Variant> args) const = 0;
 	};
 
@@ -117,19 +132,19 @@ namespace engine_type_registry {
 			bool success = false;
 			Variant result;
 			if (_isConst) {
-				result = call_class_method_helper<R, T, Args...>(static_cast<T*>(obj), constMethod, args, requiredArgCount, defaultArgs, success);
+				result = call_class_method_helper<R, T, Args...>(static_cast<T*>(obj), constMethod, args, methodMetadata.requiredArgCount, methodMetadata.defaultArgValues, success);
 			}
 			else {
-				result = call_class_method_helper<R, T, Args...>(static_cast<T*>(obj), method, args, requiredArgCount, defaultArgs, success);
+				result = call_class_method_helper<R, T, Args...>(static_cast<T*>(obj), method, args, methodMetadata.requiredArgCount, methodMetadata.defaultArgValues, success);
 			}
 			return result;
 		}
 
-		BindedObjectMethodDefinition(R(T::* met)(Args...) const) {
+		BindedObjectMethodDefinition(R(T::* met)(Args...) const, ObjectMethodDescription methodInfo): ObjectMethodDefinition(methodInfo) {
 			constMethod = met;
 			_isConst = true;
 		}
-		BindedObjectMethodDefinition(R(T::* met)(Args...)) {
+		BindedObjectMethodDefinition(R(T::* met)(Args...), ObjectMethodDescription methodInfo) : ObjectMethodDefinition(methodInfo) {
 			method = met;
 			_isConst = false;
 		}
@@ -163,14 +178,14 @@ namespace engine_type_registry {
 		static void class_register_enum(class_id c_id, string enum_name);
 
 		template <typename R, typename T, typename... Args> requires IsDerivedFromObject<T>
-		static void class_expose_method(class_id c_id, string method_name, string type, R (T::* func)(Args...)) {
-			_registered_classes[c_id]._methods[method_name] = new BindedObjectMethodDefinition<R, T, Args...>(func);
+		static void class_expose_method(class_id c_id, ObjectMethodDescription methodInfo, R (T::* func)(Args...)) {
+			_registered_classes[c_id]._methods[methodInfo.methodName] = new BindedObjectMethodDefinition<R, T, Args...>(func, methodInfo);
 		};
 
 		// Overload to expose member functions declared const
 		template <typename R, typename T, typename... Args> requires IsDerivedFromObject<T>
-		static void class_expose_method(class_id c_id, string method_name, string type, R(T::* func)(Args...) const) {
-			_registered_classes[c_id]._methods[method_name] = new BindedObjectMethodDefinition<R, T, Args...>(func);
+		static void class_expose_method(class_id c_id, ObjectMethodDescription methodInfo, R(T::* func)(Args...) const) {
+			_registered_classes[c_id]._methods[methodInfo.methodName] = new BindedObjectMethodDefinition<R, T, Args...>(func, methodInfo);
 		};
 
 		static void class_define_property(class_id c_id, string prop_name, string type, string getter_method_name, string setter_method_name);
