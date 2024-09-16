@@ -16,10 +16,10 @@ std::unordered_map<string, Resource*> ResourceLoader::loadedResources;
 Resource* ResourceLoader::_loadPropertyResource(propertyResourceLoadMode mode, const string path) {
 	resources::PropertyResource::ParsedPropertyResourceFile resourceData;
 
-	if (mode == propResLoad) {
+	if (mode == propertyResourceLoadMode::propResLoad) {
 		resourceData = resource_file_parser::load_prop_resource(path);
 	}
-	else if (mode == propResLoadSrcOnly) {
+	else if (mode == propertyResourceLoadMode::propResLoadSrcOnly) {
 		resourceData.dataPath = path;
 	}
 
@@ -36,13 +36,13 @@ Resource* ResourceLoader::_loadPropertyResource(propertyResourceLoadMode mode, c
 		shaderOpts.resourceName = resourceData.resourceName;
 		shaderOpts.resourceSavedPath = resourceData.resourcePath;
 		shaderOpts.sourceFilePath = resourceData.dataPath;
-		shaderOpts.language = shaderOpts.LanguageGLSL;
-		if (sourceType == "vert") shaderOpts.stage = shaderOpts.StageVert;
-		if (sourceType == "frag") shaderOpts.stage = shaderOpts.StageFrag;
-		if (sourceType == "tesc") shaderOpts.stage = shaderOpts.StageTessControl;
-		if (sourceType == "tese") shaderOpts.stage = shaderOpts.StageTessEval;
-		if (sourceType == "geom") shaderOpts.stage = shaderOpts.StageGeom;
-		if (sourceType == "comp") shaderOpts.stage = shaderOpts.StageComp;
+		shaderOpts.language = ShaderResourceOptions::ShaderLanguage::LanguageGLSL;
+		if (sourceType == "vert") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageVert;
+		if (sourceType == "frag") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageFrag;
+		if (sourceType == "tesc") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageTessControl;
+		if (sourceType == "tese") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageTessEval;
+		if (sourceType == "geom") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageGeom;
+		if (sourceType == "comp") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageComp;
 		shaderOpts.spirvBinary = Shader::CompileGLSLtoSPIRV(file_helpers::read_file_text(shaderOpts.sourceFilePath), shaderOpts.language, shaderOpts.stage);
 		Shader* s = new Shader(shaderOpts);
 		return s;
@@ -77,7 +77,7 @@ Resource* ResourceLoader::_load(const string filePath) {
 
 	if (resourceType == "pres") {
 		// The file is a property resource, and contains engine settings for an external data file.
-		res = ResourceLoader::_loadPropertyResource(propResLoad, filePath);
+		res = ResourceLoader::_loadPropertyResource(ResourceLoader::propertyResourceLoadMode::propResLoad, filePath);
 		loadedResources[filePath] = res;
 	}
 
@@ -85,10 +85,10 @@ Resource* ResourceLoader::_load(const string filePath) {
 	// The file is external data, and must be encapsulated in a property resource
 	bool presFileExists = file_helpers::file_exists(filePath + ".pres");
 	if (presFileExists) {
-		res = ResourceLoader::_loadPropertyResource(propResLoad, filePath + ".pres");
+		res = ResourceLoader::_loadPropertyResource(ResourceLoader::propertyResourceLoadMode::propResLoad, filePath + ".pres");
 		loadedResources[filePath + ".pres"] = res;
 	} else {
-		res = ResourceLoader::_loadPropertyResource(propResLoadSrcOnly, filePath);
+		res = ResourceLoader::_loadPropertyResource(ResourceLoader::propertyResourceLoadMode::propResLoadSrcOnly, filePath);
 		loadedResources[filePath] = res;
 	}
 

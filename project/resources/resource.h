@@ -1,5 +1,6 @@
 #pragma once
 #include "core/globals.h"
+#include "core/types/type_registry.h"
 #include "core/types/object.h"
 #include <string>
 namespace resources {
@@ -9,7 +10,7 @@ namespace resources {
 	};
 	class Resource : public Object
 	{
-		GUS_CLASS_DERIVED(Resource, Object);
+		GUS_DECLARE_CLASS(Resource, Object)
 		protected:
 		// The name of the resource.
 		string _name = "";

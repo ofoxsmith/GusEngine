@@ -10,7 +10,7 @@ using namespace resources;
 
 class ResourceLoader
 {
-	enum propertyResourceLoadMode {
+	enum class propertyResourceLoadMode {
 		propResLoad,
 		propResLoadSrcOnly,
 	};

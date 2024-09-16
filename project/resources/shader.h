@@ -5,11 +5,11 @@
 #include <vulkan/vulkan.h>
 namespace resources {
 	struct ShaderResourceOptions : public PropertyResourceOptions {
-		enum ShaderLanguage {
+		enum class ShaderLanguage {
 			LanguageGLSL,
 			LanguageHLSL
 		};
-		enum ShaderStage {
+		enum class ShaderStage {
 			StageUnknown,
 			StageVert,
 			StageFrag,
@@ -21,12 +21,12 @@ namespace resources {
 
 		std::vector<uint32_t> spirvBinary{};
 		string shaderTextCode = "";
-		ShaderLanguage language = LanguageGLSL;
-		ShaderStage stage = StageUnknown;
+		ShaderLanguage language = ShaderLanguage::LanguageGLSL;
+		ShaderStage stage = ShaderStage::StageUnknown;
 	};
 
 	class Shader: public PropertyResource {
-		GUS_CLASS_DERIVED(Shader, PropertyResource)
+		GUS_DECLARE_CLASS(Shader, PropertyResource)
 		public:
 
 		static vector<uint32_t> CompileGLSLtoSPIRV(const std::string& source, ShaderResourceOptions::ShaderLanguage lang, ShaderResourceOptions::ShaderStage stage);
@@ -46,7 +46,7 @@ namespace resources {
 		private:
 
 		vector<uint32_t> compiledCode;
-		ShaderResourceOptions::ShaderLanguage lang = ShaderResourceOptions::LanguageGLSL;
-		ShaderResourceOptions::ShaderStage stage = ShaderResourceOptions::StageUnknown;
+		ShaderResourceOptions::ShaderLanguage lang = ShaderResourceOptions::ShaderLanguage::LanguageGLSL;
+		ShaderResourceOptions::ShaderStage stage = ShaderResourceOptions::ShaderStage::StageUnknown;
 	};
 }

@@ -9,7 +9,7 @@ namespace resources {
 	};
 
 	class PropertyResource : public Resource {
-		GUS_CLASS_DERIVED(PropertyResource, Resource)
+		GUS_DECLARE_CLASS(PropertyResource, Resource)
 		public:
 		PropertyResource(PropertyResourceOptions opts = {}) : Resource(opts) {
 			_type = "PropertyResource";

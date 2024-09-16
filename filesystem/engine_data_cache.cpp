@@ -196,14 +196,14 @@ void EngineDataCache::Init() {
         return;
     }
     hashFile.seekg(0, std::ios::end);
-    int len = hashFile.tellg();
+    int len = static_cast<int>(hashFile.tellg());
     if (len < 34) {
         return;
     }
 
     hashFile.seekg(0, std::ios::beg);
     while ((int)hashFile.tellg() <= (len - 34)) {
-        int currentPos = hashFile.tellg();
+        int currentPos = static_cast<int>(hashFile.tellg());
 
         // Get the length of the filename char[]
         char numChars[2]{};
