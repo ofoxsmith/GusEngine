@@ -25,8 +25,7 @@ struct Variant {
 	};
 
 	private:
-	// All data is stored in a single union type. 
-	// Primitives are stored directly in the union, while complex types have an access pointer stored in the union.
+
 	union variantData {
 		bool _bool;
 		int _int;
@@ -50,30 +49,22 @@ struct Variant {
 
 	static bool _same(const Variant& v1, const Variant& v2);
 
-	
-#pragma region Casting operators
-	// Each supported type has a weakCast operator, which could result in an unexpected value/data loss.
+	// Each supported type has an _cast method, converts it to other Variant data types.
+	// If strictCast is false, weak casts which could result in an unexpected value/data loss are used.
+	// If strictCast is true, stricter casting rules are used, which guarantee to safely cast between types without data loss.
 	template <typename T>
-	static T _weakCast(const variantData& data, StoredType currentType) {
-		static_assert(sizeof(T) == 0, "Only specializations of _weakCast can be used");
+	static T _cast(const variantData& data, StoredType currentType, bool strictCast = false) {
+		static_assert(sizeof(T) == 0, "Only specializations of _cast can be used");
 	};
 
-	// Each supported type has a strictCast operator, which is guaranteed to safely cast between types without data loss.
-	template <typename T>
-	static T _strictCast(const variantData& data, StoredType currentType) {
-		static_assert(sizeof(T) == 0, "Only specializations of _strictCast can be used");
-	};
-
-	template <> static bool _weakCast<bool>(const variantData& data, StoredType currentType) {
-		switch (currentType) {
-			case StoredType::String:
-				return *data._stringPtr == "true";
+	template <> static bool _cast<bool>(const variantData& data, StoredType currentType, bool strictCast) {
+		if (!strictCast) {
+			switch (currentType) {
+				case StoredType::String:
+					return *data._stringPtr == "true";
+			}
 		}
-		return _strictCast<bool>(data, currentType);
-	}
 
-	template<>
-	static bool _strictCast<bool>(const variantData& data, StoredType currentType) {
 		switch (currentType) {
 			case StoredType::Empty:
 			case StoredType::Void:
@@ -94,27 +85,57 @@ struct Variant {
 				return data._double;
 		}
 		return false;
-
 	}
 
-	template <> static int _weakCast<int>(const variantData& data, StoredType currentType) {
-		switch (currentType) {
-			case StoredType::LongLong:
-				return static_cast<int>(data._llong);
-			case StoredType::ULongLong:
-				return static_cast<int>(data._ullong);
-			case StoredType::Float:
-				return static_cast<int>(data._float);
-			case StoredType::Double:
-				return static_cast<int>(data._double);
-			case StoredType::String:
-				return std::stoi(*data._stringPtr);
+	template <> 
+	static int _cast<int>(const variantData& data, StoredType currentType, bool strictCast) {
+		if (!strictCast) {
+			switch (currentType) {
+				case StoredType::LongLong:
+					return static_cast<int>(data._llong);
+				case StoredType::ULongLong:
+					return static_cast<int>(data._ullong);
+				case StoredType::Float:
+					return static_cast<int>(data._float);
+				case StoredType::Double:
+					return static_cast<int>(data._double);
+				case StoredType::String:
+					return std::stoi(*data._stringPtr);
+			}
 		}
-		return _strictCast<int>(data, currentType);
+
+		switch (currentType) {
+			case StoredType::Empty:
+			case StoredType::Void:
+				return 0;
+			case StoredType::Bool:
+				return data._bool;
+			case StoredType::Int:
+				return data._int;
+			case StoredType::UInt:
+				return data._uint;
+		}
+		return 0;
+
 	}
 
-	template<>
-	static int _strictCast<int>(const variantData& data, StoredType currentType) {
+	template <> 
+	static unsigned int _cast<unsigned int>(const variantData& data, StoredType currentType, bool strictCast) {
+		if (!strictCast) {
+			switch (currentType) {
+				case StoredType::LongLong:
+					return static_cast<unsigned int>(data._llong);
+				case StoredType::ULongLong:
+					return static_cast<unsigned int>(data._ullong);
+				case StoredType::Float:
+					return static_cast<unsigned int>(data._float);
+				case StoredType::Double:
+					return static_cast<unsigned int>(data._double);
+				case StoredType::String:
+					return std::stoul(*data._stringPtr);
+			}
+		}
+
 		switch (currentType) {
 			case StoredType::Empty:
 			case StoredType::Void:
@@ -129,53 +150,17 @@ struct Variant {
 		return 0;
 	}
 
-
-	template <> static unsigned int _weakCast<unsigned int>(const variantData& data, StoredType currentType) {
-		switch (currentType) {
-			case StoredType::LongLong:
-				return static_cast<unsigned int>(data._llong);
-			case StoredType::ULongLong:
-				return static_cast<unsigned int>(data._ullong);
-			case StoredType::Float:
-				return static_cast<unsigned int>(data._float);
-			case StoredType::Double:
-				return static_cast<unsigned int>(data._double);
-			case StoredType::String:
-				return std::stoul(*data._stringPtr);
+	template <> static long long _cast<long long>(const variantData& data, StoredType currentType, bool strictCast) {
+		if (!strictCast) {
+			switch (currentType) {
+				case StoredType::Float:
+					return static_cast<long long>(data._float);
+				case StoredType::Double:
+					return static_cast<long long>(data._double);
+				case StoredType::String:
+					return std::stoll(*data._stringPtr);
+			}
 		}
-		return _strictCast<unsigned int>(data, currentType);
-	}
-
-	template<>
-	static unsigned int _strictCast<unsigned int>(const variantData& data, StoredType currentType) {
-		switch (currentType) {
-			case StoredType::Empty:
-			case StoredType::Void:
-				return 0;
-			case StoredType::Bool:
-				return data._bool;
-			case StoredType::Int:
-				return data._int;
-			case StoredType::UInt:
-				return data._uint;
-		}
-		return 0;
-	}
-
-	template <> static long long _weakCast<long long>(const variantData& data, StoredType currentType) {
-		switch (currentType) {
-			case StoredType::Float:
-				return static_cast<long long>(data._float);
-			case StoredType::Double:
-				return static_cast<long long>(data._double);
-			case StoredType::String:
-				return std::stoll(*data._stringPtr);
-		}
-		return _strictCast<long long>(data, currentType);
-	}
-
-	template<>
-	static long long _strictCast<long long>(const variantData& data, StoredType currentType) {
 		switch (currentType) {
 			case StoredType::Empty:
 			case StoredType::Void:
@@ -194,20 +179,19 @@ struct Variant {
 		return 0;
 	}
 
-	template <> static unsigned long long _weakCast<unsigned long long>(const variantData& data, StoredType currentType) {
-		switch (currentType) {
-			case StoredType::Float:
-				return static_cast<unsigned long long>(data._float);
-			case StoredType::Double:
-				return static_cast<unsigned long long>(data._double);
-			case StoredType::String:
-				return std::stoull(*data._stringPtr);
+	template <> 
+	static unsigned long long _cast<unsigned long long>(const variantData& data, StoredType currentType, bool strictCast) {
+		if (!strictCast) {
+			switch (currentType) {
+				case StoredType::Float:
+					return static_cast<unsigned long long>(data._float);
+				case StoredType::Double:
+					return static_cast<unsigned long long>(data._double);
+				case StoredType::String:
+					return std::stoull(*data._stringPtr);
+			}
 		}
-		return _strictCast<unsigned long long>(data, currentType);
-	}
 
-	template<>
-	static unsigned long long _strictCast<unsigned long long>(const variantData& data, StoredType currentType) {
 		switch (currentType) {
 			case StoredType::Empty:
 			case StoredType::Void:
@@ -227,26 +211,23 @@ struct Variant {
 
 	}
 
-	template <> static float _weakCast<float>(const variantData& data, StoredType currentType) {
-		switch (currentType) {
-			case StoredType::Int:
-				return static_cast<float>(data._int);
-			case StoredType::UInt:
-				return static_cast<float>(data._uint);
-			case StoredType::LongLong:
-				return static_cast<float>(data._llong);
-			case StoredType::ULongLong:
-				return static_cast<float>(data._ullong);
-			case StoredType::Double:
-				return static_cast<float>(data._double);
-			case StoredType::String:
-				return std::stof(*data._stringPtr);
+	template <> static float _cast<float>(const variantData& data, StoredType currentType, bool strictCast) {
+		if (!strictCast) {
+			switch (currentType) {
+				case StoredType::Int:
+					return static_cast<float>(data._int);
+				case StoredType::UInt:
+					return static_cast<float>(data._uint);
+				case StoredType::LongLong:
+					return static_cast<float>(data._llong);
+				case StoredType::ULongLong:
+					return static_cast<float>(data._ullong);
+				case StoredType::Double:
+					return static_cast<float>(data._double);
+				case StoredType::String:
+					return std::stof(*data._stringPtr);
+			}
 		}
-		return _strictCast<float>(data, currentType);
-	}
-
-	template<>
-	static float _strictCast<float>(const variantData& data, StoredType currentType) {
 		switch (currentType) {
 			case StoredType::Empty:
 			case StoredType::Void:
@@ -257,25 +238,21 @@ struct Variant {
 				return data._float;
 		}
 		return 0;
-
 	}
 
-	template <> static double _weakCast<double>(const variantData& data, StoredType currentType) {
-		switch (currentType) {
-			case StoredType::LongLong:
-				return static_cast<double>(data._llong);
-			case StoredType::ULongLong:
-				return static_cast<double>(data._ullong);
-			case StoredType::Float:
-				return static_cast<double>(data._float);
-			case StoredType::String:
-				return std::stod(*data._stringPtr);
+	template <> static double _cast<double>(const variantData& data, StoredType currentType, bool strictCast) {
+		if (!strictCast) {
+			switch (currentType) {
+				case StoredType::LongLong:
+					return static_cast<double>(data._llong);
+				case StoredType::ULongLong:
+					return static_cast<double>(data._ullong);
+				case StoredType::Float:
+					return static_cast<double>(data._float);
+				case StoredType::String:
+					return std::stod(*data._stringPtr);
+			}
 		}
-		return _strictCast<double>(data, currentType);
-	}
-
-	template<>
-	static double _strictCast<double>(const variantData& data, StoredType currentType) {
 		switch (currentType) {
 			case StoredType::Empty:
 			case StoredType::Void:
@@ -290,28 +267,26 @@ struct Variant {
 				return data._double;
 		}
 		return 0;
+
 	}
 
-	template <> static std::string _weakCast<std::string>(const variantData& data, StoredType currentType) {
-		switch (currentType) {
-			case StoredType::Int:
-				return std::to_string(data._int);
-			case StoredType::UInt:
-				return std::to_string(data._uint);
-			case StoredType::LongLong:
-				return std::to_string(data._llong);
-			case StoredType::ULongLong:
-				return std::to_string(data._ullong);
-			case StoredType::Float:
-				return std::to_string(data._float);
-			case StoredType::Double:
-				return std::to_string(data._double);
+	template <> static std::string _cast<std::string>(const variantData& data, StoredType currentType, bool strictCast) {
+		if (!strictCast) {
+			switch (currentType) {
+				case StoredType::Int:
+					return std::to_string(data._int);
+				case StoredType::UInt:
+					return std::to_string(data._uint);
+				case StoredType::LongLong:
+					return std::to_string(data._llong);
+				case StoredType::ULongLong:
+					return std::to_string(data._ullong);
+				case StoredType::Float:
+					return std::to_string(data._float);
+				case StoredType::Double:
+					return std::to_string(data._double);
+			}
 		}
-		return _strictCast<std::string>(data, currentType);
-	}
-
-	template<>
-	static std::string _strictCast<std::string>(const variantData& data, StoredType currentType) {
 		switch (currentType) {
 			case StoredType::Empty:
 			case StoredType::Void:
@@ -322,9 +297,7 @@ struct Variant {
 				return *data._stringPtr;
 		}
 		return "";
-
 	}
-#pragma endregion
 
 	public:
 	StoredType Type() const { return _currentType; }
@@ -385,10 +358,10 @@ struct Variant {
 		return (_currentType & (StoredType::Int | StoredType::LongLong));
 	};
 
-	void CastTo(StoredType newType);
-	void CastToStrict(StoredType newType);
+	void CastTo(StoredType newType, bool castStrictly = false);
 	std::string Stringify();
 	static Variant FromString(std::string str);
+	
 	//// Operators and constructors
 
 	Variant() { 
@@ -399,17 +372,10 @@ struct Variant {
 		_primitiveData._int = 0;
 		_currentType = type;
 	}
-	Variant(bool data);
-	Variant(int data);
-	Variant(unsigned int data);
-	Variant(long long data);
-	Variant(unsigned long long data);
-	Variant(float data);
-	Variant(double data);
-	Variant(std::string data);
-
 	Variant(const Variant& other);
-	Variant(Variant&& other) noexcept;
+	Variant(Variant&& other) noexcept : Variant() {
+		_swap(*this, other);
+	}
 	~Variant() {
 		Clear();
 	}
@@ -419,29 +385,39 @@ struct Variant {
 		return *this;
 	}
 
+
+	Variant(bool data);
+	Variant(int data);
+	Variant(unsigned int data);
+	Variant(long long data);
+	Variant(unsigned long long data);
+	Variant(float data);
+	Variant(double data);
+	Variant(std::string data);
+
 	operator bool() const {
-		return _weakCast<bool>(_primitiveData, _currentType);
+		return _cast<bool>(_primitiveData, _currentType);
 	};
 	operator int() const {
-		return _weakCast<int>(_primitiveData, _currentType);
+		return _cast<int>(_primitiveData, _currentType);
 	};
 	operator unsigned int() const {
-		return _weakCast<unsigned int>(_primitiveData, _currentType);
+		return _cast<unsigned int>(_primitiveData, _currentType);
 	};
 	operator long long() const {
-		return _weakCast<long long>(_primitiveData, _currentType);
+		return _cast<long long>(_primitiveData, _currentType);
 	};
 	operator unsigned long long() const {
-		return _weakCast<unsigned long long>(_primitiveData, _currentType);
+		return _cast<unsigned long long>(_primitiveData, _currentType);
 	};
 	operator float() const {
-		return _weakCast<float>(_primitiveData, _currentType);
+		return _cast<float>(_primitiveData, _currentType);
 	};
 	operator double() const {
-		return _weakCast<double>(_primitiveData, _currentType);
+		return _cast<double>(_primitiveData, _currentType);
 	};
 	operator std::string() const {
-		return _weakCast<std::string>(_primitiveData, _currentType);
+		return "_cast<std::string>(_primitiveData, _currentType);";
 	};
 
 	friend static bool operator==(const Variant& lhs, const Variant& rhs);

@@ -28,7 +28,7 @@ bool Variant::_same(const Variant& v1, const Variant& v2)
 	return false;
 }
 
-void Variant::CastTo(StoredType newType)
+void Variant::CastTo(StoredType newType, bool castStrictly)
 {
 	switch (newType) {
 		case StoredType::Empty:
@@ -36,49 +36,49 @@ void Variant::CastTo(StoredType newType)
 			Clear();
 			break;
 		case StoredType::Bool: {
-			bool newB = _weakCast<bool>(_primitiveData, _currentType);
+			bool newB = _cast<bool>(_primitiveData, _currentType, castStrictly);
 			Clear();
 			_primitiveData._bool = newB;
 			break;
 		}
 		case StoredType::Int: {
-			int newI = _weakCast<int>(_primitiveData, _currentType);
+			int newI = _cast<int>(_primitiveData, _currentType, castStrictly);
 			Clear();
 			_primitiveData._int = newI;
 			break;
 		}
 		case StoredType::UInt: {
-			unsigned int newUI = _weakCast<unsigned int>(_primitiveData, _currentType);
+			unsigned int newUI = _cast<unsigned int>(_primitiveData, _currentType, castStrictly);
 			Clear();
 			_primitiveData._uint = newUI;
 			break;
 		}
 		case StoredType::LongLong: {
-			long long newLL = _weakCast<long long>(_primitiveData, _currentType);
+			long long newLL = _cast<long long>(_primitiveData, _currentType, castStrictly);
 			Clear();
 			_primitiveData._llong = newLL;
 			break;
 		}
 		case StoredType::ULongLong: {
-			unsigned long long newULL = _weakCast<unsigned long long>(_primitiveData, _currentType);
+			unsigned long long newULL = _cast<unsigned long long>(_primitiveData, _currentType, castStrictly);
 			Clear();
 			_primitiveData._ullong = newULL;
 			break;
 		}
 		case StoredType::Float: {
-			float newF = _weakCast<float>(_primitiveData, _currentType);
+			float newF = _cast<float>(_primitiveData, _currentType, castStrictly);
 			Clear();
 			_primitiveData._float = newF;
 			break;
 		}
 		case StoredType::Double: {
-			double newD = _weakCast<double>(_primitiveData, _currentType);
+			double newD = _cast<double>(_primitiveData, _currentType, castStrictly);
 			Clear();
 			_primitiveData._double = newD;
 			break;
 		}
 		case StoredType::String: {
-			std::string newStr = _weakCast<std::string>(_primitiveData, _currentType);
+			std::string newStr = _cast<std::string>(_primitiveData, _currentType, castStrictly);
 			Clear();
 			_primitiveData._stringPtr = &newStr;
 			break;
@@ -87,63 +87,6 @@ void Variant::CastTo(StoredType newType)
 	_currentType = newType;
 }
 
-void Variant::CastToStrict(StoredType newType) {
-	switch (newType) {
-		case StoredType::Empty:
-		case StoredType::Void:
-			Clear();
-			break;
-		case StoredType::Bool: {
-			bool newB = _strictCast<bool>(_primitiveData, _currentType);
-			Clear();
-			_primitiveData._bool = newB;
-			break;
-		}
-		case StoredType::Int: {
-			int newI = _strictCast<int>(_primitiveData, _currentType);
-			Clear();
-			_primitiveData._int = newI;
-			break;
-		}
-		case StoredType::UInt: {
-			unsigned int newUI = _strictCast<unsigned int>(_primitiveData, _currentType);
-			Clear();
-			_primitiveData._uint = newUI;
-			break;
-		}
-		case StoredType::LongLong: {
-			long long newLL = _strictCast<long long>(_primitiveData, _currentType);
-			Clear();
-			_primitiveData._llong = newLL;
-			break;
-		}
-		case StoredType::ULongLong: {
-			unsigned long long newULL = _strictCast<unsigned long long>(_primitiveData, _currentType);
-			Clear();
-			_primitiveData._ullong = newULL;
-			break;
-		}
-		case StoredType::Float: {
-			float newF = _strictCast<float>(_primitiveData, _currentType);
-			Clear();
-			_primitiveData._float = newF;
-			break;
-		}
-		case StoredType::Double: {
-			double newD = _strictCast<double>(_primitiveData, _currentType);
-			Clear();
-			_primitiveData._double = newD;
-			break;
-		}
-		case StoredType::String: {
-			std::string newStr = _strictCast<std::string>(_primitiveData, _currentType);
-			Clear();
-			_primitiveData._stringPtr = &newStr;
-			break;
-		}
-	}
-	_currentType = newType;
-}
 
 std::string Variant::Stringify()
 {
@@ -206,10 +149,6 @@ Variant::Variant(const Variant& other)
 		_currentType = other._currentType;
 		_primitiveData = other._primitiveData;
 	}
-}
-
-Variant::Variant(Variant&& other) noexcept : Variant() {
-	_swap(*this, other);
 }
 
 static bool operator==(const Variant& lhs, const Variant& rhs) {
