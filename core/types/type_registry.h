@@ -189,11 +189,6 @@ namespace engine_type_registry {
 		static class_id register_new_class(string new_class_name, string parent_class_name = "Object");
 		static class_id get_registered_class_name(string c_name);
 
-		template <typename EnumType>
-		static void class_register_enum(class_id c_id, string enum_name) {
-			
-		};
-
 		template <typename R, typename T, typename... Args> requires IsDerivedFromObject<T>
 		static void class_expose_method(class_id c_id, ClassMethodDescription methodInfo, R(T::* func)(Args...)) {
 			if (_registered_classes[c_id]._methods.contains(methodInfo.methodName)) {

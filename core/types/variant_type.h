@@ -1,6 +1,12 @@
 #pragma once
 #include <string>
 #include "core/globals.h"
+#include <concepts>
+#include <type_traits>
+
+template <typename T>
+concept IsIntegerEnum = (std::is_enum<T>::value) && (std::is_same_v<std::underlying_type_t<T>, int>);
+
 
 // Implementation of a variant data type, which can dynamically hold primitve data types, used to correctly cast data for use with RTTI.
 struct Variant {
@@ -417,8 +423,20 @@ struct Variant {
 		return _cast<double>(_primitiveData, _currentType);
 	};
 	operator std::string() const {
-		return "_cast<std::string>(_primitiveData, _currentType);";
+		return _cast<std::string>(_primitiveData, _currentType);
 	};
+
+	// Enum conversions (Enum values in a variant are stored as an int)
+	template <typename E> requires IsIntegerEnum<E>
+	Variant(E data) noexcept {
+		_primitiveData._int = static_cast<int>(data);
+		_currentType = StoredType::Int;
+	}
+
+	template <typename E> requires IsIntegerEnum<E>
+	operator E() const noexcept {
+		return static_cast<E>(_primitiveData._int);
+	}
 
 	friend static bool operator==(const Variant& lhs, const Variant& rhs);
 };
