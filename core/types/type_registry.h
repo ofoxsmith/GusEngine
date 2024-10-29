@@ -196,6 +196,7 @@ namespace engine_type_registry {
 				return;
 			}
 			_registered_classes[c_id]._methods[methodInfo.methodName] = new BindedClassMethodDefinition<R, T, Args...>(func, methodInfo);
+			return;
 		};
 
 		// Overload to expose member functions declared const
@@ -206,6 +207,7 @@ namespace engine_type_registry {
 				return;
 			}
 			_registered_classes[c_id]._methods[methodInfo.methodName] = new BindedClassMethodDefinition<R, T, Args...>(func, methodInfo);
+			return;
 		};
 
 		static void class_define_property(class_id c_id, ClassPropertyDefinition def);
@@ -216,13 +218,15 @@ namespace engine_type_registry {
 				std::cout << endl;
 				std::cout << "Class: '" << value._className << "' " << value._classId << endl;
 
+				std::cout << "Methods:" << endl;
 				for (const auto& [k, method] : value._methods) {
-					std::cout << enum_get_underlying(method->methodMetadata.returnType) << " " << value._className << "::" << method->methodMetadata.methodName << "()" << endl;
+					std::cout << Variant::VariantTypeToString(method->methodMetadata.returnType) << " " << value._className << "::" << method->methodMetadata.methodName << "()" << endl;
 					std::cout << "Required args:" << method->methodMetadata.requiredArgCount << endl;
 				}
 
+				std::cout << "Properties:" << endl;
 				for (const auto& [k, prop] : value._properties) {
-					std::cout << enum_get_underlying(prop.type) << " " << value._className << "::" << prop.propertyName << endl;
+					std::cout << Variant::VariantTypeToString(prop.type) << " " << value._className << "::" << prop.propertyName << endl;
 					std::cout << "getter, setter = " << prop.getterName << "()  " << prop.setterName << "()" << endl;
 				}
 

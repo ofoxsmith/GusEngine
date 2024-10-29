@@ -30,6 +30,33 @@ struct Variant {
 
 	};
 
+	inline static string VariantTypeToString(StoredType type) {
+		switch (type) {
+			case StoredType::Empty:
+				return "Empty";
+			case StoredType::Void:
+				return "Void";
+			case StoredType::Bool:
+				return "Bool";
+			case StoredType::Int:
+				return "Int";
+			case StoredType::UInt:
+				return "UInt";
+			case StoredType::LongLong:
+				return "LongLong";
+			case StoredType::ULongLong:
+				return "ULongLong";
+			case StoredType::Float:
+				return "Float";
+			case StoredType::Double:
+				return "Double";
+			case StoredType::String:
+				return "String";
+			default:
+				return "";
+		}
+	}
+
 	private:
 
 	union variantData {
