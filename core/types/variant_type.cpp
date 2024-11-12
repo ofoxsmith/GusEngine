@@ -28,7 +28,7 @@ bool Variant::_same(const Variant& v1, const Variant& v2)
 	return false;
 }
 
-void Variant::CastTo(StoredType newType, bool castStrictly)
+void Variant::CastTo(StoredType newType)
 {
 	switch (newType) {
 		case StoredType::Empty:
@@ -36,49 +36,49 @@ void Variant::CastTo(StoredType newType, bool castStrictly)
 			Clear();
 			break;
 		case StoredType::Bool: {
-			bool newB = _cast<bool>(_primitiveData, _currentType, castStrictly);
+			bool newB = operator bool();
 			Clear();
 			_primitiveData._bool = newB;
 			break;
 		}
 		case StoredType::Int: {
-			int newI = _cast<int>(_primitiveData, _currentType, castStrictly);
+			int newI = operator int();
 			Clear();
 			_primitiveData._int = newI;
 			break;
 		}
 		case StoredType::UInt: {
-			unsigned int newUI = _cast<unsigned int>(_primitiveData, _currentType, castStrictly);
+			unsigned int newUI = operator unsigned int();
 			Clear();
 			_primitiveData._uint = newUI;
 			break;
 		}
 		case StoredType::LongLong: {
-			long long newLL = _cast<long long>(_primitiveData, _currentType, castStrictly);
+			long long newLL = operator long long();
 			Clear();
 			_primitiveData._llong = newLL;
 			break;
 		}
 		case StoredType::ULongLong: {
-			unsigned long long newULL = _cast<unsigned long long>(_primitiveData, _currentType, castStrictly);
+			unsigned long long newULL = operator unsigned long long();
 			Clear();
 			_primitiveData._ullong = newULL;
 			break;
 		}
 		case StoredType::Float: {
-			float newF = _cast<float>(_primitiveData, _currentType, castStrictly);
+			float newF = operator float();
 			Clear();
 			_primitiveData._float = newF;
 			break;
 		}
 		case StoredType::Double: {
-			double newD = _cast<double>(_primitiveData, _currentType, castStrictly);
+			double newD = operator double();
 			Clear();
 			_primitiveData._double = newD;
 			break;
 		}
 		case StoredType::String: {
-			std::string newStr = _cast<std::string>(_primitiveData, _currentType, castStrictly);
+			std::string newStr = operator string();
 			Clear();
 			_primitiveData._stringPtr = &newStr;
 			break;
@@ -87,8 +87,18 @@ void Variant::CastTo(StoredType newType, bool castStrictly)
 	_currentType = newType;
 }
 
+char* Variant::BinarySerialise(Variant v)
+{
+	char* data;
+	return nullptr;
+}
 
-std::string Variant::Stringify()
+Variant Variant::FromBinary(char* bin)
+{
+	return Variant();
+}
+
+std::string Variant::StringSerialise(Variant v)
 {
 	return std::string();
 }
@@ -97,6 +107,7 @@ Variant Variant::FromString(std::string str)
 {
 	return Variant();
 }
+
 
 Variant::Variant(bool data) {
 	_primitiveData._bool = data; 
@@ -152,7 +163,7 @@ Variant::Variant(const Variant& other)
 }
 
 static bool operator==(const Variant& lhs, const Variant& rhs) {
-	return (lhs.Type() == rhs.Type() && Variant::_same(lhs, rhs));
+	return (Variant::_same(lhs, rhs));
 }
 
 static bool operator!=(const Variant& lhs, const Variant& rhs) {

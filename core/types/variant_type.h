@@ -82,256 +82,6 @@ struct Variant {
 
 	static bool _same(const Variant& v1, const Variant& v2);
 
-	// Each supported type has an _cast method, converts it to other Variant data types.
-	// If strictCast is false, weak casts which could result in an unexpected value/data loss are used.
-	// If strictCast is true, stricter casting rules are used, which guarantee to safely cast between types without data loss.
-	template <typename T>
-	static T _cast(const variantData& data, StoredType currentType, bool strictCast = false) {
-		static_assert(sizeof(T) == 0, "Only specializations of _cast can be used");
-	};
-
-	template <> static bool _cast<bool>(const variantData& data, StoredType currentType, bool strictCast) {
-		if (!strictCast) {
-			switch (currentType) {
-				case StoredType::String:
-					return *data._stringPtr == "true";
-			}
-		}
-
-		switch (currentType) {
-			case StoredType::Empty:
-			case StoredType::Void:
-				return false;
-			case StoredType::Bool:
-				return data._bool;
-			case StoredType::Int:
-				return data._int;
-			case StoredType::UInt:
-				return data._uint;
-			case StoredType::LongLong:
-				return data._llong;
-			case StoredType::ULongLong:
-				return data._ullong;
-			case StoredType::Float:
-				return data._float;
-			case StoredType::Double:
-				return data._double;
-		}
-		return false;
-	}
-
-	template <> 
-	static int _cast<int>(const variantData& data, StoredType currentType, bool strictCast) {
-		if (!strictCast) {
-			switch (currentType) {
-				case StoredType::LongLong:
-					return static_cast<int>(data._llong);
-				case StoredType::ULongLong:
-					return static_cast<int>(data._ullong);
-				case StoredType::Float:
-					return static_cast<int>(data._float);
-				case StoredType::Double:
-					return static_cast<int>(data._double);
-				case StoredType::String:
-					return std::stoi(*data._stringPtr);
-			}
-		}
-
-		switch (currentType) {
-			case StoredType::Empty:
-			case StoredType::Void:
-				return 0;
-			case StoredType::Bool:
-				return data._bool;
-			case StoredType::Int:
-				return data._int;
-			case StoredType::UInt:
-				return data._uint;
-		}
-		return 0;
-
-	}
-
-	template <> 
-	static unsigned int _cast<unsigned int>(const variantData& data, StoredType currentType, bool strictCast) {
-		if (!strictCast) {
-			switch (currentType) {
-				case StoredType::LongLong:
-					return static_cast<unsigned int>(data._llong);
-				case StoredType::ULongLong:
-					return static_cast<unsigned int>(data._ullong);
-				case StoredType::Float:
-					return static_cast<unsigned int>(data._float);
-				case StoredType::Double:
-					return static_cast<unsigned int>(data._double);
-				case StoredType::String:
-					return std::stoul(*data._stringPtr);
-			}
-		}
-
-		switch (currentType) {
-			case StoredType::Empty:
-			case StoredType::Void:
-				return 0;
-			case StoredType::Bool:
-				return data._bool;
-			case StoredType::Int:
-				return data._int;
-			case StoredType::UInt:
-				return data._uint;
-		}
-		return 0;
-	}
-
-	template <> static long long _cast<long long>(const variantData& data, StoredType currentType, bool strictCast) {
-		if (!strictCast) {
-			switch (currentType) {
-				case StoredType::Float:
-					return static_cast<long long>(data._float);
-				case StoredType::Double:
-					return static_cast<long long>(data._double);
-				case StoredType::String:
-					return std::stoll(*data._stringPtr);
-			}
-		}
-		switch (currentType) {
-			case StoredType::Empty:
-			case StoredType::Void:
-				return 0;
-			case StoredType::Bool:
-				return data._bool;
-			case StoredType::Int:
-				return data._int;
-			case StoredType::UInt:
-				return data._uint;
-			case StoredType::LongLong:
-				return data._llong;
-			case StoredType::ULongLong:
-				return data._ullong;
-		}
-		return 0;
-	}
-
-	template <> 
-	static unsigned long long _cast<unsigned long long>(const variantData& data, StoredType currentType, bool strictCast) {
-		if (!strictCast) {
-			switch (currentType) {
-				case StoredType::Float:
-					return static_cast<unsigned long long>(data._float);
-				case StoredType::Double:
-					return static_cast<unsigned long long>(data._double);
-				case StoredType::String:
-					return std::stoull(*data._stringPtr);
-			}
-		}
-
-		switch (currentType) {
-			case StoredType::Empty:
-			case StoredType::Void:
-				return 0;
-			case StoredType::Bool:
-				return data._bool;
-			case StoredType::Int:
-				return data._int;
-			case StoredType::UInt:
-				return data._uint;
-			case StoredType::LongLong:
-				return data._llong;
-			case StoredType::ULongLong:
-				return data._ullong;
-		}
-		return 0;
-
-	}
-
-	template <> static float _cast<float>(const variantData& data, StoredType currentType, bool strictCast) {
-		if (!strictCast) {
-			switch (currentType) {
-				case StoredType::Int:
-					return static_cast<float>(data._int);
-				case StoredType::UInt:
-					return static_cast<float>(data._uint);
-				case StoredType::LongLong:
-					return static_cast<float>(data._llong);
-				case StoredType::ULongLong:
-					return static_cast<float>(data._ullong);
-				case StoredType::Double:
-					return static_cast<float>(data._double);
-				case StoredType::String:
-					return std::stof(*data._stringPtr);
-			}
-		}
-		switch (currentType) {
-			case StoredType::Empty:
-			case StoredType::Void:
-				return 0;
-			case StoredType::Bool:
-				return data._bool;
-			case StoredType::Float:
-				return data._float;
-		}
-		return 0;
-	}
-
-	template <> static double _cast<double>(const variantData& data, StoredType currentType, bool strictCast) {
-		if (!strictCast) {
-			switch (currentType) {
-				case StoredType::LongLong:
-					return static_cast<double>(data._llong);
-				case StoredType::ULongLong:
-					return static_cast<double>(data._ullong);
-				case StoredType::Float:
-					return static_cast<double>(data._float);
-				case StoredType::String:
-					return std::stod(*data._stringPtr);
-			}
-		}
-		switch (currentType) {
-			case StoredType::Empty:
-			case StoredType::Void:
-				return 0;
-			case StoredType::Bool:
-				return data._bool;
-			case StoredType::Int:
-				return data._int;
-			case StoredType::UInt:
-				return data._uint;
-			case StoredType::Double:
-				return data._double;
-		}
-		return 0;
-
-	}
-
-	template <> static std::string _cast<std::string>(const variantData& data, StoredType currentType, bool strictCast) {
-		if (!strictCast) {
-			switch (currentType) {
-				case StoredType::Int:
-					return std::to_string(data._int);
-				case StoredType::UInt:
-					return std::to_string(data._uint);
-				case StoredType::LongLong:
-					return std::to_string(data._llong);
-				case StoredType::ULongLong:
-					return std::to_string(data._ullong);
-				case StoredType::Float:
-					return std::to_string(data._float);
-				case StoredType::Double:
-					return std::to_string(data._double);
-			}
-		}
-		switch (currentType) {
-			case StoredType::Empty:
-			case StoredType::Void:
-				return "";
-			case StoredType::Bool:
-				return data._bool ? "true" : "false";
-			case StoredType::String:
-				return *data._stringPtr;
-		}
-		return "";
-	}
-
 	public:
 	StoredType Type() const { return _currentType; }
 
@@ -351,27 +101,11 @@ struct Variant {
 	bool IsValueFalseLike() inline const {
 		if (IsEmptyOrVoid()) return true;
 		switch (_currentType) {
-			case StoredType::Empty:
-			case StoredType::Void:
-				return false;
-			case StoredType::Bool:
-				return _primitiveData._bool;
-			case StoredType::Int:
-				return _primitiveData._int == 0;
-			case StoredType::UInt:
-				return _primitiveData._uint == 0;
-			case StoredType::LongLong:
-				return _primitiveData._llong == 0;
-			case StoredType::ULongLong:
-				return _primitiveData._ullong == 0;
-			case StoredType::Float:
-				return _primitiveData._float == 0;
-			case StoredType::Double:
-				return _primitiveData._double == 0;
 			case StoredType::String:
 				return (_primitiveData._stringPtr)->empty();
+			default:
+				return operator bool() == false;
 		}
-		return false;
 	}
 
 
@@ -391,8 +125,10 @@ struct Variant {
 		return (_currentType & (StoredType::Int | StoredType::LongLong));
 	};
 
-	void CastTo(StoredType newType, bool castStrictly = false);
-	std::string Stringify();
+	void CastTo(StoredType newType);
+	char* BinarySerialise(Variant v);
+	static Variant FromBinary(char* bin);
+	static std::string StringSerialise(Variant v);
 	static Variant FromString(std::string str);
 	
 	//// Operators and constructors
@@ -429,28 +165,185 @@ struct Variant {
 	Variant(std::string data);
 
 	operator bool() const {
-		return _cast<bool>(_primitiveData, _currentType);
+		switch (_currentType) {
+			case StoredType::Empty:
+			case StoredType::Void:
+				return false;
+			case StoredType::Bool:
+				return _primitiveData._bool;
+			case StoredType::Int:
+				return _primitiveData._int;
+			case StoredType::UInt:
+				return _primitiveData._uint;
+			case StoredType::LongLong:
+				return _primitiveData._llong;
+			case StoredType::ULongLong:
+				return _primitiveData._ullong;
+			case StoredType::Float:
+				return _primitiveData._float;
+			case StoredType::Double:
+				return _primitiveData._double;
+		}
+		return false;
 	};
 	operator int() const {
-		return _cast<int>(_primitiveData, _currentType);
+		switch (_currentType) {
+			case StoredType::Empty:
+			case StoredType::Void:
+				return 0;
+			case StoredType::LongLong:
+				return static_cast<int>(_primitiveData._llong);
+			case StoredType::ULongLong:
+				return static_cast<int>(_primitiveData._ullong);
+			case StoredType::Float:
+				return static_cast<int>(_primitiveData._float);
+			case StoredType::Double:
+				return static_cast<int>(_primitiveData._double);
+			case StoredType::Bool:
+				return _primitiveData._bool;
+			case StoredType::Int:
+				return _primitiveData._int;
+			case StoredType::UInt:
+				return _primitiveData._uint;
+		}
+		return 0;
 	};
 	operator unsigned int() const {
-		return _cast<unsigned int>(_primitiveData, _currentType);
+		switch (_currentType) {
+			case StoredType::Empty:
+			case StoredType::Void:
+				return 0;
+			case StoredType::Bool:
+				return _primitiveData._bool;
+			case StoredType::Int:
+				return _primitiveData._int;
+			case StoredType::UInt:
+				return _primitiveData._uint;
+			case StoredType::LongLong:
+				return static_cast<unsigned int>(_primitiveData._llong);
+			case StoredType::ULongLong:
+				return static_cast<unsigned int>(_primitiveData._ullong);
+			case StoredType::Float:
+				return static_cast<unsigned int>(_primitiveData._float);
+			case StoredType::Double:
+				return static_cast<unsigned int>(_primitiveData._double);
+		}
+		return 0;
 	};
+
 	operator long long() const {
-		return _cast<long long>(_primitiveData, _currentType);
+		switch (_currentType) {
+			case StoredType::Empty:
+			case StoredType::Void:
+				return 0;
+			case StoredType::Bool:
+				return _primitiveData._bool;
+			case StoredType::Int:
+				return _primitiveData._int;
+			case StoredType::UInt:
+				return _primitiveData._uint;
+			case StoredType::LongLong:
+				return _primitiveData._llong;
+			case StoredType::ULongLong:
+				return _primitiveData._ullong;
+			case StoredType::Float:
+				return static_cast<long long>(_primitiveData._float);
+			case StoredType::Double:
+				return static_cast<long long>(_primitiveData._double);
+		}
+		return 0;
+
 	};
 	operator unsigned long long() const {
-		return _cast<unsigned long long>(_primitiveData, _currentType);
-	};
+		switch (_currentType) {
+			case StoredType::Empty:
+			case StoredType::Void:
+				return 0;
+			case StoredType::Bool:
+				return _primitiveData._bool;
+			case StoredType::Int:
+				return _primitiveData._int;
+			case StoredType::UInt:
+				return _primitiveData._uint;
+			case StoredType::LongLong:
+				return _primitiveData._llong;
+			case StoredType::ULongLong:
+				return _primitiveData._ullong;
+			case StoredType::Float:
+				return static_cast<unsigned long long>(_primitiveData._float);
+			case StoredType::Double:
+				return static_cast<unsigned long long>(_primitiveData._double);
+		}
+		return 0;
+	}
 	operator float() const {
-		return _cast<float>(_primitiveData, _currentType);
+		switch (_currentType) {
+			case StoredType::Empty:
+			case StoredType::Void:
+				return 0;
+			case StoredType::Bool:
+				return _primitiveData._bool;
+			case StoredType::Int:
+				return static_cast<float>(_primitiveData._int);
+			case StoredType::UInt:
+				return static_cast<float>(_primitiveData._uint);
+			case StoredType::LongLong:
+				return static_cast<float>(_primitiveData._llong);
+			case StoredType::ULongLong:
+				return static_cast<float>(_primitiveData._ullong);
+			case StoredType::Double:
+				return static_cast<float>(_primitiveData._double);
+			case StoredType::Float:
+				return _primitiveData._float;
+		}
+		return 0;
 	};
 	operator double() const {
-		return _cast<double>(_primitiveData, _currentType);
+		switch (_currentType) {
+			case StoredType::Empty:
+			case StoredType::Void:
+				return 0;
+			case StoredType::Bool:
+				return _primitiveData._bool;
+			case StoredType::Int:
+				return _primitiveData._int;
+			case StoredType::UInt:
+				return _primitiveData._uint;
+			case StoredType::Double:
+				return _primitiveData._double;
+			case StoredType::LongLong:
+				return static_cast<double>(_primitiveData._llong);
+			case StoredType::ULongLong:
+				return static_cast<double>(_primitiveData._ullong);
+			case StoredType::Float:
+				return static_cast<double>(_primitiveData._float);
+		}
+		return 0;
 	};
+
 	operator std::string() const {
-		return _cast<std::string>(_primitiveData, _currentType);
+		switch (_currentType) {
+			case StoredType::Empty:
+			case StoredType::Void:
+				return "";
+			case StoredType::Bool:
+				return _primitiveData._bool ? "true" : "false";
+			case StoredType::Int:
+				return std::to_string(_primitiveData._int);
+			case StoredType::UInt:
+				return std::to_string(_primitiveData._uint);
+			case StoredType::LongLong:
+				return std::to_string(_primitiveData._llong);
+			case StoredType::ULongLong:
+				return std::to_string(_primitiveData._ullong);
+			case StoredType::Float:
+				return std::to_string(_primitiveData._float);
+			case StoredType::Double:
+				return std::to_string(_primitiveData._double);
+			case StoredType::String:
+				return *_primitiveData._stringPtr;
+		}
+
 	};
 
 	// Enum conversions (Enum values in a variant are stored as an int)
