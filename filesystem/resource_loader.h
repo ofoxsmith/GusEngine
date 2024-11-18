@@ -1,6 +1,6 @@
 #pragma once
 #include "core/globals.h"
-#include "project/resources/resource.h"
+#include "core/types/resource.h"
 #include <unordered_map>
 #include "filesystem/engine_data_cache.h"
 

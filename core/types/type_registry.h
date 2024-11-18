@@ -16,11 +16,6 @@
 using namespace std;
 
 // This namespace contains macros, methods, and classes used to provide detailed runtime type information (RTTI) to the engine.
-namespace engine_type_registry {
-	typedef string data_type;
-	typedef unsigned int class_id;
-}
-
 #define GUS_DECLARE_CLASS(NAME, DERIVED) \
 friend void engine_type_registry::type_registry::register_all_types(); \
 static void _register_type(); \
@@ -93,40 +88,10 @@ static Variant call_class_method_helper(T* obj, R(T::* method)(Args...) const, c
 }
 
 namespace engine_type_registry {
-	struct ClassPropertyDefinition {
-		string propertyName = "";
-		Variant::StoredType type = Variant::StoredType::Void;
-		bool isReadOnly = false;
-		string getterName = "";
-		string setterName = "";
-		ClassPropertyDefinition() {}
-		ClassPropertyDefinition(string propName, Variant::StoredType ty, bool readOnly, string getter, string setter = "") {
-			propertyName = propName;
-			type = ty;
-			isReadOnly = readOnly;
-			getterName = getter;
-			setterName = setter;
-		}
-	};
-
-	struct ClassMethodDescription {
-		string methodName = "";
-		Variant::StoredType returnType = Variant::StoredType::Void;
-		int requiredArgCount = 0;
-		vector<Variant> defaultArgValues{};
-		ClassMethodDescription() {}
-		ClassMethodDescription(string name, Variant::StoredType rType, int reqArgCount = 0, vector<Variant> defaultArgs = {}) {
-			methodName = name;
-			returnType = rType;
-			requiredArgCount = reqArgCount;
-			defaultArgValues = defaultArgs;
-		}
-	};
-
 	class ClassMethodDefinition {
 		public:
-		ClassMethodDescription methodMetadata;
-		ClassMethodDefinition(ClassMethodDescription methodInfo) {
+		ObjectRTTIModel::ObjectMethodDefinition methodMetadata;
+		ClassMethodDefinition(ObjectRTTIModel::ObjectMethodDefinition methodInfo) {
 			methodMetadata = methodInfo;
 		}
 
@@ -154,11 +119,11 @@ namespace engine_type_registry {
 			return result;
 		}
 
-		BindedClassMethodDefinition(R(T::* met)(Args...) const, ClassMethodDescription methodInfo): ClassMethodDefinition(methodInfo) {
+		BindedClassMethodDefinition(R(T::* met)(Args...) const, ObjectRTTIModel::ObjectMethodDefinition methodInfo): ClassMethodDefinition(methodInfo) {
 			constMethod = met;
 			_isConst = true;
 		}
-		BindedClassMethodDefinition(R(T::* met)(Args...), ClassMethodDescription methodInfo) : ClassMethodDefinition(methodInfo) {
+		BindedClassMethodDefinition(R(T::* met)(Args...), ObjectRTTIModel::ObjectMethodDefinition methodInfo) : ClassMethodDefinition(methodInfo) {
 			method = met;
 			_isConst = false;
 		}
@@ -168,55 +133,51 @@ namespace engine_type_registry {
 		friend class type_registry;
 		private:
 		string _className = "";
-		class_id _classId = -1;
+
 		map<string, ClassMethodDefinition*> _methods{};
-		map<string, ClassPropertyDefinition> _properties{};
+		map<string, ObjectRTTIModel::ObjectPropertyDefinition> _properties{};
 		public:
 		string GetName() const { return _className; }
-		class_id GetId() const { return _classId; }
 		bool HasMethod(string methodName) const { return _methods.contains(methodName); }
 	};
 
 	class type_registry {
 		private:
-		static class_id _currentId;
-		static map<class_id, EngineClass> _registered_classes;
-		static map<string, class_id> _registered_classes_names;
+		static map<string, EngineClass> _registered_classes;
 		public:
 		static void register_all_types();
 
 
-		static class_id register_new_class(string new_class_name, string parent_class_name = "Object");
-		static class_id get_registered_class_name(string c_name);
+		static void register_new_class(string new_class_name, string parent_class_name = "Object");
 
 		template <typename R, typename T, typename... Args> requires IsDerivedFromObject<T>
-		static void class_expose_method(class_id c_id, ClassMethodDescription methodInfo, R(T::* func)(Args...)) {
-			if (_registered_classes[c_id]._methods.contains(methodInfo.methodName)) {
-				Log.Warn("TypeRegistry", "Attempted to redefine method " + _registered_classes[c_id]._className + "::" + methodInfo.methodName);
+		static void class_expose_method(string class_name, ObjectRTTIModel::ObjectMethodDefinition methodInfo, R(T::* func)(Args...)) {
+			if (_registered_classes[class_name]._methods.contains(methodInfo.methodName)) {
+				Log.Warn("TypeRegistry", "Attempted to redefine method " + class_name + "::" + methodInfo.methodName);
 				return;
 			}
-			_registered_classes[c_id]._methods[methodInfo.methodName] = new BindedClassMethodDefinition<R, T, Args...>(func, methodInfo);
+			_registered_classes[class_name]._methods[methodInfo.methodName] = new BindedClassMethodDefinition<R, T, Args...>(func, methodInfo);
 			return;
 		};
 
 		// Overload to expose member functions declared const
 		template <typename R, typename T, typename... Args> requires IsDerivedFromObject<T>
-		static void class_expose_method(class_id c_id, ClassMethodDescription methodInfo, R(T::* func)(Args...) const) {
-			if (_registered_classes[c_id]._methods.contains(methodInfo.methodName)) {
-				Log.Warn("TypeRegistry", "Attempted to redefine method " + _registered_classes[c_id]._className + "::" + methodInfo.methodName);
+		static void class_expose_method(string class_name, ObjectRTTIModel::ObjectMethodDefinition methodInfo, R(T::* func)(Args...) const) {
+			if (_registered_classes[class_name]._methods.contains(methodInfo.methodName)) {
+				Log.Warn("TypeRegistry", "Attempted to redefine method " + class_name + "::" + methodInfo.methodName);
 				return;
 			}
-			_registered_classes[c_id]._methods[methodInfo.methodName] = new BindedClassMethodDefinition<R, T, Args...>(func, methodInfo);
+			_registered_classes[class_name]._methods[methodInfo.methodName] = new BindedClassMethodDefinition<R, T, Args...>(func, methodInfo);
 			return;
 		};
 
-		static void class_define_property(class_id c_id, ClassPropertyDefinition def);
+		static void class_define_property(string class_name, ObjectRTTIModel::ObjectPropertyDefinition def);
 
 
 		static void log_all_type_data_debug() {
 			for (const auto& [key, value] : _registered_classes) {
 				std::cout << endl;
-				std::cout << "Class: '" << value._className << "' " << value._classId << endl;
+				std::cout << "Class: '" << value._className << endl;
 
 				std::cout << "Methods:" << endl;
 				for (const auto& [k, method] : value._methods) {

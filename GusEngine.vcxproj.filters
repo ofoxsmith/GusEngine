@@ -36,7 +36,7 @@
     <ClCompile Include="core\engine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project\resources\resource.cpp">
+    <ClCompile Include="core\types\resource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="filesystem\resource_loader.cpp">
@@ -63,6 +63,9 @@
     <ClCompile Include="core\types\variant_type.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="filesystem\engine_io.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="filesystem\file_helpers.h">
@@ -83,7 +86,7 @@
     <ClInclude Include="core\engine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project\resources\resource.h">
+    <ClInclude Include="core\types\resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="filesystem\resource_loader.h">
@@ -108,6 +111,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="core\types\variant_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="filesystem\engine_io.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

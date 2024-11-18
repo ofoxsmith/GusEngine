@@ -36,17 +36,17 @@ VkShaderModule resources::Shader::GetShaderModule(VkDevice device)
 
 void resources::Shader::_register_type() {
 	using namespace engine_type_registry;
-	class_id cId = type_registry::register_new_class("Shader", "PropertyResource");
-	//type_registry::class_expose_method(cId, "GetShaderSPIRV", "vector<uint32_t>", &Shader::GetShaderSPIRV);
-	type_registry::class_expose_method(cId, ClassMethodDescription("SetLanguage", Variant::StoredType::Void), &Shader::SetLanguage);
-	type_registry::class_expose_method(cId, ClassMethodDescription("GetLanguage", Variant::StoredType::Int), &Shader::GetLanguage);
-	type_registry::class_expose_method(cId, ClassMethodDescription("SetStage", Variant::StoredType::Void), &Shader::SetStage);
-	type_registry::class_expose_method(cId, ClassMethodDescription("GetStage", Variant::StoredType::Int), &Shader::GetStage);
+	type_registry::register_new_class("Shader", "PropertyResource");
+	//type_registry::class_expose_method("Shader", "GetShaderSPIRV", "vector<uint32_t>", &Shader::GetShaderSPIRV);
+	type_registry::class_expose_method("Shader", ObjectRTTIModel::ObjectMethodDefinition("SetLanguage", Variant::StoredType::Void), &Shader::SetLanguage);
+	type_registry::class_expose_method("Shader", ObjectRTTIModel::ObjectMethodDefinition("GetLanguage", Variant::StoredType::Int), &Shader::GetLanguage);
+	type_registry::class_expose_method("Shader", ObjectRTTIModel::ObjectMethodDefinition("SetStage", Variant::StoredType::Void), &Shader::SetStage);
+	type_registry::class_expose_method("Shader", ObjectRTTIModel::ObjectMethodDefinition("GetStage", Variant::StoredType::Int), &Shader::GetStage);
 	
-	ClassPropertyDefinition langProp = ClassPropertyDefinition("Language", Variant::StoredType::Int, false, "GetLanguage", "SetLanguage");
-	ClassPropertyDefinition stageProp = ClassPropertyDefinition("Stage", Variant::StoredType::Int, false, "GetStage", "SetStage");
-	type_registry::class_define_property(cId, langProp);
-	type_registry::class_define_property(cId, stageProp);
+	ObjectRTTIModel::ObjectPropertyDefinition langProp = ObjectRTTIModel::ObjectPropertyDefinition("Language", Variant::StoredType::Int, false, "GetLanguage", "SetLanguage");
+	ObjectRTTIModel::ObjectPropertyDefinition stageProp = ObjectRTTIModel::ObjectPropertyDefinition("Stage", Variant::StoredType::Int, false, "GetStage", "SetStage");
+	type_registry::class_define_property("Shader", langProp);
+	type_registry::class_define_property("Shader", stageProp);
 }
 
 vector<uint32_t> resources::Shader::CompileGLSLtoSPIRV(const std::string& source, ShaderResourceOptions::ShaderLanguage lang, ShaderResourceOptions::ShaderStage type)

@@ -152,12 +152,13 @@
     <ClCompile Include="core\types\type_registry.cpp" />
     <ClCompile Include="core\vkGraphics.cpp" />
     <ClCompile Include="core\engine.cpp" />
+    <ClCompile Include="filesystem\engine_io.cpp" />
     <ClCompile Include="filesystem\res_fileparser.cpp" />
     <ClCompile Include="filesystem\engine_data_cache.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="filesystem\file_helpers.cpp" />
     <ClCompile Include="project\project.cpp" />
-    <ClCompile Include="project\resources\resource.cpp" />
+    <ClCompile Include="core\types\resource.cpp" />
     <ClCompile Include="filesystem\resource_loader.cpp" />
     <ClCompile Include="project\resources\shader.cpp" />
     <ClCompile Include="project\resources\propertyResource.cpp" />
@@ -170,13 +171,14 @@
     <ClInclude Include="core\types\type_registry.h" />
     <ClInclude Include="core\vkGraphics.h" />
     <ClInclude Include="core\engine.h" />
+    <ClInclude Include="filesystem\engine_io.h" />
     <ClInclude Include="filesystem\file_helpers.h" />
     <ClInclude Include="filesystem\engine_data_cache.h" />
     <ClInclude Include="filesystem\res_fileparser.h" />
     <ClInclude Include="project\project.h" />
     <ClInclude Include="project\resources\propertyResource.h" />
     <ClInclude Include="project\resources\shader.h" />
-    <ClInclude Include="project\resources\resource.h" />
+    <ClInclude Include="core\types\resource.h" />
     <ClInclude Include="filesystem\resource_loader.h" />
     <ClInclude Include="utils\logger.h" />
   </ItemGroup>
