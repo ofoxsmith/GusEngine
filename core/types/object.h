@@ -40,8 +40,9 @@ class Object {
 	protected:
 
 	public:
-	string _ClassName();
-	bool _DerivedFrom(string className);
+	virtual string _ClassName() { return "Object"; };
+	virtual string _DerivedFrom() { return ""; };
+	bool _IsDerivedFrom(string className);
 
 	std::vector<ObjectRTTIModel::ObjectMethodDefinition> _GetMethodList();
 	bool _HasMethod(string methodName);

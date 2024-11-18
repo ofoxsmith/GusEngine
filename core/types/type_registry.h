@@ -19,8 +19,8 @@ using namespace std;
 #define GUS_DECLARE_CLASS(NAME, DERIVED) \
 friend void engine_type_registry::type_registry::register_all_types(); \
 static void _register_type(); \
-static string _get_type() {return #NAME; } \
-static string _get_parent_type() {return #DERIVED; } \
+string _ClassName() override {return #NAME; } \
+string _DerivedFrom() override {return #DERIVED; } \
 
 template <class Type>
 concept IsDerivedFromObject = std::is_base_of<Object, Type>::value;
@@ -118,7 +118,7 @@ namespace engine_type_registry {
 			}
 			return result;
 		}
-
+		
 		BindedClassMethodDefinition(R(T::* met)(Args...) const, ObjectRTTIModel::ObjectMethodDefinition methodInfo): ClassMethodDefinition(methodInfo) {
 			constMethod = met;
 			_isConst = true;
@@ -133,7 +133,7 @@ namespace engine_type_registry {
 		friend class type_registry;
 		private:
 		string _className = "";
-
+		string _parentClassName = "";
 		map<string, ClassMethodDefinition*> _methods{};
 		map<string, ObjectRTTIModel::ObjectPropertyDefinition> _properties{};
 		public:
