@@ -86,7 +86,7 @@ struct Variant {
 	StoredType Type() const { return _currentType; }
 
 	void Clear() {
-		if (_currentType & StoredType::String) {
+		if (_currentType == StoredType::String) {
 			delete _primitiveData._stringPtr;
 		}
 		_currentType = StoredType::Empty;

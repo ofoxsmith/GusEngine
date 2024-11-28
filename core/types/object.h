@@ -1,6 +1,7 @@
 #pragma once
 #include "variant_type.h"
 #include <vector>
+#include <map>
 // Base class for everything, provides RTTI and engine boilerplate.
 
 namespace ObjectRTTIModel {
@@ -37,6 +38,9 @@ namespace ObjectRTTIModel {
 }
 
 class Object {
+	private:
+	Variant _callInternal(string methodName, vector<Variant> args);
+
 	protected:
 
 	public:
@@ -44,11 +48,15 @@ class Object {
 	virtual string _DerivedFrom() { return ""; };
 	bool _IsDerivedFrom(string className);
 
-	std::vector<ObjectRTTIModel::ObjectMethodDefinition> _GetMethodList();
+	map<string, ObjectRTTIModel::ObjectMethodDefinition> _GetMethodList();
 	bool _HasMethod(string methodName);
-	void _Call(string methodName, const Variant args...);
+	template <typename... Args>
+	Variant _Call(string methodName, const Args... args) {
+		std::vector<Variant> argVector = { args... };
+		return _callInternal(methodName, argVector);
+	};
 
-	std::vector<ObjectRTTIModel::ObjectPropertyDefinition> _GetPropertyList();
+	map<string, ObjectRTTIModel::ObjectPropertyDefinition> _GetPropertyList();
 	bool _HasProperty(string propertyName);
 	void _Set(string property, Variant value);
 	Variant _Get(string property);
