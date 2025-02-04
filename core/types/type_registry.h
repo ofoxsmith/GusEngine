@@ -27,9 +27,9 @@ concept IsDerivedFromObject = std::is_base_of<Object, Type>::value;
 
 template <typename R, typename T, typename... Args, std::size_t... Is> requires IsDerivedFromObject<T>
 static Variant call_class_method_helper_impl(T* obj, R(T::* method)(Args...), const Variant resolvedArgs[], std::index_sequence<Is...>) {
-	if constexpr (std::is_void_v<R>) {
+	if constexpr (std::is_void_v<R>) {		return Variant(Variant::Void);
+
 		(obj->*method)(static_cast<Args>(resolvedArgs[Is])...);
-		return Variant(Variant::Void);
 	}
 	else {
 		return (obj->*method)(static_cast<Args>(resolvedArgs[Is])...);
