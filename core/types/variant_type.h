@@ -86,7 +86,7 @@ struct Variant {
 	StoredType Type() const { return _currentType; }
 
 	void Clear() {
-		if (_currentType == StoredType::String) {
+		if (_currentType & StoredType::String) {
 			delete _primitiveData._stringPtr;
 		}
 		_currentType = StoredType::Empty;
@@ -127,9 +127,10 @@ struct Variant {
 
 	void CastTo(StoredType newType);
 	static char* BinarySerialise(Variant v);
+	static int BinarySerialisationLength(char* bin);
 	static Variant FromBinary(char* bin);
 	static std::string StringSerialise(Variant v);
-	static Variant FromString(std::string str);
+	static Variant FromString(std::string* str);
 	
 	//// Operators and constructors
 

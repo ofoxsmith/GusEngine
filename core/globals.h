@@ -3,6 +3,7 @@
 extern Logger Log;
 const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 600;
+constexpr unsigned long long VARIANT_ENUM_SIZE = sizeof(short);
 
 // Helper for enum conversions and casting
 

@@ -19,8 +19,10 @@ using namespace std;
 #define GUS_DECLARE_CLASS(NAME, DERIVED) \
 friend void engine_type_registry::type_registry::register_all_types(); \
 static void _register_type(); \
+public: \
 string _ClassName() override {return #NAME; } \
 string _DerivedFrom() override {return #DERIVED; } \
+private: \
 
 template <class Type>
 concept IsDerivedFromObject = std::is_base_of<Object, Type>::value;

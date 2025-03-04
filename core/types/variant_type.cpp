@@ -3,8 +3,6 @@
 #include <cstring>
 #include <regex>
 
-#define VARIANT_ENUM_SIZE sizeof(short)
-
 bool Variant::_same(const Variant& v1, const Variant& v2)
 {
 	if (v1.Type() != v2.Type()) return false;
@@ -103,7 +101,7 @@ char* Variant::BinarySerialise(Variant v)
 		case StoredType::Bool:
 			buffer = new char[VARIANT_ENUM_SIZE + 1];
 			buffer[0] = static_cast<char>(v.Type());
-			buffer[VARIANT_ENUM_SIZE] = v.Value<bool>() ? 0x111 : 0x00;
+			buffer[VARIANT_ENUM_SIZE] = v.Value<bool>() ? 0xFF : 0x00;
 			return buffer;
 		case StoredType::Int:
 			buffer = new char[VARIANT_ENUM_SIZE + sizeof(int)];
@@ -148,13 +146,85 @@ char* Variant::BinarySerialise(Variant v)
 	return buffer;
 }
 
+int Variant::BinarySerialisationLength(char* bin) {
+	short* typeBin = new short;
+	memcpy(typeBin, bin, VARIANT_ENUM_SIZE);
+	Variant::StoredType type = static_cast<Variant::StoredType>(*typeBin);
+	delete typeBin;
+
+	switch (type) {
+		case StoredType::Empty:
+		case StoredType::Void:
+			return 0;
+		case StoredType::Bool:
+			return sizeof(char);
+		case StoredType::Int:
+			return sizeof(int);
+		case StoredType::UInt:
+			return sizeof(unsigned int);
+		case StoredType::LongLong:
+			return sizeof(long long);
+		case StoredType::ULongLong:
+			return sizeof(unsigned long long);
+		case StoredType::Float:
+			return sizeof(float);
+		case StoredType::Double:
+			return sizeof(double);
+		case StoredType::String:
+			int size = 0;
+			memcpy(&size, bin + VARIANT_ENUM_SIZE, sizeof(int));
+			return sizeof(int) + sizeof(char) * size;
+	}
+	return 0;
+}
+
 Variant Variant::FromBinary(char* bin)
 {
 	short* typeBin = new short;
 	memcpy(typeBin, bin, VARIANT_ENUM_SIZE);
 	Variant::StoredType type = static_cast<Variant::StoredType>(*typeBin);
 	delete typeBin;
-	return Variant(Variant::Void);
+
+	int valInt = 0;
+	unsigned int valUInt = 0;
+	long long valLLong = 0;
+	unsigned long long valULLong = 0;
+	float valFl = 0;
+	double valDb = 0;
+	int strSize = 0;
+
+	switch (type) {
+		case StoredType::Empty:
+		case StoredType::Void:
+			return Variant(Variant::Void);
+		case StoredType::Bool:
+			return *(bin + VARIANT_ENUM_SIZE) == 0xFF;
+		case StoredType::Int:
+			memcpy(&valInt, bin + VARIANT_ENUM_SIZE, sizeof(int));
+			return valInt;
+		case StoredType::UInt:
+			memcpy(&valUInt, bin + VARIANT_ENUM_SIZE, sizeof(unsigned int));
+			return valUInt;
+		case StoredType::LongLong:
+			memcpy(&valLLong, bin + VARIANT_ENUM_SIZE, sizeof(long long));
+			return valLLong;
+		case StoredType::ULongLong:
+			memcpy(&valULLong, bin + VARIANT_ENUM_SIZE, sizeof(unsigned long long));
+			return valULLong;
+		case StoredType::Float:
+			memcpy(&valFl, bin + VARIANT_ENUM_SIZE, sizeof(float));
+			return valFl;
+		case StoredType::Double:
+			memcpy(&valDb, bin + VARIANT_ENUM_SIZE, sizeof(double));
+			return valDb;
+		case StoredType::String:
+			memcpy(&strSize, bin + VARIANT_ENUM_SIZE, sizeof(int));
+
+			char* valStr = new char[strSize];
+			memcpy(valStr, bin + VARIANT_ENUM_SIZE + sizeof(int), sizeof(char) * strSize);
+			return std::string(valStr);
+	}
+	return Variant();
 }
 
 std::string Variant::StringSerialise(Variant v)
@@ -183,19 +253,19 @@ std::string Variant::StringSerialise(Variant v)
 	return "";
 }
 
-Variant Variant::FromString(std::string str)
+Variant Variant::FromString(std::string* str)
 {
 	std::regex pattern (R"(^([A-Za-z]+)(.+);$)");
 	std::smatch match;
 
-	if (!std::regex_search(str, match, pattern)) {
+	if (!std::regex_search(*str, match, pattern)) {
 		return Variant(Variant::Empty);
 	}
 
 	string type = match[1];
 	string content = match[2];
 
-	if (str.starts_with(";")) {
+	if ((*str).starts_with(";")) {
 		return Variant(Variant::Void);
 	}
 	else if (type == "Bool") {
