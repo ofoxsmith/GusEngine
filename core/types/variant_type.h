@@ -10,7 +10,7 @@ concept IsIntegerEnum = (std::is_enum<T>::value) && (std::is_same_v<std::underly
 
 // Implementation of a variant data type, which can dynamically hold primitve data types, used to correctly cast data for use with RTTI.
 struct Variant {
-	enum StoredType {
+	enum StoredType: short {
 		// NOTE: Empty and Void represent two different types - A variant that has not been assigned, vs an assigned variant holding nothing.
 		Empty = 0,
 		Void = (1u << 0),
@@ -126,7 +126,7 @@ struct Variant {
 	};
 
 	void CastTo(StoredType newType);
-	char* BinarySerialise(Variant v);
+	static char* BinarySerialise(Variant v);
 	static Variant FromBinary(char* bin);
 	static std::string StringSerialise(Variant v);
 	static Variant FromString(std::string str);

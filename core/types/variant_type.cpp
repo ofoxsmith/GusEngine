@@ -1,5 +1,9 @@
 #include "variant_type.h"
+
 #include <cstring>
+#include <regex>
+
+#define VARIANT_ENUM_SIZE sizeof(short)
 
 bool Variant::_same(const Variant& v1, const Variant& v2)
 {
@@ -89,23 +93,138 @@ void Variant::CastTo(StoredType newType)
 
 char* Variant::BinarySerialise(Variant v)
 {
-	char* data;
-	return nullptr;
+	char* buffer = nullptr;
+	switch (v.Type()) {
+		case StoredType::Empty:
+		case StoredType::Void:
+			buffer = new char[VARIANT_ENUM_SIZE];
+			buffer[0] = static_cast<char>(v.Type());
+			return buffer;
+		case StoredType::Bool:
+			buffer = new char[VARIANT_ENUM_SIZE + 1];
+			buffer[0] = static_cast<char>(v.Type());
+			buffer[VARIANT_ENUM_SIZE] = v.Value<bool>() ? 0x111 : 0x00;
+			return buffer;
+		case StoredType::Int:
+			buffer = new char[VARIANT_ENUM_SIZE + sizeof(int)];
+			buffer[0] = static_cast<char>(v.Type());
+			memcpy(buffer + VARIANT_ENUM_SIZE, &v._primitiveData, sizeof(int));
+			return buffer;
+		case StoredType::UInt:
+			buffer = new char[VARIANT_ENUM_SIZE + sizeof(unsigned int)];
+			buffer[0] = static_cast<char>(v.Type());
+			memcpy(buffer + VARIANT_ENUM_SIZE, &v._primitiveData, sizeof(unsigned int));
+			return buffer;
+		case StoredType::LongLong:
+			buffer = new char[VARIANT_ENUM_SIZE + sizeof(long long)];
+			buffer[0] = static_cast<char>(v.Type());
+			memcpy(buffer + VARIANT_ENUM_SIZE, &v._primitiveData, sizeof(long long));
+			return buffer;
+		case StoredType::ULongLong:
+			buffer = new char[VARIANT_ENUM_SIZE + sizeof(unsigned long long)];
+			buffer[0] = static_cast<char>(v.Type());
+			memcpy(buffer + VARIANT_ENUM_SIZE, &v._primitiveData, sizeof(unsigned long long));
+			return buffer;
+		case StoredType::Float:
+			buffer = new char[VARIANT_ENUM_SIZE + sizeof(float)];
+			buffer[0] = static_cast<char>(v.Type());
+			memcpy(buffer + VARIANT_ENUM_SIZE, &v._primitiveData, sizeof(float));
+			return buffer;
+		case StoredType::Double:
+			buffer = new char[VARIANT_ENUM_SIZE + sizeof(double)];
+			buffer[0] = static_cast<char>(v.Type());
+			memcpy(buffer + VARIANT_ENUM_SIZE, &v._primitiveData, sizeof(double));
+			return buffer;
+		case StoredType::String:
+			string data = v.Value<string>();
+			int size = static_cast<int>(data.size());
+			char* buffer = new char[VARIANT_ENUM_SIZE + sizeof(int) + size];
+			buffer[0] = static_cast<char>(v.Type());
+			memcpy(buffer + VARIANT_ENUM_SIZE, &size, sizeof(int));
+			memcpy(buffer + VARIANT_ENUM_SIZE + sizeof(int), data.data(), size);
+			return buffer;
+	}
+
+	return buffer;
 }
 
 Variant Variant::FromBinary(char* bin)
 {
-	return Variant();
+	short* typeBin = new short;
+	memcpy(typeBin, bin, VARIANT_ENUM_SIZE);
+	Variant::StoredType type = static_cast<Variant::StoredType>(*typeBin);
+	delete typeBin;
+	return Variant(Variant::Void);
 }
 
 std::string Variant::StringSerialise(Variant v)
 {
-	return std::string();
+	switch (v.Type()) {
+		case StoredType::Empty:
+		case StoredType::Void:
+			return ";";
+		case StoredType::Bool:
+			return v.Value<bool>() ? "Bool1" : "Bool0";
+		case StoredType::Int:
+			return "Int" + std::to_string(v.Value<int>());
+		case StoredType::UInt:
+			return "UInt" + std::to_string(v.Value<unsigned int>());
+		case StoredType::LongLong:
+			return "LLong" + std::to_string(v.Value<long long>());
+		case StoredType::ULongLong:
+			return "ULLong" + std::to_string(v.Value<unsigned long long>());
+		case StoredType::Float:
+			return "Float" + std::to_string(v.Value<float>());
+		case StoredType::Double:
+			return "Double" + std::to_string(v.Value<double>());
+		case StoredType::String:
+			return "String[" + v.Value<string>() + "];";
+	}
+	return "";
 }
 
 Variant Variant::FromString(std::string str)
 {
-	return Variant();
+	std::regex pattern (R"(^([A-Za-z]+)(.+);$)");
+	std::smatch match;
+
+	if (!std::regex_search(str, match, pattern)) {
+		return Variant(Variant::Empty);
+	}
+
+	string type = match[1];
+	string content = match[2];
+
+	if (str.starts_with(";")) {
+		return Variant(Variant::Void);
+	}
+	else if (type == "Bool") {
+		return Variant(content == "1" ? true : false);
+	}
+	else if (type == "Int") {
+		return Variant(std::stoi(content));
+	}
+	else if (type == "UInt") {
+		return Variant(static_cast<unsigned int>(std::stoul(content)));
+	}
+	else if (type == "LLong") {
+		return Variant(std::stoll(content));
+	}
+	else if (type == "ULLong") {
+		return Variant(std::stoull(content));
+	}
+	else if (type == "Float") {
+		return Variant(std::stof(content));
+	}
+	else if (type == "Double") {
+		return Variant(std::stod(content));
+	}
+	else if (type == "String") {
+		content.pop_back();
+		return Variant(content.substr(1));
+	}
+
+	return Variant(Variant::Empty);
 }
 
 
