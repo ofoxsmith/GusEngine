@@ -19,7 +19,7 @@ class ResourceLoader
 	static EngineDataCache dataCache;
 	// A map containing pointers to all loaded resource instances.
 	static std::unordered_map<string, Resource*> loadedResources;
-	static Resource* _loadPropertyResource(propertyResourceLoadMode mode, const string sourcePath);
+	static Resource* _loadExternalFile(const string filePath);
 	static Resource* _load(const string filePath);
 	public:
 	static void Init();

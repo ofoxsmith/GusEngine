@@ -4,21 +4,21 @@
 #include <glslang/Public/ResourceLimits.h>
 #include "core/types/type_registry.h"
 
-resources::Shader::Shader(ShaderResourceOptions opts): PropertyResource(opts) {
-	_type = "Shader";
-
-	if (opts.shaderTextCode == "" && opts.spirvBinary.empty()) {
-		throw new runtime_error("Failed to create shader resource: Both opts.shaderTextCode and opts.spirvBinary were empty.");
-	}
-	stage = opts.stage;
-	lang = opts.language;
-	if (!opts.spirvBinary.empty()) {
-		compiledCode = opts.spirvBinary;
-	}
-	else {
-		compiledCode = CompileGLSLtoSPIRV(opts.shaderTextCode, opts.language, opts.stage);
-	}
-}
+//resources::Shader::Shader(ShaderResourceOptions opts): Resource(opts) {
+//	_type = "Shader";
+//
+//	if (opts.shaderTextCode == "" && opts.spirvBinary.empty()) {
+//		throw new runtime_error("Failed to create shader resource: Both opts.shaderTextCode and opts.spirvBinary were empty.");
+//	}
+//	stage = opts.stage;
+//	lang = opts.language;
+//	if (!opts.spirvBinary.empty()) {
+//		compiledCode = opts.spirvBinary;
+//	}
+//	else {
+//		compiledCode = CompileGLSLtoSPIRV(opts.shaderTextCode, opts.language, opts.stage);
+//	}
+//}
 
 VkShaderModule resources::Shader::GetShaderModule(VkDevice device)
 {
@@ -36,7 +36,7 @@ VkShaderModule resources::Shader::GetShaderModule(VkDevice device)
 
 void resources::Shader::_register_type() {
 	using namespace engine_type_registry;
-	type_registry::register_new_class("Shader", "PropertyResource");
+	type_registry::register_new_class("Shader", "Resource");
 	//type_registry::class_expose_method("Shader", "GetShaderSPIRV", "vector<uint32_t>", &Shader::GetShaderSPIRV);
 	type_registry::class_expose_method("Shader", ObjectRTTIModel::ObjectMethodDefinition("SetLanguage", Variant::StoredType::Void), &Shader::SetLanguage);
 	type_registry::class_expose_method("Shader", ObjectRTTIModel::ObjectMethodDefinition("GetLanguage", Variant::StoredType::Int), &Shader::GetLanguage);

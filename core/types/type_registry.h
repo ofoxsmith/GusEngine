@@ -17,15 +17,23 @@ using namespace std;
 
 // This namespace contains macros, methods, and classes used to provide detailed runtime type information (RTTI) to the engine.
 #define GUS_DECLARE_CLASS(NAME, DERIVED) \
-friend void engine_type_registry::type_registry::register_all_types(); \
+friend class engine_type_registry::type_registry; \
 static void _register_type(); \
 public: \
+static string _ClassNameStatic() {return #NAME;} \
+static string _DerivedFromStatic() {return #DERIVED;} \
 string _ClassName() override {return #NAME; } \
 string _DerivedFrom() override {return #DERIVED; } \
 private: \
 
 template <class Type>
 concept IsDerivedFromObject = std::is_base_of<Object, Type>::value;
+
+template <typename T>
+static Object* dynamic_constructor() {
+	Object* ret = new T;
+	return ret;
+}
 
 template <typename R, typename T, typename... Args, std::size_t... Is> requires IsDerivedFromObject<T>
 static Variant call_class_method_helper_impl(T* obj, R(T::* method)(Args...), const Variant resolvedArgs[], std::index_sequence<Is...>) {
@@ -138,6 +146,7 @@ namespace engine_type_registry {
 		map<string, ObjectRTTIModel::ObjectMethodDefinition> _methods{};
 		map<string, ObjectMethod*> _methodBinds{};
 		map<string, ObjectRTTIModel::ObjectPropertyDefinition> _properties{};
+		Object* (*_dynamic_constructor)() = nullptr;
 		public:
 		string GetName() const { return _className; }
 		bool HasMethod(string methodName) const { return _methods.contains(methodName); }
@@ -150,6 +159,14 @@ namespace engine_type_registry {
 		public:
 		static void register_all_types();
 		static void register_new_class(string new_class_name, string parent_class_name = "Object");
+
+		template <typename T>
+		static void register_class() {
+			T::_register_type();
+			EngineClass cls = _registered_classes[T::_ClassNameStatic()];
+			cls._dynamic_constructor = &dynamic_constructor<T>;
+
+		};
 
 		template <typename R, typename T, typename... Args> requires IsDerivedFromObject<T>
 		static void class_expose_method(string class_name, ObjectRTTIModel::ObjectMethodDefinition methodInfo, R(T::* func)(Args...)) {

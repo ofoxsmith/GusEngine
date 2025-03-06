@@ -3,7 +3,6 @@
 #include <utility>
 #include "typeinfo"
 #include "core/types/resource.h"
-#include "project/resources/propertyResource.h"
 #include "project/resources/shader.h"
 
 using namespace engine_type_registry;
@@ -11,9 +10,8 @@ map<string, EngineClass> type_registry::_registered_classes{};
 void type_registry::register_all_types()
 {
 	using namespace resources;
-	Resource::_register_type();
-	PropertyResource::_register_type();
-	Shader::_register_type();
+	register_class<Resource>();
+	register_class<Shader>();
 }
 
 void type_registry::register_new_class(string new_class_name, string parent_class_name)

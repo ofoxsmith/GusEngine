@@ -1,10 +1,10 @@
 #pragma once
-#include "project/resources/propertyResource.h"
 #include "filesystem/file_helpers.h"
+#include "core/types/resource.h"
 #include <vector>
 #include <vulkan/vulkan.h>
 namespace resources {
-	struct ShaderResourceOptions : public PropertyResourceOptions {
+	struct ShaderResourceOptions : public ResourceOptions {
 		enum class ShaderLanguage {
 			LanguageGLSL,
 			LanguageHLSL
@@ -25,14 +25,14 @@ namespace resources {
 		ShaderStage stage = ShaderStage::StageUnknown;
 	};
 
-	class Shader: public PropertyResource {
-		GUS_DECLARE_CLASS(Shader, PropertyResource)
+	class Shader: public Resource {
+		GUS_DECLARE_CLASS(Shader, Resource)
 		public:
 
 		static vector<uint32_t> CompileGLSLtoSPIRV(const std::string& source, ShaderResourceOptions::ShaderLanguage lang, ShaderResourceOptions::ShaderStage stage);
 		
-		Shader(ShaderResourceOptions options = {});
-
+		//Shader(ShaderResourceOptions options = {});
+		Shader() {};
 		VkShaderModule GetShaderModule(VkDevice device);
 		vector<uint32_t> GetShaderSPIRV() const {
 			return compiledCode;

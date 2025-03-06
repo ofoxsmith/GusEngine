@@ -20,6 +20,9 @@ namespace resources {
 		string _resourcePath = "";
 		// If this resource is saved on disk.
 		bool _saved = false;
+		// If this resource depends on an external file
+		bool _externalAsset = false;
+		string _assetPath = "";
 
 		public:
 
@@ -30,10 +33,16 @@ namespace resources {
 		void SetPath(string path) { _resourcePath = path; }
 		string Type() { return _type; }
 
-		Resource(ResourceOptions opts = {}) {
-			_name = opts.resourceName;
-			_resourcePath = opts.resourceSavedPath;
-			_saved = opts.resourceSavedPath != "";
+		bool IsExternalAsset() const { return _externalAsset; }
+		string GetAssetPath() const { return _assetPath; }
+
+		//Resource(ResourceOptions opts = {}) {
+		//	_name = opts.resourceName;
+		//	_resourcePath = opts.resourceSavedPath;
+		//	_saved = opts.resourceSavedPath != "";
+		//}
+		Resource() {
+
 		}
 		virtual ~Resource() {}
 	};

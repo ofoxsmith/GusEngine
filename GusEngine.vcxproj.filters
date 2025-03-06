@@ -45,12 +45,6 @@
     <ClCompile Include="project\resources\shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project\resources\propertyResource.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="filesystem\res_fileparser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="filesystem\engine_data_cache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -93,12 +87,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="project\resources\shader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="project\resources\propertyResource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="filesystem\res_fileparser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="filesystem\engine_data_cache.h">
