@@ -74,7 +74,7 @@ Resource* ResourceLoader::_load(const string filePath) {
 	Resource* res = nullptr;
 
 	if (resourceType == "res") {
-		res = EngineIO::ObjectLoader::LoadSerialisedObjectText(filePath);
+		res = EngineIO::ObjectLoader::LoadSerialisedResourceText(filePath);
 		//The file is a standard resource, and can be converted directly to a resource
 		loadedResources[filePath] = res;
 	}
@@ -82,7 +82,7 @@ Resource* ResourceLoader::_load(const string filePath) {
 	// The file is external data, and must be encapsulated in a property resource
 	bool presFileExists = file_helpers::file_exists(filePath + ".res");
 	if (presFileExists) {
-		res = EngineIO::ObjectLoader::LoadSerialisedObjectText(filePath);
+		res = EngineIO::ObjectLoader::LoadSerialisedResourceText(filePath);
 	} else {
 
 	}

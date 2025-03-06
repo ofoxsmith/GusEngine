@@ -143,6 +143,7 @@ namespace engine_type_registry {
 		private:
 		string _className = "";
 		string _parentClassName = "";
+		EngineClass* _inherits = nullptr;
 		map<string, ObjectRTTIModel::ObjectMethodDefinition> _methods{};
 		map<string, ObjectMethod*> _methodBinds{};
 		map<string, ObjectRTTIModel::ObjectPropertyDefinition> _properties{};

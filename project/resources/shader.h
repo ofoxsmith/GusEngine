@@ -4,7 +4,7 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 namespace resources {
-	struct ShaderResourceOptions : public ResourceOptions {
+	struct ShaderResourceOptions {
 		enum class ShaderLanguage {
 			LanguageGLSL,
 			LanguageHLSL
@@ -31,8 +31,12 @@ namespace resources {
 
 		static vector<uint32_t> CompileGLSLtoSPIRV(const std::string& source, ShaderResourceOptions::ShaderLanguage lang, ShaderResourceOptions::ShaderStage stage);
 		
-		//Shader(ShaderResourceOptions options = {});
 		Shader() {};
+
+		virtual void _Init() override {
+
+		}
+
 		VkShaderModule GetShaderModule(VkDevice device);
 		vector<uint32_t> GetShaderSPIRV() const {
 			return compiledCode;

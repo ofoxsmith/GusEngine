@@ -61,7 +61,7 @@ class Object {
 	void _Set(string property, Variant value);
 	Variant _Get(string property);
 
-
+	virtual void _Init() {}
 	virtual ~Object() {}
 
 };

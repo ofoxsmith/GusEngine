@@ -4,10 +4,7 @@
 #include "core/types/object.h"
 #include <string>
 namespace resources {
-	struct ResourceOptions {
-		string resourceName = "";
-		string resourceSavedPath = "";
-	};
+
 	class Resource : public Object
 	{
 		GUS_DECLARE_CLASS(Resource, Object)
@@ -36,14 +33,7 @@ namespace resources {
 		bool IsExternalAsset() const { return _externalAsset; }
 		string GetAssetPath() const { return _assetPath; }
 
-		//Resource(ResourceOptions opts = {}) {
-		//	_name = opts.resourceName;
-		//	_resourcePath = opts.resourceSavedPath;
-		//	_saved = opts.resourceSavedPath != "";
-		//}
-		Resource() {
-
-		}
+		Resource() {}
 		virtual ~Resource() {}
 	};
 }

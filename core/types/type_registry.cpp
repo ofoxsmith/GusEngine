@@ -23,6 +23,9 @@ void type_registry::register_new_class(string new_class_name, string parent_clas
 	EngineClass newClass{};
 	newClass._className = new_class_name;
 	newClass._parentClassName = parent_class_name;
+	if (newClass._parentClassName != "") {
+		newClass._inherits = &_registered_classes[newClass._parentClassName];
+	}
 	_registered_classes[new_class_name] = newClass;
 }
 

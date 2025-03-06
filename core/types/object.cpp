@@ -1,40 +1,115 @@
 #include "object.h"
 #include "type_registry.h"
 
+using namespace engine_type_registry;
 bool Object::_IsDerivedFrom(string className)
 {
+	EngineClass* obj = type_registry::_registered_classes[this->_ClassName()]._inherits;
+	while (obj != nullptr) {
+		if (obj->_className == className) return true;
+		obj = obj->_inherits;
+	}
 	return false;
 }
 
 map<string, ObjectRTTIModel::ObjectMethodDefinition> Object::_GetMethodList()
 {
-	return engine_type_registry::type_registry::_registered_classes[this->_ClassName()]._methods;
+	map<string, ObjectRTTIModel::ObjectMethodDefinition> methodList = {};
+	EngineClass* obj = &type_registry::_registered_classes[this->_ClassName()];
+	while (obj != nullptr) {
+		std::map<string, ObjectRTTIModel::ObjectMethodDefinition>::iterator it= obj->_methods.begin();
+
+		while (it != obj->_methods.end()) {
+			methodList[it->first] = it->second;
+		}
+
+		obj = obj->_inherits;
+	}
+
+	return methodList;
 }
 
 bool Object::_HasMethod(string methodName)
 {
-	return engine_type_registry::type_registry::_registered_classes[this->_ClassName()]._methods.contains(methodName);
+	EngineClass* obj = &type_registry::_registered_classes[this->_ClassName()];
+	while (obj != nullptr) {
+		std::map<string, ObjectRTTIModel::ObjectMethodDefinition>::iterator it = obj->_methods.begin();
+
+		while (it != obj->_methods.end()) {
+			if (it->first == methodName) return true;
+		}
+
+		obj = obj->_inherits;
+	}
+	return false;
 }
 
 Variant Object::_callInternal(string methodName, vector<Variant> args)
 {
-	return engine_type_registry::type_registry::_registered_classes[this->_ClassName()]._methodBinds[methodName]->Call(this, args);
+	EngineClass* obj = &type_registry::_registered_classes[this->_ClassName()];
+	while (obj != nullptr) {
+		map<string, ObjectMethod*>::iterator it = obj->_methodBinds.begin();
+
+		while (it != obj->_methodBinds.end()) {
+			if (it->first == methodName) it->second->Call(this, args);
+		}
+
+		obj = obj->_inherits;
+	}
+	return false;
 }
 
 
 map<string, ObjectRTTIModel::ObjectPropertyDefinition> Object::_GetPropertyList()
 {
-	return engine_type_registry::type_registry::_registered_classes[this->_ClassName()]._properties;
+	map<string, ObjectRTTIModel::ObjectPropertyDefinition> propertyList = {};
+	EngineClass* obj = &type_registry::_registered_classes[this->_ClassName()];
+	while (obj != nullptr) {
+		std::map<string, ObjectRTTIModel::ObjectPropertyDefinition>::iterator it = obj->_properties.begin();
+
+		while (it != obj->_properties.end()) {
+			propertyList[it->first] = it->second;
+		}
+
+		obj = obj->_inherits;
+	}
+
+	return propertyList;
 }
 
 bool Object::_HasProperty(string propertyName)
 {
-	return engine_type_registry::type_registry::_registered_classes[this->_ClassName()]._properties.contains(propertyName);
+	EngineClass* obj = &type_registry::_registered_classes[this->_ClassName()];
+	while (obj != nullptr) {
+		std::map<string, ObjectRTTIModel::ObjectPropertyDefinition>::iterator it = obj->_properties.begin();
+
+		while (it != obj->_properties.end()) {
+			if (it->first == propertyName) return true;
+		}
+
+		obj = obj->_inherits;
+	}
+
+	return false;
 }
 
 void Object::_Set(string propertyName, Variant value)
 {
-	ObjectRTTIModel::ObjectPropertyDefinition prop = engine_type_registry::type_registry::_registered_classes[this->_ClassName()]._properties[propertyName];
+	EngineClass* obj = &type_registry::_registered_classes[this->_ClassName()];
+	ObjectRTTIModel::ObjectPropertyDefinition prop;
+	while (obj != nullptr) {
+		std::map<string, ObjectRTTIModel::ObjectPropertyDefinition>::iterator it = obj->_properties.begin();
+
+		while (it != obj->_properties.end()) {
+			if (it->first == propertyName) {
+				prop = it->second;
+				break;
+			}
+		}
+
+		obj = obj->_inherits;
+	}
+
 	if (prop.isReadOnly) {
 		return;
 	}
@@ -43,6 +118,20 @@ void Object::_Set(string propertyName, Variant value)
 
 Variant Object::_Get(string propertyName)
 {
-	ObjectRTTIModel::ObjectPropertyDefinition prop = engine_type_registry::type_registry::_registered_classes[this->_ClassName()]._properties[propertyName];
+	EngineClass* obj = &type_registry::_registered_classes[this->_ClassName()];
+	ObjectRTTIModel::ObjectPropertyDefinition prop;
+	while (obj != nullptr) {
+		std::map<string, ObjectRTTIModel::ObjectPropertyDefinition>::iterator it = obj->_properties.begin();
+
+		while (it != obj->_properties.end()) {
+			if (it->first == propertyName) {
+				prop = it->second;
+				break;
+			}
+		}
+
+		obj = obj->_inherits;
+	}
+
 	return this->_Call(prop.getterName);
 }
