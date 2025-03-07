@@ -35,53 +35,44 @@ void Variant::CastTo(StoredType newType)
 	switch (newType) {
 		case StoredType::Empty:
 		case StoredType::Void:
-			Clear();
 			break;
 		case StoredType::Bool: {
 			bool newB = operator bool();
-			Clear();
 			_primitiveData._bool = newB;
 			break;
 		}
 		case StoredType::Int: {
 			int newI = operator int();
-			Clear();
 			_primitiveData._int = newI;
 			break;
 		}
 		case StoredType::UInt: {
 			unsigned int newUI = operator unsigned int();
-			Clear();
 			_primitiveData._uint = newUI;
 			break;
 		}
 		case StoredType::LongLong: {
 			long long newLL = operator long long();
-			Clear();
 			_primitiveData._llong = newLL;
 			break;
 		}
 		case StoredType::ULongLong: {
 			unsigned long long newULL = operator unsigned long long();
-			Clear();
 			_primitiveData._ullong = newULL;
 			break;
 		}
 		case StoredType::Float: {
 			float newF = operator float();
-			Clear();
 			_primitiveData._float = newF;
 			break;
 		}
 		case StoredType::Double: {
 			double newD = operator double();
-			Clear();
 			_primitiveData._double = newD;
 			break;
 		}
 		case StoredType::String: {
 			std::string newStr = operator string();
-			Clear();
 			_primitiveData._stringPtr = &newStr;
 			break;
 		}
@@ -298,18 +289,6 @@ Variant::Variant(std::string data)
 {
 	_currentType = StoredType::String;
 	_primitiveData._stringPtr = new std::string(data);
-}
-
-Variant::Variant(const Variant& other)
-{
-	if (other._currentType & StoredType::String) {
-		_currentType = StoredType::String;
-		_primitiveData._stringPtr = new std::string(*other._primitiveData._stringPtr);
-	}
-	else {
-		_currentType = other._currentType;
-		_primitiveData = other._primitiveData;
-	}
 }
 
 static bool operator==(const Variant& lhs, const Variant& rhs) {

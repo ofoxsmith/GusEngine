@@ -90,8 +90,9 @@ Variant EngineIO::ObjectLoader::LoadBinaryVariant(std::ifstream* input)
 			return valDb;
 		case Variant::String:
 			input->read((char*)&strSize, sizeof(int));
-			char* valStr = new char[strSize];
+			char* valStr = new char[strSize+1];
 			input->read(valStr, strSize);
+			valStr[strSize] = 0x00;
 			return std::string(valStr);
 	}
 	return Variant();
@@ -136,6 +137,7 @@ Resource* EngineIO::ObjectLoader::LoadSerialisedResourceBinary(std::string filep
 		}
 
 		res->_Set(currentProp, LoadBinaryVariant(&inFile));
+		currentProp = "";
 	}
 	delete[] currentType;
 	res->_Init();

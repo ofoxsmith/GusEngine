@@ -66,7 +66,7 @@ static Variant call_class_method_helper(T* obj, R(T::* method)(Args...), const v
 
 	Variant resolvedArgs[sizeof...(Args) == 0 ? 1 : sizeof...(Args)]{};
 	for (int i = 0; i < (int)sizeof...(Args); i++) {
-		if (args.size() < i) {
+		if (i >= args.size()-1) {
 			resolvedArgs[i] = args[i];
 		}
 		else {
@@ -86,7 +86,7 @@ static Variant call_class_method_helper(T* obj, R(T::* method)(Args...) const, c
 
 	Variant resolvedArgs[sizeof...(Args) == 0 ? 1 : sizeof...(Args)]{};
 	for (int i = 0; i < (int)sizeof...(Args); i++) {
-		if (args.size() < i) {
+		if (i >= args.size() - 1) {
 			resolvedArgs[i] = args[i];
 		}
 		else {

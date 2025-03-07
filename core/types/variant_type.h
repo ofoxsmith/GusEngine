@@ -73,24 +73,10 @@ struct Variant {
 
 	StoredType _currentType;
 
-	friend void _swap(Variant& first, Variant& second) noexcept
-	{
-		using std::swap;
-		swap(first._primitiveData, second._primitiveData);
-		swap(first._currentType, first._currentType);
-	}
-
 	static bool _same(const Variant& v1, const Variant& v2);
 
 	public:
 	StoredType Type() const { return _currentType; }
-
-	void Clear() {
-		if (_currentType & StoredType::String) {
-			delete _primitiveData._stringPtr;
-		}
-		_currentType = StoredType::Empty;
-	};
 
 	template <typename T>
 	T Value() const {
@@ -141,20 +127,7 @@ struct Variant {
 		_primitiveData._int = 0;
 		_currentType = type;
 	}
-	Variant(const Variant& other);
-	Variant(Variant&& other) noexcept : Variant() {
-		_swap(*this, other);
-	}
-	~Variant() {
-		Clear();
-	}
-
-	Variant& operator=(Variant other) {
-		_swap(*this, other);
-		return *this;
-	}
-
-
+	
 	Variant(bool data);
 	Variant(int data);
 	Variant(unsigned int data);
