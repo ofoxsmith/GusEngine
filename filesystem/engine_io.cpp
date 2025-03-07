@@ -47,9 +47,63 @@ void EngineIO::ObjectSaver::SerialiseResourceText(Resource res, std::string file
 
 }
 
+Variant EngineIO::ObjectLoader::LoadBinaryVariant(std::ifstream* input)
+{
+	short* typeBin = new short;
+	input->read((char*)typeBin, sizeof(short));
+	Variant::StoredType type = static_cast<Variant::StoredType>(*typeBin);
+	delete typeBin;
+
+	char valB = 0;
+	int valInt = 0;
+	unsigned int valUInt = 0;
+	long long valLLong = 0;
+	unsigned long long valULLong = 0;
+	float valFl = 0;
+	double valDb = 0;
+	int strSize = 0;
+
+	switch (type) {
+		case Variant::Empty:
+		case Variant::Void:
+			return Variant(Variant::Void);
+		case Variant::Bool:
+			input->read(&valB, 1);
+			return valB == 0xFF;
+		case Variant::Int:
+			input->read((char*)&valInt, sizeof(int));
+			return valInt;
+		case Variant::UInt:
+			input->read((char*)&valUInt, sizeof(unsigned int));
+			return valUInt;
+		case Variant::LongLong:
+			input->read((char*)&valLLong, sizeof(long long));
+			return valLLong;
+		case Variant::ULongLong:
+			input->read((char*)&valULLong, sizeof(unsigned long long));
+			return valULLong;
+		case Variant::Float:
+			input->read((char*)&valFl, sizeof(float));
+			return valFl;
+		case Variant::Double:
+			input->read((char*)&valDb, sizeof(double));
+			return valDb;
+		case Variant::String:
+			input->read((char*)&strSize, sizeof(int));
+			char* valStr = new char[strSize];
+			input->read(valStr, strSize);
+			return std::string(valStr);
+	}
+	return Variant();
+}
+
 Resource* EngineIO::ObjectLoader::LoadSerialisedResourceBinary(std::string filepath)
 {
 	std::ifstream inFile(filepath, std::ios::binary);
+
+	if (!inFile.is_open()) {
+		Log.Error("EngineIO", "Cannot load file " + filepath);
+	}
 
 	std::string type;
 	std::string name;
@@ -81,16 +135,7 @@ Resource* EngineIO::ObjectLoader::LoadSerialisedResourceBinary(std::string filep
 			currentProp += ch;
 		}
 
-		inFile.read(currentType, VARIANT_ENUM_SIZE);
-		inFile.unget();
-		inFile.unget();
-		int size = Variant::BinarySerialisationLength(currentType);
-		char* data = new char[size];
-		inFile.read(data, size);
-		Variant value = Variant::FromBinary(data);
-		delete[] data;
-
-		res->_Set(currentProp, value);
+		res->_Set(currentProp, LoadBinaryVariant(&inFile));
 	}
 	delete[] currentType;
 	res->_Init();

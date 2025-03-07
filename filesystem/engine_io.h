@@ -11,6 +11,8 @@ namespace EngineIO {
 	};
 
 	class ObjectLoader {
+		private:
+		static Variant LoadBinaryVariant(std::ifstream* input);
 		public:
 		static Resource* LoadSerialisedResourceBinary(std::string filepath);
 		static Resource* LoadSerialisedResourceText(std::string filepath);

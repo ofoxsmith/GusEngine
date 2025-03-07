@@ -163,9 +163,9 @@ namespace engine_type_registry {
 		template <typename T>
 		static void register_class() {
 			T::_register_type();
-			EngineClass cls = _registered_classes[T::_ClassNameStatic()];
-			cls._dynamic_constructor = &(dynamic_constructor<T>);
-
+			EngineClass* cls = &_registered_classes[T::_ClassNameStatic()];
+			cls->_dynamic_constructor = &(dynamic_constructor<T>);
+			return;
 		};
 
 		template <typename R, typename T, typename... Args> requires IsDerivedFromObject<T>

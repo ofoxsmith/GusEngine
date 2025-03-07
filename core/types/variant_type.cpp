@@ -187,54 +187,6 @@ int Variant::BinarySerialisationLength(char* bin) {
 	return len + VARIANT_ENUM_SIZE;
 }
 
-Variant Variant::FromBinary(char* bin)
-{
-	short* typeBin = new short;
-	memcpy(typeBin, bin, VARIANT_ENUM_SIZE);
-	Variant::StoredType type = static_cast<Variant::StoredType>(*typeBin);
-	delete typeBin;
-
-	int valInt = 0;
-	unsigned int valUInt = 0;
-	long long valLLong = 0;
-	unsigned long long valULLong = 0;
-	float valFl = 0;
-	double valDb = 0;
-	int strSize = 0;
-
-	switch (type) {
-		case StoredType::Empty:
-		case StoredType::Void:
-			return Variant(Variant::Void);
-		case StoredType::Bool:
-			return *(bin + VARIANT_ENUM_SIZE) == 0xFF;
-		case StoredType::Int:
-			memcpy(&valInt, bin + VARIANT_ENUM_SIZE, sizeof(int));
-			return valInt;
-		case StoredType::UInt:
-			memcpy(&valUInt, bin + VARIANT_ENUM_SIZE, sizeof(unsigned int));
-			return valUInt;
-		case StoredType::LongLong:
-			memcpy(&valLLong, bin + VARIANT_ENUM_SIZE, sizeof(long long));
-			return valLLong;
-		case StoredType::ULongLong:
-			memcpy(&valULLong, bin + VARIANT_ENUM_SIZE, sizeof(unsigned long long));
-			return valULLong;
-		case StoredType::Float:
-			memcpy(&valFl, bin + VARIANT_ENUM_SIZE, sizeof(float));
-			return valFl;
-		case StoredType::Double:
-			memcpy(&valDb, bin + VARIANT_ENUM_SIZE, sizeof(double));
-			return valDb;
-		case StoredType::String:
-			memcpy(&strSize, bin + VARIANT_ENUM_SIZE, sizeof(int));
-
-			char* valStr = new char[strSize];
-			memcpy(valStr, bin + VARIANT_ENUM_SIZE + sizeof(int), sizeof(char) * strSize);
-			return std::string(valStr);
-	}
-	return Variant();
-}
 
 std::string Variant::StringSerialise(Variant v)
 {

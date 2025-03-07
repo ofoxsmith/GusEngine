@@ -128,7 +128,6 @@ struct Variant {
 	void CastTo(StoredType newType);
 	static char* BinarySerialise(Variant v);
 	static int BinarySerialisationLength(char* bin);
-	static Variant FromBinary(char* bin);
 	static std::string StringSerialise(Variant v);
 	static Variant FromString(std::string* str);
 	
