@@ -147,25 +147,24 @@ namespace engine_type_registry {
 		map<string, ObjectRTTIModel::ObjectMethodDefinition> _methods{};
 		map<string, ObjectMethod*> _methodBinds{};
 		map<string, ObjectRTTIModel::ObjectPropertyDefinition> _properties{};
-		Object* (*_dynamic_constructor)() = nullptr;
 		public:
 		string GetName() const { return _className; }
 		bool HasMethod(string methodName) const { return _methods.contains(methodName); }
+		Object* (*_dynamic_constructor)() = nullptr;
 	};
 
 	class type_registry {
 		private:
-		friend class Object;
-		static map<string, EngineClass> _registered_classes;
 		public:
 		static void register_all_types();
 		static void register_new_class(string new_class_name, string parent_class_name = "Object");
+		static map<string, EngineClass> _registered_classes;
 
 		template <typename T>
 		static void register_class() {
 			T::_register_type();
 			EngineClass cls = _registered_classes[T::_ClassNameStatic()];
-			cls._dynamic_constructor = &dynamic_constructor<T>;
+			cls._dynamic_constructor = &(dynamic_constructor<T>);
 
 		};
 

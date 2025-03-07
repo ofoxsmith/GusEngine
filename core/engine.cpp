@@ -7,6 +7,7 @@
 void Engine::Run(vector<string> args) {
 	engine_type_registry::type_registry::register_all_types();
 
+	Resource x = *EngineIO::ObjectLoader::LoadSerialisedResourceBinary("output.bin");
 	Init();
 	MainLoop();
 	Cleanup();

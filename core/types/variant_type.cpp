@@ -241,15 +241,15 @@ std::string Variant::StringSerialise(Variant v)
 	switch (v.Type()) {
 		case StoredType::Empty:
 		case StoredType::Void:
-			return ";";
+			return "null";
 		case StoredType::Bool:
-			return v.Value<bool>() ? "Bool1" : "Bool0";
+			return v.Value<bool>() ? "true" : "false";
 		case StoredType::Int:
 			return "Int" + std::to_string(v.Value<int>());
 		case StoredType::UInt:
 			return "UInt" + std::to_string(v.Value<unsigned int>());
 		case StoredType::LongLong:
-			return "LLong" + std::to_string(v.Value<long long>());
+			return "Llong" + std::to_string(v.Value<long long>());
 		case StoredType::ULongLong:
 			return "ULLong" + std::to_string(v.Value<unsigned long long>());
 		case StoredType::Float:
@@ -257,7 +257,7 @@ std::string Variant::StringSerialise(Variant v)
 		case StoredType::Double:
 			return "Double" + std::to_string(v.Value<double>());
 		case StoredType::String:
-			return "String[" + v.Value<string>() + "];";
+			return "\"" + v.Value<string>() + "\"";
 	}
 	return "";
 }

@@ -33,11 +33,68 @@ void EngineIO::ObjectSaver::SerialiseResourceBinary(Resource res, std::string fi
 
 void EngineIO::ObjectSaver::SerialiseResourceText(Resource res, std::string filepath)
 {
+	std::ofstream outFile(filepath);
+	outFile << "[" << res._ClassName() << "] " << res.Name()  << std::endl;
+
+	map<string, ObjectRTTIModel::ObjectPropertyDefinition> properties = res._GetPropertyList();
+	map<string, ObjectRTTIModel::ObjectPropertyDefinition>::iterator it = properties.begin();
+
+	while (it != properties.end()) {
+		Variant value = res._Call(it->second.getterName);
+		outFile << it->first << ": " << Variant::StringSerialise(value) << "" << std::endl;
+		it++;
+	}
+
 }
 
 Resource* EngineIO::ObjectLoader::LoadSerialisedResourceBinary(std::string filepath)
 {
-	return nullptr;
+	std::ifstream inFile(filepath, std::ios::binary);
+
+	std::string type;
+	std::string name;
+	
+	char ch;
+	while (inFile.read(&ch, 1)) {
+		if (ch == '\0') {
+			break;
+		}
+		type += ch; 
+	}
+	while (inFile.read(&ch, 1)) {
+		if (ch == '\0') {
+			break;
+		}
+		name += ch;
+	}
+
+	engine_type_registry::EngineClass engCls = engine_type_registry::type_registry::_registered_classes[type];
+	Resource* res = dynamic_cast<Resource*>((*engCls._dynamic_constructor)());
+
+	std::string currentProp;
+	char* currentType = new char[VARIANT_ENUM_SIZE];
+	while (!inFile.eof()) {
+		while (inFile.read(&ch, 1)) {
+			if (ch == '\0') {
+				break;
+			}
+			currentProp += ch;
+		}
+
+		inFile.read(currentType, VARIANT_ENUM_SIZE);
+		inFile.unget();
+		inFile.unget();
+		int size = Variant::BinarySerialisationLength(currentType);
+		char* data = new char[size];
+		inFile.read(data, size);
+		Variant value = Variant::FromBinary(data);
+		delete[] data;
+
+		res->_Set(currentProp, value);
+	}
+	delete[] currentType;
+	res->_Init();
+	return res;
 }
 
 Resource* EngineIO::ObjectLoader::LoadSerialisedResourceText(std::string filepath)
