@@ -91,59 +91,59 @@ void Variant::CastTo(StoredType newType)
 
 char* Variant::BinarySerialise(Variant v)
 {
-	char* buffer = nullptr;
+	char* buffer;
+	short typeVal = static_cast<short>(v._currentType);
 	switch (v.Type()) {
 		case StoredType::Empty:
 		case StoredType::Void:
 			buffer = new char[VARIANT_ENUM_SIZE];
+			memcpy(buffer, &typeVal, VARIANT_ENUM_SIZE);
 			buffer[0] = static_cast<char>(v.Type());
 			return buffer;
 		case StoredType::Bool:
 			buffer = new char[VARIANT_ENUM_SIZE + 1];
-			buffer[0] = static_cast<char>(v.Type());
+			memcpy(buffer, &typeVal, VARIANT_ENUM_SIZE);
 			buffer[VARIANT_ENUM_SIZE] = v.Value<bool>() ? 0xFF : 0x00;
 			return buffer;
 		case StoredType::Int:
 			buffer = new char[VARIANT_ENUM_SIZE + sizeof(int)];
-			buffer[0] = static_cast<char>(v.Type());
+			memcpy(buffer, &typeVal, VARIANT_ENUM_SIZE);
 			memcpy(buffer + VARIANT_ENUM_SIZE, &v._primitiveData, sizeof(int));
 			return buffer;
 		case StoredType::UInt:
 			buffer = new char[VARIANT_ENUM_SIZE + sizeof(unsigned int)];
-			buffer[0] = static_cast<char>(v.Type());
+			memcpy(buffer, &typeVal, VARIANT_ENUM_SIZE);
 			memcpy(buffer + VARIANT_ENUM_SIZE, &v._primitiveData, sizeof(unsigned int));
 			return buffer;
 		case StoredType::LongLong:
 			buffer = new char[VARIANT_ENUM_SIZE + sizeof(long long)];
-			buffer[0] = static_cast<char>(v.Type());
+			memcpy(buffer, &typeVal, VARIANT_ENUM_SIZE);
 			memcpy(buffer + VARIANT_ENUM_SIZE, &v._primitiveData, sizeof(long long));
 			return buffer;
 		case StoredType::ULongLong:
 			buffer = new char[VARIANT_ENUM_SIZE + sizeof(unsigned long long)];
-			buffer[0] = static_cast<char>(v.Type());
+			memcpy(buffer, &typeVal, VARIANT_ENUM_SIZE);
 			memcpy(buffer + VARIANT_ENUM_SIZE, &v._primitiveData, sizeof(unsigned long long));
 			return buffer;
 		case StoredType::Float:
 			buffer = new char[VARIANT_ENUM_SIZE + sizeof(float)];
-			buffer[0] = static_cast<char>(v.Type());
+			memcpy(buffer, &typeVal, VARIANT_ENUM_SIZE);
 			memcpy(buffer + VARIANT_ENUM_SIZE, &v._primitiveData, sizeof(float));
 			return buffer;
 		case StoredType::Double:
 			buffer = new char[VARIANT_ENUM_SIZE + sizeof(double)];
-			buffer[0] = static_cast<char>(v.Type());
+			memcpy(buffer, &typeVal, VARIANT_ENUM_SIZE);
 			memcpy(buffer + VARIANT_ENUM_SIZE, &v._primitiveData, sizeof(double));
 			return buffer;
 		case StoredType::String:
-			string data = v.Value<string>();
-			int size = static_cast<int>(data.size());
-			char* buffer = new char[VARIANT_ENUM_SIZE + sizeof(int) + size];
-			buffer[0] = static_cast<char>(v.Type());
+			int size = static_cast<int>(v._primitiveData._stringPtr->size());
+			buffer = new char[VARIANT_ENUM_SIZE + sizeof(int) + size];
+			memcpy(buffer, &typeVal, VARIANT_ENUM_SIZE);
 			memcpy(buffer + VARIANT_ENUM_SIZE, &size, sizeof(int));
-			memcpy(buffer + VARIANT_ENUM_SIZE + sizeof(int), data.data(), size);
+			memcpy(buffer + VARIANT_ENUM_SIZE + sizeof(int), v._primitiveData._stringPtr->data(), size);
 			return buffer;
 	}
-
-	return buffer;
+	throw runtime_error("");
 }
 
 int Variant::BinarySerialisationLength(char* bin) {
@@ -151,31 +151,40 @@ int Variant::BinarySerialisationLength(char* bin) {
 	memcpy(typeBin, bin, VARIANT_ENUM_SIZE);
 	Variant::StoredType type = static_cast<Variant::StoredType>(*typeBin);
 	delete typeBin;
-
+	int len = 0;
 	switch (type) {
 		case StoredType::Empty:
 		case StoredType::Void:
-			return 0;
+			len = 0;
+			break;
 		case StoredType::Bool:
-			return sizeof(char);
+			len = sizeof(char);
+			break;
 		case StoredType::Int:
-			return sizeof(int);
+			len = sizeof(int);
+			break;
 		case StoredType::UInt:
-			return sizeof(unsigned int);
+			len = sizeof(unsigned int);
+			break;
 		case StoredType::LongLong:
-			return sizeof(long long);
+			len = sizeof(long long);
+			break;
 		case StoredType::ULongLong:
-			return sizeof(unsigned long long);
+			len = sizeof(unsigned long long);
+			break;
 		case StoredType::Float:
-			return sizeof(float);
+			len = sizeof(float);
+			break;
 		case StoredType::Double:
-			return sizeof(double);
+			len = sizeof(double);
+			break;
 		case StoredType::String:
 			int size = 0;
 			memcpy(&size, bin + VARIANT_ENUM_SIZE, sizeof(int));
-			return sizeof(int) + sizeof(char) * size;
+			len = sizeof(int) + sizeof(char) * size;
+			break;
 	}
-	return 0;
+	return len + VARIANT_ENUM_SIZE;
 }
 
 Variant Variant::FromBinary(char* bin)

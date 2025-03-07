@@ -40,7 +40,6 @@ namespace ObjectRTTIModel {
 class Object {
 	private:
 	Variant _callInternal(string methodName, vector<Variant> args);
-
 	protected:
 
 	public:

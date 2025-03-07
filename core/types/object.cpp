@@ -21,6 +21,7 @@ map<string, ObjectRTTIModel::ObjectMethodDefinition> Object::_GetMethodList()
 
 		while (it != obj->_methods.end()) {
 			methodList[it->first] = it->second;
+			it++;
 		}
 
 		obj = obj->_inherits;
@@ -37,6 +38,7 @@ bool Object::_HasMethod(string methodName)
 
 		while (it != obj->_methods.end()) {
 			if (it->first == methodName) return true;
+			it++;
 		}
 
 		obj = obj->_inherits;
@@ -51,12 +53,13 @@ Variant Object::_callInternal(string methodName, vector<Variant> args)
 		map<string, ObjectMethod*>::iterator it = obj->_methodBinds.begin();
 
 		while (it != obj->_methodBinds.end()) {
-			if (it->first == methodName) it->second->Call(this, args);
+			if (it->first == methodName) return it->second->Call(this, args);
+			it++;
 		}
 
 		obj = obj->_inherits;
 	}
-	return false;
+	return Variant(Variant::Void);
 }
 
 
@@ -69,6 +72,7 @@ map<string, ObjectRTTIModel::ObjectPropertyDefinition> Object::_GetPropertyList(
 
 		while (it != obj->_properties.end()) {
 			propertyList[it->first] = it->second;
+			it++;
 		}
 
 		obj = obj->_inherits;
@@ -85,6 +89,7 @@ bool Object::_HasProperty(string propertyName)
 
 		while (it != obj->_properties.end()) {
 			if (it->first == propertyName) return true;
+			it++;
 		}
 
 		obj = obj->_inherits;
@@ -105,6 +110,7 @@ void Object::_Set(string propertyName, Variant value)
 				prop = it->second;
 				break;
 			}
+			it++;
 		}
 
 		obj = obj->_inherits;
@@ -128,6 +134,7 @@ Variant Object::_Get(string propertyName)
 				prop = it->second;
 				break;
 			}
+			it++;
 		}
 
 		obj = obj->_inherits;

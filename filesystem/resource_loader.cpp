@@ -2,11 +2,11 @@
 #include "file_helpers.h"
 #include "engine_io.h"
 void ResourceLoader::Init() {
-	dataCache.Init();
+	//dataCache.Init();
 }
 
 void ResourceLoader::Cleanup() {
-	dataCache.Cleanup();
+	//dataCache.Cleanup();
 }
 
 EngineDataCache ResourceLoader::dataCache{};
