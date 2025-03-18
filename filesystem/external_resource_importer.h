@@ -3,17 +3,18 @@
 #include <string>
 #include "unordered_map"
 #include <fstream>
-// A class that allows for project resources and data to be cached in a binary format, rather than read from text every time
-// the project restarts or a file is reloaded.
+#include "core/types/resource.h"
+// A class that allows for project resources and data to be stored in an engine-readable format, rather than converting/importing 
+// them into engine-readable data every time the project is restarted.
 class EngineDataCache {
 public:
 	void Init();
 	void Cleanup();
-	vector<uint32_t> LoadFileBinary(string filePath);
-	string LoadFileText(string filePath);
-	bool LoadFileFromCacheOnly(string filePath);
-	void RemoveFileFromCache(string filePath);
-	void ReloadCachedFile(string filePath);
+
+	bool IsResourceImported(string filePath);
+
+	void ReloadResource(string filePath);
+	void ImportResource(string filePath);
 private:
 	std::unordered_map<string, std::tuple<int, string>> savedHashes{};
 	std::fstream hashFile{};

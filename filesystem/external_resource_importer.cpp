@@ -1,10 +1,12 @@
-#include "engine_data_cache.h"
+#include "external_resource_importer.h"
 #include <algorithm>
 #include <array>    
 #include <cstring>
 #include <vector>
 #include "file_helpers.h"
 #include <filesystem>
+#include "engine_io.h"
+#include "project/resources/shader.h"
 using namespace std;
 
 /*
@@ -227,6 +229,29 @@ void EngineDataCache::Cleanup() {
     hashFile.close();
 }
 
+void EngineDataCache::ImportResource(string extResourcePath)
+{
+
+    string sourceType = file_helpers::get_file_type(extResourcePath);
+    if (sourceType == "jpg" || sourceType == "jpeg" || sourceType == "png" || sourceType == "bmp" || sourceType == "psd" || sourceType == "tga"
+        || sourceType == "gif" || sourceType == "hdr" || sourceType == "pic" || sourceType == "ppm" || sourceType == "pgm") {
+
+
+    }
+
+    if (sourceType == "vert" || sourceType == "frag" || sourceType == "tesc" || sourceType == "tese" || sourceType == "geom" || sourceType == "comp" || sourceType == "spv") {
+        ShaderResourceOptions shaderOpts{};
+        if (sourceType == "vert") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageVert;
+        if (sourceType == "frag") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageFrag;
+        if (sourceType == "tesc") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageTessControl;
+        if (sourceType == "tese") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageTessEval;
+        if (sourceType == "geom") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageGeom;
+        if (sourceType == "comp") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageComp;
+        shaderOpts.spirvBinary = Shader::CompileGLSLtoSPIRV(file_helpers::read_file_text(extResourcePath), shaderOpts.language, shaderOpts.stage);
+        
+    }
+}
+
 void EngineDataCache::SaveMD5Hash(string filePath, string hash) {
     // If the filepath already has a saved hash, navigate the file to the md5 hash and overwrite the 32-byte data
     if (savedHashes.contains(filePath)) {
@@ -258,28 +283,4 @@ bool EngineDataCache::HasMD5HashChanged(string filePath, string newHash) {
     if (!savedHashes.contains(filePath)) return true;
     string oldVal = std::get<1>(savedHashes[filePath]);
     return newHash != oldVal;
-}
-
-bool EngineDataCache::LoadFileFromCacheOnly(string filePath) {
-    return false;
-}
-
-
-
-vector<uint32_t> EngineDataCache::LoadFileBinary(string filePath) {
-    auto data = file_helpers::read_file_binary(filePath);
-    auto newHash = GetFileMD5Hash(filePath);
-    if (HasMD5HashChanged(filePath, newHash)) {
-        SaveMD5Hash(filePath, newHash);
-    }
-    return data;
-}
-
-string EngineDataCache::LoadFileText(string filePath) {
-    auto data = file_helpers::read_file_text(filePath);
-    auto newHash = GetFileMD5Hash(filePath);
-    if (HasMD5HashChanged(filePath, newHash)) {
-        SaveMD5Hash(filePath, newHash);
-    }
-    return data;
 }
