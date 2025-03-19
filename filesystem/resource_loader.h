@@ -2,7 +2,6 @@
 #include "core/globals.h"
 #include "core/types/resource.h"
 #include <unordered_map>
-#include "filesystem/external_resource_importer.h"
 
 // Resource Types
 #include "project/resources/shader.h"
@@ -11,11 +10,11 @@ using namespace resources;
 class ResourceLoader
 {
 	private:
-	static EngineDataCache dataCache;
 	// A map containing pointers to all loaded resource instances.
 	static std::unordered_map<string, Resource*> loadedResources;
 	static Resource* _load(const string filePath);
 	public:
+	static void ImportResource(string filePath);
 	static void Init();
 	static void Cleanup();
 	template <typename T>
