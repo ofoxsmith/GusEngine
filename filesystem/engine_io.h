@@ -15,11 +15,11 @@ namespace EngineIO {
 		string _path;
 		string _type;
 		string _name;
-		File(string filePath) {
+		File(string filePath, std::ios_base::openmode mode) {
 			_path = filePath;
 			_type = filesystem::path(filePath).extension().string();
 			_name = filesystem::path(filePath).stem().string();
-			_file = std::fstream(filePath, std::ios::binary | std::ios::in | std::ios::out);
+			_file = std::fstream(filePath, mode);
 		}
 		public:
 		string FilePath() inline const {return _path; }
@@ -45,25 +45,12 @@ namespace EngineIO {
 			return { buffer.begin(), buffer.end() };
 		};
 
-		///Read functions
-		void Get(char* str, int count) {
-			_file.get(str, count);
-		};
-		void Peek(char* str, int count) {
-			int current = _file.tellg();
-			_file.get(str, count);
-			_file.seekg(current);
-		};
-		int GetReadPos() { return _file.tellg(); }
-		void SeekReadPos(int pos) { _file.seekg(pos); }
 
-		//Write functions
-		int GetWritePos() { return _file.tellp(); }
-		void SeekWritePos(int pos) { _file.seekp(pos); }
-		void Write(const char* str, int count) {
-			_file.write(str, count);
-		};
-		void WriteByte(const char b) {_file.put(b);}
+		fstream* GetFileStream() {return &_file; }
+
+		~File() {
+			_file.close();
+		}
 	};
 
 
@@ -74,9 +61,15 @@ namespace EngineIO {
 		static bool FileExists(string filePath) {
 			return filesystem::exists(filePath);
 		};
-		static File OpenFile(string filePath) {
-			return File(filePath);
+		static File OpenFile(string filePath, std::ios_base::openmode mode) {
+			if (!FileExists(filePath)) {
+				Log.Error("EngineIO", "Cannot open file: " + filePath + " - doesn't exist.");
+			}
+			return File(filePath, mode);
 		};
+		static File OpenOrCreateFile(string filePath, std::ios_base::openmode mode) {
+			return File(filePath, mode);
+		}
 	};
 
 	class ObjectSaver {

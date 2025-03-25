@@ -5,24 +5,24 @@ using namespace resources;
 using namespace EngineIO;
 void EngineIO::ObjectSaver::SerialiseResourceBinary(Resource res, std::string filepath)
 {
-	File outFile = EngineIO::FileSystem::OpenFile(filepath);
-
+	File outFile = EngineIO::FileSystem::OpenOrCreateFile(filepath, std::ios::binary | std::ios::out);
+	fstream* outStream = outFile.GetFileStream();
 	string className = res._ClassName();
 	string resourceName = res.Name();
-	outFile.Write(className.c_str(), className.size());
-	outFile.WriteByte(0x00);
-	outFile.Write(resourceName.c_str(), resourceName.size());
-	outFile.WriteByte(0x00);
+	outStream->write(className.c_str(), className.size());
+	outStream->put(0x00);
+	outStream->write(resourceName.c_str(), resourceName.size());
+	outStream->put(0x00);
 
 	map<string, ObjectRTTIModel::ObjectPropertyDefinition> properties = res._GetPropertyList();
 	map<string, ObjectRTTIModel::ObjectPropertyDefinition>::iterator it = properties.begin();
 
 	while (it != properties.end()) {
-		outFile.Write(it->first.c_str(), it->first.size());
-		outFile.WriteByte(0x00);
+		outStream->write(it->first.c_str(), it->first.size());
+		outStream->put(0x00);
 		Variant value = res._Call(it->second.getterName);
 		char* val = Variant::BinarySerialise(value);
-		outFile.Write(val, Variant::BinarySerialisationLength(val));
+		outStream->write(val, Variant::BinarySerialisationLength(val));
 		delete val;
 		it++;
 	}
@@ -31,15 +31,15 @@ void EngineIO::ObjectSaver::SerialiseResourceBinary(Resource res, std::string fi
 
 void EngineIO::ObjectSaver::SerialiseResourceText(Resource res, std::string filepath)
 {
-	std::ofstream outFile(filepath);
-	outFile << "[" << res._ClassName() << "] " << res.Name()  << std::endl;
+	fstream* outFile = (FileSystem::OpenOrCreateFile(filepath, std::ios::out).GetFileStream());
+	*outFile << "[" << res._ClassName() << "] " << res.Name()  << std::endl;
 
 	map<string, ObjectRTTIModel::ObjectPropertyDefinition> properties = res._GetPropertyList();
 	map<string, ObjectRTTIModel::ObjectPropertyDefinition>::iterator it = properties.begin();
 
 	while (it != properties.end()) {
 		Variant value = res._Call(it->second.getterName);
-		outFile << it->first << ": " << Variant::StringSerialise(value) << "" << std::endl;
+		*outFile << it->first << ": " << Variant::StringSerialise(value) << "" << std::endl;
 		it++;
 	}
 
@@ -47,8 +47,9 @@ void EngineIO::ObjectSaver::SerialiseResourceText(Resource res, std::string file
 
 Variant EngineIO::ObjectLoader::LoadBinaryVariant(File* input)
 {
+	fstream* inStream = input->GetFileStream();
 	short* typeBin = new short;
-	input->Get((char*)typeBin, sizeof(short));
+	inStream->read((char*)typeBin, sizeof(short));
 	Variant::StoredType type = static_cast<Variant::StoredType>(*typeBin);
 	delete typeBin;
 
@@ -66,30 +67,30 @@ Variant EngineIO::ObjectLoader::LoadBinaryVariant(File* input)
 		case Variant::Void:
 			return Variant(Variant::Void);
 		case Variant::Bool:
-			input->Get(&valB, 1);
+			inStream->read(&valB, 1);
 			return valB == 0xFF;
 		case Variant::Int:
-			input->Get((char*)&valInt, sizeof(int));
+			inStream->read((char*)&valInt, sizeof(int));
 			return valInt;
 		case Variant::UInt:
-			input->Get((char*)&valUInt, sizeof(unsigned int));
+			inStream->read((char*)&valUInt, sizeof(unsigned int));
 			return valUInt;
 		case Variant::LongLong:
-			input->Get((char*)&valLLong, sizeof(long long));
+			inStream->read((char*)&valLLong, sizeof(long long));
 			return valLLong;
 		case Variant::ULongLong:
-			input->Get((char*)&valULLong, sizeof(unsigned long long));
+			inStream->read((char*)&valULLong, sizeof(unsigned long long));
 			return valULLong;
 		case Variant::Float:
-			input->Get((char*)&valFl, sizeof(float));
+			inStream->read((char*)&valFl, sizeof(float));
 			return valFl;
 		case Variant::Double:
-			input->Get((char*)&valDb, sizeof(double));
+			inStream->read((char*)&valDb, sizeof(double));
 			return valDb;
 		case Variant::String:
-			input->Get((char*)&strSize, sizeof(int));
+			inStream->read((char*)&strSize, sizeof(int));
 			char* valStr = new char[strSize+1];
-			input->Get(valStr, strSize);
+			inStream->read(valStr, strSize);
 			valStr[strSize] = 0x00;
 			return std::string(valStr);
 	}
@@ -98,9 +99,10 @@ Variant EngineIO::ObjectLoader::LoadBinaryVariant(File* input)
 
 Resource* EngineIO::ObjectLoader::LoadSerialisedResourceBinary(std::string filepath)
 {
-	std::ifstream inFile(filepath, std::ios::binary);
+	File file = EngineIO::FileSystem::OpenFile(filepath, std::ios::in | std::ios::binary);
+	fstream* inFile = file.GetFileStream();
 
-	if (!inFile.is_open()) {
+	if (!inFile->is_open()) {
 		Log.Error("EngineIO", "Cannot load file " + filepath);
 	}
 
@@ -108,13 +110,13 @@ Resource* EngineIO::ObjectLoader::LoadSerialisedResourceBinary(std::string filep
 	std::string name;
 	
 	char ch;
-	while (inFile.read(&ch, 1)) {
+	while (inFile->read(&ch, 1)) {
 		if (ch == '\0') {
 			break;
 		}
 		type += ch; 
 	}
-	while (inFile.read(&ch, 1)) {
+	while (inFile->read(&ch, 1)) {
 		if (ch == '\0') {
 			break;
 		}
@@ -126,15 +128,15 @@ Resource* EngineIO::ObjectLoader::LoadSerialisedResourceBinary(std::string filep
 
 	std::string currentProp;
 	char* currentType = new char[VARIANT_ENUM_SIZE];
-	while (!inFile.eof()) {
-		while (inFile.read(&ch, 1)) {
+	while (!inFile->eof()) {
+		while (inFile->read(&ch, 1)) {
 			if (ch == '\0') {
 				break;
 			}
 			currentProp += ch;
 		}
 
-		res->_Set(currentProp, LoadBinaryVariant(&inFile));
+		res->_Set(currentProp, LoadBinaryVariant(&file));
 		currentProp = "";
 	}
 	delete[] currentType;
@@ -144,5 +146,6 @@ Resource* EngineIO::ObjectLoader::LoadSerialisedResourceBinary(std::string filep
 
 Resource* EngineIO::ObjectLoader::LoadSerialisedResourceText(std::string filepath)
 {
+	File file = EngineIO::FileSystem::OpenFile(filepath, std::ios::in);
 	return nullptr;
 }

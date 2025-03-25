@@ -187,7 +187,7 @@ void ResourceLoader::Cleanup() {
 
 void ResourceLoader::ImportResource(string extResourcePath)
 {
-    EngineIO::File extResource = EngineIO::FileSystem::OpenFile(extResourcePath);
+    EngineIO::File extResource = EngineIO::FileSystem::OpenFile(extResourcePath, std::ios::binary | std::ios::in);
     string sourceType = extResource.FileType();
     if (sourceType == "jpg" || sourceType == "jpeg" || sourceType == "png" || sourceType == "bmp" || sourceType == "psd" || sourceType == "tga"
         || sourceType == "gif" || sourceType == "hdr" || sourceType == "pic" || sourceType == "ppm" || sourceType == "pgm") {
