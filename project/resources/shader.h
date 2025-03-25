@@ -1,5 +1,4 @@
 #pragma once
-#include "filesystem/file_helpers.h"
 #include "core/types/resource.h"
 #include <vector>
 #include <vulkan/vulkan.h>

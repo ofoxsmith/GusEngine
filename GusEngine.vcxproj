@@ -154,7 +154,6 @@
     <ClCompile Include="core\engine.cpp" />
     <ClCompile Include="filesystem\engine_io.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="filesystem\file_helpers.cpp" />
     <ClCompile Include="core\types\resource.cpp" />
     <ClCompile Include="filesystem\resource_loader.cpp" />
     <ClCompile Include="project\resources\shader.cpp" />
@@ -168,7 +167,6 @@
     <ClInclude Include="core\vkGraphics.h" />
     <ClInclude Include="core\engine.h" />
     <ClInclude Include="filesystem\engine_io.h" />
-    <ClInclude Include="filesystem\file_helpers.h" />
     <ClInclude Include="project\resources\shader.h" />
     <ClInclude Include="core\types\resource.h" />
     <ClInclude Include="filesystem\resource_loader.h" />

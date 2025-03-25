@@ -1,30 +1,28 @@
 #include "engine_io.h"
 #include "core/types/object.h"
-#include <fstream>
-#include <iostream>
 
 using namespace resources;
+using namespace EngineIO;
 void EngineIO::ObjectSaver::SerialiseResourceBinary(Resource res, std::string filepath)
 {
-    std::ofstream outFile(filepath, std::ios::binary);
-	char nullByte = 0x00;
+	File outFile = EngineIO::FileSystem::OpenFile(filepath);
 
 	string className = res._ClassName();
 	string resourceName = res.Name();
-	outFile.write(className.c_str(), className.size());
-	outFile.write(&nullByte, 1);
-	outFile.write(resourceName.c_str(), resourceName.size());
-	outFile.write(&nullByte, 1);
+	outFile.Write(className.c_str(), className.size());
+	outFile.WriteByte(0x00);
+	outFile.Write(resourceName.c_str(), resourceName.size());
+	outFile.WriteByte(0x00);
 
 	map<string, ObjectRTTIModel::ObjectPropertyDefinition> properties = res._GetPropertyList();
 	map<string, ObjectRTTIModel::ObjectPropertyDefinition>::iterator it = properties.begin();
 
 	while (it != properties.end()) {
-		outFile.write(it->first.c_str(), it->first.size());
-		outFile.write(&nullByte, 1);
+		outFile.Write(it->first.c_str(), it->first.size());
+		outFile.WriteByte(0x00);
 		Variant value = res._Call(it->second.getterName);
 		char* val = Variant::BinarySerialise(value);
-		outFile.write(val, Variant::BinarySerialisationLength(val));
+		outFile.Write(val, Variant::BinarySerialisationLength(val));
 		delete val;
 		it++;
 	}
@@ -47,10 +45,10 @@ void EngineIO::ObjectSaver::SerialiseResourceText(Resource res, std::string file
 
 }
 
-Variant EngineIO::ObjectLoader::LoadBinaryVariant(std::ifstream* input)
+Variant EngineIO::ObjectLoader::LoadBinaryVariant(File* input)
 {
 	short* typeBin = new short;
-	input->read((char*)typeBin, sizeof(short));
+	input->Get((char*)typeBin, sizeof(short));
 	Variant::StoredType type = static_cast<Variant::StoredType>(*typeBin);
 	delete typeBin;
 
@@ -68,30 +66,30 @@ Variant EngineIO::ObjectLoader::LoadBinaryVariant(std::ifstream* input)
 		case Variant::Void:
 			return Variant(Variant::Void);
 		case Variant::Bool:
-			input->read(&valB, 1);
+			input->Get(&valB, 1);
 			return valB == 0xFF;
 		case Variant::Int:
-			input->read((char*)&valInt, sizeof(int));
+			input->Get((char*)&valInt, sizeof(int));
 			return valInt;
 		case Variant::UInt:
-			input->read((char*)&valUInt, sizeof(unsigned int));
+			input->Get((char*)&valUInt, sizeof(unsigned int));
 			return valUInt;
 		case Variant::LongLong:
-			input->read((char*)&valLLong, sizeof(long long));
+			input->Get((char*)&valLLong, sizeof(long long));
 			return valLLong;
 		case Variant::ULongLong:
-			input->read((char*)&valULLong, sizeof(unsigned long long));
+			input->Get((char*)&valULLong, sizeof(unsigned long long));
 			return valULLong;
 		case Variant::Float:
-			input->read((char*)&valFl, sizeof(float));
+			input->Get((char*)&valFl, sizeof(float));
 			return valFl;
 		case Variant::Double:
-			input->read((char*)&valDb, sizeof(double));
+			input->Get((char*)&valDb, sizeof(double));
 			return valDb;
 		case Variant::String:
-			input->read((char*)&strSize, sizeof(int));
+			input->Get((char*)&strSize, sizeof(int));
 			char* valStr = new char[strSize+1];
-			input->read(valStr, strSize);
+			input->Get(valStr, strSize);
 			valStr[strSize] = 0x00;
 			return std::string(valStr);
 	}

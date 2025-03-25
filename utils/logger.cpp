@@ -1,5 +1,5 @@
 #include "logger.h"
-
+#include <iostream>
 void Logger::Write(LogLevel lvl, std::string msg, std::string source)
 {
 	std::cout << source << "[" << GetLevelLabel(lvl) << "]: " << msg << endl;

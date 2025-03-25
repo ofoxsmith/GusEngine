@@ -1,8 +1,7 @@
 #include "utils/logger.h"
-#include "filesystem/file_helpers.h"
 #include "core/engine.h"
 #include "core/globals.h"
-
+#include <iostream>
 int main(int argc, char* argv[]) {
 	std::string current_exec = argv[0];
 	std::vector<std::string> args;

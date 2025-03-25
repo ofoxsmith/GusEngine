@@ -393,8 +393,8 @@ void VkGraphics::createRenderPass() {
 }
 
 void VkGraphics::createGraphicsPipeline() {
-	resources::Shader* vertShader = ResourceLoader::Load<resources::Shader>("://shaders/shader.vert");
-	resources::Shader* fragShader = ResourceLoader::Load<resources::Shader>("://shaders/shader.frag");
+	resources::Shader* vertShader = ResourceLoader::Load<resources::Shader>("shaders/shader.vert");
+	resources::Shader* fragShader = ResourceLoader::Load<resources::Shader>("shaders/shader.frag");
 
 	VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 	vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;

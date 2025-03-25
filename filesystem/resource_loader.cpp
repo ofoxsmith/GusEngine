@@ -1,5 +1,4 @@
 #include "resource_loader.h"
-#include "file_helpers.h"
 #include "engine_io.h"
 
 namespace md5 {
@@ -188,8 +187,8 @@ void ResourceLoader::Cleanup() {
 
 void ResourceLoader::ImportResource(string extResourcePath)
 {
-
-    string sourceType = file_helpers::get_file_type(extResourcePath);
+    EngineIO::File extResource = EngineIO::FileSystem::OpenFile(extResourcePath);
+    string sourceType = extResource.FileType();
     if (sourceType == "jpg" || sourceType == "jpeg" || sourceType == "png" || sourceType == "bmp" || sourceType == "psd" || sourceType == "tga"
         || sourceType == "gif" || sourceType == "hdr" || sourceType == "pic" || sourceType == "ppm" || sourceType == "pgm") {
 
@@ -204,7 +203,7 @@ void ResourceLoader::ImportResource(string extResourcePath)
         if (sourceType == "tese") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageTessEval;
         if (sourceType == "geom") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageGeom;
         if (sourceType == "comp") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageComp;
-        shaderOpts.spirvBinary = Shader::CompileGLSLtoSPIRV(file_helpers::read_file_text(extResourcePath), shaderOpts.language, shaderOpts.stage);
+        shaderOpts.spirvBinary = Shader::CompileGLSLtoSPIRV(extResource.ReadAllText(), shaderOpts.language, shaderOpts.stage);
 
     }
 }
@@ -217,14 +216,14 @@ Resource* ResourceLoader::_load(string filePath) {
 		return loadedResources[filePath];
 	}
 
-	if (!file_helpers::file_exists(filePath)) {
+	if (!EngineIO::FileSystem::FileExists(filePath)) {
 		Log.Error("ResourceLoader", filePath + " does not exist.");
 		return nullptr;
 	}
 
 	if (filePath.ends_with(".res")) {
 		string testPath = filePath.substr(0, filePath.size() - 4);
-		if (file_helpers::file_exists(testPath)) {
+		if (EngineIO::FileSystem::FileExists(testPath)) {
 			filePath = testPath;
 		}
 		else {
