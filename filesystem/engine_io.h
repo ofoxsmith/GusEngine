@@ -4,12 +4,13 @@
 #include <vector>
 #include <fstream>
 #include <filesystem>
-
+#include "resource_loader.h"
 using namespace resources;
 namespace EngineIO {
 	
 	class File {
 		friend class FileSystem;
+		friend class ResourceLoader;
 		private:
 		std::fstream _file;
 		string _path;
@@ -61,6 +62,23 @@ namespace EngineIO {
 		static bool FileExists(string filePath) {
 			return filesystem::exists(filePath);
 		};
+
+		static vector<string> GetFilesInDir(string dirPath, bool recursive = false) {
+			filesystem::path dp = filesystem::path(dirPath);
+			vector<string> files;
+			if (recursive) {
+				for (const filesystem::directory_entry entry : filesystem::recursive_directory_iterator(dp)) {
+					if (!entry.is_directory()) files.push_back(filesystem::relative(entry.path(), dp).string());
+				}
+			}
+			else {
+				for (const filesystem::directory_entry entry : filesystem::directory_iterator(dp)) {
+					if (!entry.is_directory()) files.push_back(filesystem::relative(entry.path(), dp).string());
+				}
+			}
+			return files;
+		};
+
 		static File OpenFile(string filePath, std::ios_base::openmode mode) {
 			if (!FileExists(filePath)) {
 				Log.Error("EngineIO", "Cannot open file: " + filePath + " - doesn't exist.");

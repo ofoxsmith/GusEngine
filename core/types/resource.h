@@ -11,8 +11,6 @@ namespace resources {
 		protected:
 		// The name of the resource.
 		string _name = "";
-		// The resource type.
-		string _type = "Resource";
 		// The path to a .res or .pres file if this resource is saved on disk.
 		string _resourcePath = "";
 		// If this resource is saved on disk.
@@ -25,7 +23,6 @@ namespace resources {
 		bool IsSaved() const { return _saved; }
 		string GetPath() { return _resourcePath; }
 		void SetPath(string path) { _resourcePath = path; }
-		string Type() { return _type; }
 
 		Resource() {}
 		virtual ~Resource() {}

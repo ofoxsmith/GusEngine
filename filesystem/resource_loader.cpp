@@ -178,11 +178,40 @@ namespace md5 {
 
     }
 }
+using namespace EngineIO;
+std::unordered_map<string, Resource*> ResourceLoader::loadedResources;
+std::unordered_map<string, ResourceLoader::ImportedResource> ResourceLoader::projectResources;
 
 void ResourceLoader::Init() {
+    File resourceCache = FileSystem::OpenOrCreateFile(".gusengine/resources", std::ios::in | std::ios::out);
+    fstream* cacheStream = resourceCache.GetFileStream();
+    string line;
+
+    while (std::getline(resourceCache._file, line)) {
+        ResourceLoader::ImportedResource ir;
+        std::stringstream ss(line);
+        std::getline(ss, ir.cacheLocation, ',');
+        if (ss.eofbit || ir.cacheLocation.size() == 0) continue;
+        std::getline(ss, ir.location, ',');
+        if (ss.eofbit || ir.location .size() == 0) continue;
+        std::getline(ss, ir.hash);
+        if (ir.hash.size() != 512) continue;
+
+        projectResources[ir.location] = ir;
+    }
+    
+    vector<string> files = FileSystem::GetFilesInDir(".", true);
+    auto newEnd = std::remove_if(files.begin(), files.end(), [](string s) {});
+    files.erase(newEnd, files.end());
+
 }
 
-void ResourceLoader::Cleanup() {
+
+bool ResourceLoader::IsResourceImported(string filePath) {
+    return false;
+}
+bool ResourceLoader::HasImportCacheChanged(string filePath) {
+    return false;
 }
 
 void ResourceLoader::ImportResource(string extResourcePath)
@@ -208,7 +237,6 @@ void ResourceLoader::ImportResource(string extResourcePath)
     }
 }
 
-std::unordered_map<string, Resource*> ResourceLoader::loadedResources;
 
 // Loads a resource from the filesystem
 Resource* ResourceLoader::_load(string filePath) {
@@ -216,31 +244,10 @@ Resource* ResourceLoader::_load(string filePath) {
 		return loadedResources[filePath];
 	}
 
-	if (!EngineIO::FileSystem::FileExists(filePath)) {
-		Log.Error("ResourceLoader", filePath + " does not exist.");
-		return nullptr;
-	}
-
-	if (filePath.ends_with(".res")) {
-		string testPath = filePath.substr(0, filePath.size() - 4);
-		if (EngineIO::FileSystem::FileExists(testPath)) {
-			filePath = testPath;
-		}
-		else {
-			loadedResources[filePath] = EngineIO::ObjectLoader::LoadSerialisedResourceText(filePath);
-			return loadedResources[filePath];
-		}
-	}
-
-
-	//if (dataCache.IsResourceImported(filePath)) {
-	//	loadedResources[filePath] = dataCache.GetResource(filePath);
-	//	return loadedResources[filePath];
-	//}
-
-	//
-	//dataCache.ImportResource(filePath);
-	//loadedResources[filePath] = dataCache.GetResource(filePath);
-	return loadedResources[filePath];
+    if (projectResources.contains(filePath)) {
+        Resource* r = ObjectLoader::LoadSerialisedResourceBinary(projectResources[filePath].cacheLocation);
+        loadedResources[filePath] = r;
+        return r;
+    }
 }
 
