@@ -200,14 +200,14 @@ void ResourceLoader::Init() {
         projectResources[ir.location] = ir;
     }
     
-    vector<string> files = FileSystem::GetFilesInDir(".", true);
-    auto newEnd = std::remove_if(files.begin(), files.end(), [](string s) {
-        return !(s.ends_with(".exe") || s.ends_with(".pdb") || s.starts_with(".gusengine/") ||s.ends_with(".rmeta"));
-        });
-    files.erase(newEnd, files.end());
+    //vector<string> files = FileSystem::GetFilesInDir(".", true);
+    //auto newEnd = std::remove_if(files.begin(), files.end(), [](string s) {
+    //    return !(s.ends_with(".exe") || s.ends_with(".pdb") || s.starts_with(".gusengine/") ||s.ends_with(".rmeta"));
+    //    });
+    //files.erase(newEnd, files.end());
 
-    for (string file : files) {
-    }
+    //for (string file : files) {
+    //}
 }
 
 
@@ -248,6 +248,11 @@ ResourceLoader::ImportResult ResourceLoader::ImportResource(string extResourcePa
         if (sourceType == "comp") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageComp;
         shaderOpts.spirvBinary = Shader::CompileGLSLtoSPIRV(extResource.ReadAllText(), shaderOpts.language, shaderOpts.stage);
 
+        Shader* shader = new Shader();
+        shader->SetShaderSPIRV(shaderOpts.spirvBinary);
+        loadedResources[extResourcePath] = shader;
+
+        return ImportResult::IMPORTED;
     }
 
 
@@ -257,14 +262,38 @@ ResourceLoader::ImportResult ResourceLoader::ImportResource(string extResourcePa
 
 // Loads a resource from the filesystem
 Resource* ResourceLoader::_load(string filePath) {
+    if (filePath.ends_with(".rmeta")) {
+        Log.Error("ResourceLoader", "Cannot import metadata file:" + filePath + " - import the actual resource instead");
+    }
+
 	if (loadedResources.contains(filePath)) {
 		return loadedResources[filePath];
 	}
 
-    if (projectResources.contains(filePath)) {
+    if (projectResources.contains(filePath) && !HasImportCacheChanged(filePath)) {
         Resource* r = ObjectLoader::LoadSerialisedResourceBinary(projectResources[filePath].cacheLocation);
         loadedResources[filePath] = r;
         return r;
     }
+    
+    if (filePath.ends_with(".res")) {
+        Resource* r = ObjectLoader::LoadSerialisedResourceText(filePath);
+        loadedResources[filePath] = r;
+        return r;
+    }
+    else {
+        ImportResult result = ImportResource(filePath);
+        if (result == ImportResult::NOT_RECOGNISED) {
+            Log.Error("ResourceLoader", "Unrecognised resource file type: " + filePath);
+        }
+        else if (result == ImportResult::IMPORT_FAIL) {
+            Log.Error("ResourceLoader", "Failed to import resource: " + filePath);
+
+        }
+    }
+
+    Log.Error("ResourceLoader", "Resource does not exist: " + filePath);
+
+    return nullptr;
 }
 

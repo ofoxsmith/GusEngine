@@ -37,6 +37,9 @@ namespace resources {
 		}
 
 		VkShaderModule GetShaderModule(VkDevice device);
+		void SetShaderSPIRV(vector<uint32_t> spirv) {
+			compiledCode = spirv;
+		}
 		vector<uint32_t> GetShaderSPIRV() const {
 			return compiledCode;
 		}
