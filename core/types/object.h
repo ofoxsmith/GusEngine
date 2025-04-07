@@ -7,16 +7,27 @@
 namespace ObjectRTTIModel {
 
 	struct ObjectPropertyDefinition {
+
+		enum PropertyFlags : int {
+			NONE = 0,
+			// The property is readonly.
+			READ_ONLY = 1 << 0,
+			// The property won't be saved when serialising a resource.
+			NO_SAVE = 1 << 1,
+			// The property is imported and cached internally by the engine.
+			IMPORTED = 1 << 2 & 1 << 1 & 1 << 0,
+		};
+
 		string propertyName = "";
+		int flags = 0;
 		Variant::StoredType type = Variant::StoredType::Void;
-		bool isReadOnly = false;
 		string getterName = "";
 		string setterName = "";
 		ObjectPropertyDefinition() {}
-		ObjectPropertyDefinition(string propName, Variant::StoredType ty, bool readOnly, string getter, string setter = "") {
+		ObjectPropertyDefinition(string propName, Variant::StoredType ty, PropertyFlags pflags, string getter, string setter = "") {
 			propertyName = propName;
 			type = ty;
-			isReadOnly = readOnly;
+			flags = pflags;
 			getterName = getter;
 			setterName = setter;
 		}

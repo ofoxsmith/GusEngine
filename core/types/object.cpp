@@ -116,7 +116,7 @@ void Object::_Set(string propertyName, Variant value)
 		obj = obj->_inherits;
 	}
 
-	if (prop.isReadOnly) {
+	if (prop.flags & ObjectRTTIModel::ObjectPropertyDefinition::READ_ONLY) {
 		return;
 	}
 	this->_Call(prop.setterName, value);

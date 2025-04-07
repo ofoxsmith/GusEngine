@@ -36,15 +36,16 @@ VkShaderModule resources::Shader::GetShaderModule(VkDevice device)
 
 void resources::Shader::_register_type() {
 	using namespace engine_type_registry;
+	using namespace ObjectRTTIModel;
 	type_registry::register_new_class("Shader", "Resource");
 	//type_registry::class_expose_method("Shader", "GetShaderSPIRV", "vector<uint32_t>", &Shader::GetShaderSPIRV);
-	type_registry::class_expose_method("Shader", ObjectRTTIModel::ObjectMethodDefinition("SetLanguage", Variant::StoredType::Void), &Shader::SetLanguage);
-	type_registry::class_expose_method("Shader", ObjectRTTIModel::ObjectMethodDefinition("GetLanguage", Variant::StoredType::Int), &Shader::GetLanguage);
-	type_registry::class_expose_method("Shader", ObjectRTTIModel::ObjectMethodDefinition("SetStage", Variant::StoredType::Void), &Shader::SetStage);
-	type_registry::class_expose_method("Shader", ObjectRTTIModel::ObjectMethodDefinition("GetStage", Variant::StoredType::Int), &Shader::GetStage);
+	type_registry::class_expose_method("Shader", ObjectMethodDefinition("SetLanguage", Variant::StoredType::Void), &Shader::SetLanguage);
+	type_registry::class_expose_method("Shader", ObjectMethodDefinition("GetLanguage", Variant::StoredType::Int), &Shader::GetLanguage);
+	type_registry::class_expose_method("Shader", ObjectMethodDefinition("SetStage", Variant::StoredType::Void), &Shader::SetStage);
+	type_registry::class_expose_method("Shader", ObjectMethodDefinition("GetStage", Variant::StoredType::Int), &Shader::GetStage);
 	
-	ObjectRTTIModel::ObjectPropertyDefinition langProp = ObjectRTTIModel::ObjectPropertyDefinition("Language", Variant::StoredType::Int, false, "GetLanguage", "SetLanguage");
-	ObjectRTTIModel::ObjectPropertyDefinition stageProp = ObjectRTTIModel::ObjectPropertyDefinition("Stage", Variant::StoredType::Int, false, "GetStage", "SetStage");
+	ObjectRTTIModel::ObjectPropertyDefinition langProp = ObjectPropertyDefinition("Language", Variant::StoredType::Int, ObjectPropertyDefinition::NONE, "GetLanguage", "SetLanguage");
+	ObjectRTTIModel::ObjectPropertyDefinition stageProp = ObjectPropertyDefinition("Stage", Variant::StoredType::Int, ObjectPropertyDefinition::NONE, "GetStage", "SetStage");
 	type_registry::class_define_property("Shader", langProp);
 	type_registry::class_define_property("Shader", stageProp);
 }

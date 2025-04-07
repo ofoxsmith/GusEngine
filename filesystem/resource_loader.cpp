@@ -1,6 +1,6 @@
 #include "resource_loader.h"
 #include "engine_io.h"
-
+#include <ranges>
 namespace md5 {
     /*
     The MIT License
@@ -201,30 +201,44 @@ void ResourceLoader::Init() {
     }
     
     vector<string> files = FileSystem::GetFilesInDir(".", true);
-    auto newEnd = std::remove_if(files.begin(), files.end(), [](string s) {});
+    auto newEnd = std::remove_if(files.begin(), files.end(), [](string s) {
+        return !(s.ends_with(".exe") || s.ends_with(".pdb") || s.starts_with(".gusengine/") ||s.ends_with(".rmeta"));
+        });
     files.erase(newEnd, files.end());
 
+    for (string file : files) {
+    }
 }
 
 
 bool ResourceLoader::IsResourceImported(string filePath) {
-    return false;
+    return projectResources.contains(filePath);
 }
 bool ResourceLoader::HasImportCacheChanged(string filePath) {
-    return false;
+    if (!projectResources.contains(filePath)) return true;
+    return projectResources[filePath].hash == "";
+
 }
 
-void ResourceLoader::ImportResource(string extResourcePath)
+ResourceLoader::ImportResult ResourceLoader::ImportResource(string extResourcePath)
 {
     EngineIO::File extResource = EngineIO::FileSystem::OpenFile(extResourcePath, std::ios::binary | std::ios::in);
     string sourceType = extResource.FileType();
-    if (sourceType == "jpg" || sourceType == "jpeg" || sourceType == "png" || sourceType == "bmp" || sourceType == "psd" || sourceType == "tga"
-        || sourceType == "gif" || sourceType == "hdr" || sourceType == "pic" || sourceType == "ppm" || sourceType == "pgm") {
 
+    constexpr std::array supportedImageTypes = {
+        "jpg", "jpeg", "png", "bmp", "psd",
+        "tga", "gif", "hdr", "pic", "ppm", "pgm"
+    };
 
+    if (std::find(supportedImageTypes.begin(), supportedImageTypes.end(), sourceType) != supportedImageTypes.end()) {
+        
     }
 
-    if (sourceType == "vert" || sourceType == "frag" || sourceType == "tesc" || sourceType == "tese" || sourceType == "geom" || sourceType == "comp" || sourceType == "spv") {
+    constexpr std::array supportedShaderTypes = {
+        "vert", "frag", "tesc", "tese", "geom", "comp", "glsl", "hlsl", "spv"
+    };
+
+    if (std::find(supportedShaderTypes.begin(), supportedShaderTypes.end(), sourceType) != supportedShaderTypes.end()) {
         ShaderResourceOptions shaderOpts{};
         if (sourceType == "vert") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageVert;
         if (sourceType == "frag") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageFrag;
@@ -235,6 +249,9 @@ void ResourceLoader::ImportResource(string extResourcePath)
         shaderOpts.spirvBinary = Shader::CompileGLSLtoSPIRV(extResource.ReadAllText(), shaderOpts.language, shaderOpts.stage);
 
     }
+
+
+    return ImportResult::NOT_RECOGNISED;
 }
 
 

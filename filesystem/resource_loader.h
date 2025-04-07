@@ -23,11 +23,15 @@ class ResourceLoader
 
 	static Resource* _load(const string filePath);
 	public:
-
+	enum class ImportResult {
+		IMPORTED,
+		IMPORT_FAIL,
+		NOT_RECOGNISED
+	};
 	static void Init();
 	static bool IsResourceImported(string filePath);
 	static bool HasImportCacheChanged(string filePath);
-	static void ImportResource(string filePath);
+	static ImportResult ImportResource(string filePath);
 	static void Cleanup() {};
 
 
