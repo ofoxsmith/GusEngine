@@ -223,7 +223,7 @@ bool ResourceLoader::HasImportCacheChanged(string filePath) {
 ResourceLoader::ImportResult ResourceLoader::ImportResource(string extResourcePath)
 {
     EngineIO::File extResource = EngineIO::FileSystem::OpenFile(extResourcePath, std::ios::binary | std::ios::in);
-    string sourceType = extResource.FileType();
+    string sourceType = extResource.FileType().erase(0,1);
 
     constexpr std::array supportedImageTypes = {
         "jpg", "jpeg", "png", "bmp", "psd",
@@ -289,6 +289,9 @@ Resource* ResourceLoader::_load(string filePath) {
         else if (result == ImportResult::IMPORT_FAIL) {
             Log.Error("ResourceLoader", "Failed to import resource: " + filePath);
 
+        }
+        else if (result == ImportResult::IMPORTED) {
+            return loadedResources[filePath];
         }
     }
 
