@@ -4,41 +4,25 @@
 #include <glslang/Public/ResourceLimits.h>
 #include "core/types/type_registry.h"
 
-//resources::Shader::Shader(ShaderResourceOptions opts): Resource(opts) {
-//	_type = "Shader";
-//
-//	if (opts.shaderTextCode == "" && opts.spirvBinary.empty()) {
-//		throw new runtime_error("Failed to create shader resource: Both opts.shaderTextCode and opts.spirvBinary were empty.");
-//	}
-//	stage = opts.stage;
-//	lang = opts.language;
-//	if (!opts.spirvBinary.empty()) {
-//		compiledCode = opts.spirvBinary;
-//	}
-//	else {
-//		compiledCode = CompileGLSLtoSPIRV(opts.shaderTextCode, opts.language, opts.stage);
-//	}
-//}
-
 VkShaderModule resources::Shader::GetShaderModule(VkDevice device)
 {
+	if (_shaderModule) return _shaderModule;
 	VkShaderModuleCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 	createInfo.codeSize = 4 * compiledCode.size();
 	createInfo.pCode = compiledCode.data();
-	VkShaderModule shaderModule;
-	if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+	if (vkCreateShaderModule(device, &createInfo, nullptr, &_shaderModule) != VK_SUCCESS) {
 		Log.FatalError("Vulkan", "Failed to create shader module.");
 	}
-	return shaderModule;
+	return _shaderModule;
 
 }
 
 void resources::Shader::_register_type() {
 	using namespace engine_type_registry;
 	using namespace ObjectRTTIModel;
+
 	type_registry::register_new_class("Shader", "Resource");
-	//type_registry::class_expose_method("Shader", "GetShaderSPIRV", "vector<uint32_t>", &Shader::GetShaderSPIRV);
 	type_registry::class_expose_method("Shader", ObjectMethodDefinition("SetLanguage", Variant::StoredType::Void), &Shader::SetLanguage);
 	type_registry::class_expose_method("Shader", ObjectMethodDefinition("GetLanguage", Variant::StoredType::Int), &Shader::GetLanguage);
 	type_registry::class_expose_method("Shader", ObjectMethodDefinition("SetStage", Variant::StoredType::Void), &Shader::SetStage);
@@ -52,7 +36,6 @@ void resources::Shader::_register_type() {
 
 vector<uint32_t> resources::Shader::CompileGLSLtoSPIRV(const std::string& source, ShaderResourceOptions::ShaderLanguage lang, ShaderResourceOptions::ShaderStage type)
 {
-
 	std::vector<uint32_t> spirv;
 	std::string	info_log;
 	glslang::InitializeProcess();
@@ -106,4 +89,7 @@ vector<uint32_t> resources::Shader::CompileGLSLtoSPIRV(const std::string& source
 
 	glslang::FinalizeProcess();
 	return spirv;
+}
+
+resources::Shader::~Shader() {
 }

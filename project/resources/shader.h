@@ -32,6 +32,7 @@ namespace resources {
 		
 		Shader() {};
 
+		~Shader();
 		virtual void _Init() override {
 
 		}
@@ -50,7 +51,7 @@ namespace resources {
 		ShaderResourceOptions::ShaderStage GetStage() const { return stage; };
 
 		private:
-
+		VkShaderModule _shaderModule = nullptr;
 		vector<uint32_t> compiledCode;
 		ShaderResourceOptions::ShaderLanguage lang = ShaderResourceOptions::ShaderLanguage::LanguageGLSL;
 		ShaderResourceOptions::ShaderStage stage = ShaderResourceOptions::ShaderStage::StageUnknown;
