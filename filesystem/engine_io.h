@@ -36,7 +36,7 @@ namespace EngineIO {
 			return string(buffer.data());
 		};
 
-		vector<uint32_t> ReadAllBinary() {
+		vector<uint8_t> ReadAllBinary() {
 			fstream f = fstream(_path, std::ios::ate | std::ios::binary | std::ios::in | std::ios::out);
 			size_t fileSize = (size_t)f.tellg();
 			std::vector<char> buffer(fileSize);
