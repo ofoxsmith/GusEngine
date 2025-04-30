@@ -1,13 +1,13 @@
 #pragma once
 #include "globals.h"
-#include "renderer/vkGraphics.h"
+#include "renderer/renderer.h"
 
 class Engine
 {
 public:
 	void Run(vector<string> args);
 private:
-	VkGraphics graphics;
+	Renderer graphics;
 	void Init();
 	void MainLoop();
 	void Cleanup();

@@ -154,7 +154,7 @@
     <ClCompile Include="core\types\object.cpp" />
     <ClCompile Include="core\types\variant_type.cpp" />
     <ClCompile Include="core\types\type_registry.cpp" />
-    <ClCompile Include="core\renderer\vkGraphics.cpp" />
+    <ClCompile Include="core\renderer\renderer.cpp" />
     <ClCompile Include="core\engine.cpp" />
     <ClCompile Include="filesystem\engine_io.cpp" />
     <ClCompile Include="main.cpp" />
@@ -169,7 +169,7 @@
     <ClInclude Include="core\types\variant_type.h" />
     <ClInclude Include="core\types\object.h" />
     <ClInclude Include="core\types\type_registry.h" />
-    <ClInclude Include="core\renderer\vkGraphics.h" />
+    <ClInclude Include="core\renderer\renderer.h" />
     <ClInclude Include="core\engine.h" />
     <ClInclude Include="filesystem\engine_io.h" />
     <ClInclude Include="project\resources\image.h" />
