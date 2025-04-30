@@ -51,6 +51,9 @@
     <ClCompile Include="filesystem\engine_io.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="project\resources\image.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utils\logger.h">
@@ -84,6 +87,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="filesystem\engine_io.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\resources\image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
