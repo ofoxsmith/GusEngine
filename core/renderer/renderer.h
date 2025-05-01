@@ -143,6 +143,7 @@ class Renderer {
 	void initVulkan();
 	void drawFrame();
 	void createSurface();
+	void cleanupSwapChain();
 	void createSwapChain();
 	void recreateSwapChain();
 	void createImageViews();

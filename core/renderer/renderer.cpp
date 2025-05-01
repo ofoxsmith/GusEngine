@@ -148,35 +148,56 @@ void Renderer::updateUniformBuffer(uint32_t current) {
 
 }
 
-void Renderer::Cleanup() {
-	if (_USE_VK_VALIDATION_LAYERS) {
-		DestroyDebugUtilsMessengerEXT(_instance, debugMessenger, nullptr);
+void Renderer::cleanupSwapChain() {
+	for (auto framebuffer : swapChainFramebuffers) {
+		vkDestroyFramebuffer(logicalDevice, framebuffer, nullptr);
 	}
+
+	for (auto imageView : swapChainImageViews) {
+		vkDestroyImageView(logicalDevice, imageView, nullptr);
+	}
+
+	vkb::destroy_swapchain(swapChain);
+}
+
+void Renderer::Cleanup() {
+	cleanupSwapChain();
+
+	vkDestroyDescriptorPool(logicalDevice, descriptorPool, nullptr);
+	vkDestroyDescriptorSetLayout(logicalDevice, descriptorSetLayout, nullptr);
+
+	vkDestroyPipeline(logicalDevice, graphicsPipeline, nullptr);
+	vkDestroyPipelineLayout(logicalDevice, pipelineLayout, nullptr);
+
+	vkDestroyRenderPass(logicalDevice, renderPass, nullptr);
+
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		vkDestroySemaphore(logicalDevice, renderFinishedSemaphores[i], nullptr);
 		vkDestroySemaphore(logicalDevice, imageAvailableSemaphores[i], nullptr);
 		vkDestroyFence(logicalDevice, inFlightFences[i], nullptr);
 	}
-	vkDestroyCommandPool(logicalDevice, commandPool, nullptr);
-	vkb::destroy_swapchain(swapChain);
 
 	vkDestroyBuffer(logicalDevice, indexBuffer, nullptr);
 	vkFreeMemory(logicalDevice, indexBufferMemory, nullptr);
 
 	vkDestroyBuffer(logicalDevice, vertexBuffer, nullptr);
 	vkFreeMemory(logicalDevice, vertexBufferMemory, nullptr);
+
+
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		vkDestroyBuffer(logicalDevice, uniformBuffers[i], nullptr);
 		vkFreeMemory(logicalDevice, uniformBuffersMemory[i], nullptr);
 	}
 
-	vkDestroyDescriptorPool(logicalDevice, descriptorPool, nullptr);
-	vkDestroyDescriptorSetLayout(logicalDevice, descriptorSetLayout, nullptr);
-	vkDestroyPipeline(logicalDevice, graphicsPipeline, nullptr);
-	vkDestroyPipelineLayout(logicalDevice, pipelineLayout, nullptr);
-	vkDestroyRenderPass(logicalDevice, renderPass, nullptr);
-	vkDestroySurfaceKHR(_instance, surface, nullptr);
+
+	vkDestroyCommandPool(logicalDevice, commandPool, nullptr);
+
 	vkb::destroy_device(logicalDevice);
+	if (_USE_VK_VALIDATION_LAYERS) {
+		DestroyDebugUtilsMessengerEXT(_instance, debugMessenger, nullptr);
+	}
+
+	vkb::destroy_surface(_instance, surface);
 	vkb::destroy_instance(_instance);
 
 	glfwDestroyWindow(window);
