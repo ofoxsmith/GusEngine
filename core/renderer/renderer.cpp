@@ -142,7 +142,7 @@ void Renderer::updateUniformBuffer(uint32_t current) {
 	UniformBufferObject ubo{};
 	ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
+	ubo.proj = glm::perspective(glm::radians(45.0f), swapChain.extent.width / (float)swapChain.extent.height, 0.1f, 10.0f);
 	ubo.proj[1][1] *= -1;
 	memcpy(uniformBuffersMapped[current], &ubo, sizeof(ubo));
 
@@ -158,7 +158,7 @@ void Renderer::Cleanup() {
 		vkDestroyFence(logicalDevice, inFlightFences[i], nullptr);
 	}
 	vkDestroyCommandPool(logicalDevice, commandPool, nullptr);
-	cleanupSwapChain();
+	vkb::destroy_swapchain(swapChain);
 
 	vkDestroyBuffer(logicalDevice, indexBuffer, nullptr);
 	vkFreeMemory(logicalDevice, indexBufferMemory, nullptr);
@@ -192,71 +192,28 @@ void Renderer::createSurface() {
 
 
 void Renderer::createSwapChain() {
-	SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
-
-	VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
-	VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
-	VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
-
-	uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
-	if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
-		imageCount = swapChainSupport.capabilities.maxImageCount;
+	unsigned int imageCount = 2;
+	vkb::SwapchainBuilder swapchain_builder{ logicalDevice };
+	swapchain_builder.use_default_format_selection().use_default_present_mode_selection().use_default_image_usage_flags();
+	swapchain_builder.set_desired_min_image_count(imageCount);
+	swapchain_builder.set_clipped(true);
+	swapchain_builder.set_image_array_layer_count(1);
+	if (swapChain != nullptr) {
+		swapchain_builder.set_old_swapchain(swapChain);
+	}
+	auto swap_ret = swapchain_builder.build();
+	if (!swap_ret) {
+		Log.FatalError("Vulkan", "Failed to create swapchain.");
 	}
 
-	VkSwapchainCreateInfoKHR createInfo{};
-	createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-	createInfo.surface = surface;
-	createInfo.minImageCount = imageCount;
-	createInfo.imageFormat = surfaceFormat.format;
-	createInfo.imageColorSpace = surfaceFormat.colorSpace;
-	createInfo.imageExtent = extent;
-	createInfo.imageArrayLayers = 1;
-	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-
-	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
-	uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
-
-	if (indices.graphicsFamily != indices.presentFamily) {
-		createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-		createInfo.queueFamilyIndexCount = 2;
-		createInfo.pQueueFamilyIndices = queueFamilyIndices;
+	if (swapChain != nullptr) {
+		vkb::destroy_swapchain(swapChain);
 	}
-	else {
-		createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		createInfo.queueFamilyIndexCount = 0;
-		createInfo.pQueueFamilyIndices = nullptr;
-	}
-
-	createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
-	createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-	createInfo.presentMode = presentMode;
-	createInfo.clipped = VK_TRUE;
-	createInfo.oldSwapchain = VK_NULL_HANDLE;
-
-	if (vkCreateSwapchainKHR(logicalDevice, &createInfo, nullptr, &swapChain) != VK_SUCCESS) {
-		Log.FatalError("Vulkan", "Failed to create swap chain.");
-	}
-
+	swapChain = swap_ret.value();
 	vkGetSwapchainImagesKHR(logicalDevice, swapChain, &imageCount, nullptr);
 	swapChainImages.resize(imageCount);
 	vkGetSwapchainImagesKHR(logicalDevice, swapChain, &imageCount, swapChainImages.data());
-
-	swapChainImageFormat = surfaceFormat.format;
-	swapChainExtent = extent;
 }
-
-void Renderer::cleanupSwapChain() {
-	for (auto framebuffer : swapChainFramebuffers) {
-		vkDestroyFramebuffer(logicalDevice, framebuffer, nullptr);
-	}
-
-	for (auto imageView : swapChainImageViews) {
-		vkDestroyImageView(logicalDevice, imageView, nullptr);
-	}
-
-	vkDestroySwapchainKHR(logicalDevice, swapChain, nullptr);
-}
-
 
 void Renderer::recreateSwapChain() {
 	Log.Info("Vulkan", "Recreating suboptimal swapchain.");
@@ -268,9 +225,6 @@ void Renderer::recreateSwapChain() {
 	}
 
 	vkDeviceWaitIdle(logicalDevice);
-
-	cleanupSwapChain();
-
 	createSwapChain();
 	createImageViews();
 	createFramebuffers();
@@ -285,7 +239,7 @@ void Renderer::createImageViews() {
 		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		createInfo.image = swapChainImages[i];
 		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		createInfo.format = swapChainImageFormat;
+		createInfo.format = swapChain.image_format;
 		createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 		createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
 		createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -305,7 +259,7 @@ void Renderer::createImageViews() {
 
 void Renderer::createRenderPass() {
 	VkAttachmentDescription colorAttachment{};
-	colorAttachment.format = swapChainImageFormat;
+	colorAttachment.format = swapChain.image_format;
 	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 	colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -457,8 +411,8 @@ void Renderer::createFramebuffers() {
 		framebufferInfo.renderPass = renderPass;
 		framebufferInfo.attachmentCount = 1;
 		framebufferInfo.pAttachments = attachments;
-		framebufferInfo.width = swapChainExtent.width;
-		framebufferInfo.height = swapChainExtent.height;
+		framebufferInfo.width = swapChain.extent.width;
+		framebufferInfo.height = swapChain.extent.height;
 		framebufferInfo.layers = 1;
 
 		if (vkCreateFramebuffer(logicalDevice, &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS) {
@@ -508,7 +462,7 @@ void Renderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
 
 	renderPassInfo.renderArea.offset = { 0, 0 };
-	renderPassInfo.renderArea.extent = swapChainExtent;
+	renderPassInfo.renderArea.extent = swapChain.extent;
 
 	VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
 	renderPassInfo.clearValueCount = 1;
@@ -521,15 +475,15 @@ void Renderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	VkViewport viewport{};
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
-	viewport.width = static_cast<float>(swapChainExtent.width);
-	viewport.height = static_cast<float>(swapChainExtent.height);
+	viewport.width = static_cast<float>(swapChain.extent.width);
+	viewport.height = static_cast<float>(swapChain.extent.height);
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
 	VkRect2D scissor{};
 	scissor.offset = { 0, 0 };
-	scissor.extent = swapChainExtent;
+	scissor.extent = swapChain.extent;
 	
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 	VkBuffer vertexBuffers[] = { vertexBuffer };
@@ -701,26 +655,6 @@ void Renderer::createInstanceAndDevice() {
 	}
 	presentQueue = present_queue_ret.value();
 	graphicsQueue = graphics_queue_ret.value();
-}
-
-VkSurfaceFormatKHR Renderer::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
-	for (const auto& availableFormat : availableFormats) {
-		if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-			return availableFormat;
-		}
-	}
-
-	return availableFormats[0];
-}
-
-VkPresentModeKHR Renderer::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
-	for (const auto& availablePresentMode : availablePresentModes) {
-		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
-			return availablePresentMode;
-		}
-	}
-
-	return VK_PRESENT_MODE_FIFO_KHR;
 }
 
 VkExtent2D Renderer::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {

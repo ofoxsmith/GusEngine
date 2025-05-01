@@ -110,9 +110,7 @@ class Renderer {
 	VkQueue graphicsQueue = nullptr;
 	VkSurfaceKHR surface = nullptr;
 	VkQueue presentQueue = nullptr;
-	VkSwapchainKHR swapChain = nullptr;
-	VkFormat swapChainImageFormat = VK_FORMAT_UNDEFINED;
-	VkExtent2D swapChainExtent{};
+	vkb::Swapchain swapChain;
 	VkDescriptorSetLayout descriptorSetLayout;
 	VkPipelineLayout pipelineLayout = nullptr;
 	VkRenderPass renderPass = nullptr;
@@ -146,7 +144,6 @@ class Renderer {
 	void drawFrame();
 	void createSurface();
 	void createSwapChain();
-	void cleanupSwapChain();
 	void recreateSwapChain();
 	void createImageViews();
 	void createRenderPass();
@@ -166,8 +163,6 @@ class Renderer {
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) const;
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) const;
 	void createInstanceAndDevice();
-	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
-	VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 	VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
