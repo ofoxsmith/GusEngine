@@ -156,6 +156,7 @@
     <ClCompile Include="core\types\type_registry.cpp" />
     <ClCompile Include="core\renderer\renderer.cpp" />
     <ClCompile Include="core\engine.cpp" />
+    <ClCompile Include="external\vkBootstrap\VkBootstrap.cpp" />
     <ClCompile Include="filesystem\engine_io.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="core\types\resource.cpp" />
@@ -171,6 +172,8 @@
     <ClInclude Include="core\types\type_registry.h" />
     <ClInclude Include="core\renderer\renderer.h" />
     <ClInclude Include="core\engine.h" />
+    <ClInclude Include="external\vkBootstrap\VkBootstrap.h" />
+    <ClInclude Include="external\vkBootstrap\VkBootstrapDispatch.h" />
     <ClInclude Include="filesystem\engine_io.h" />
     <ClInclude Include="project\resources\image.h" />
     <ClInclude Include="project\resources\shader.h" />

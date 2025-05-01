@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include "filesystem/resource_loader.h"
 #include "core/globals.h"
+#include "external/vkBootstrap/VkBootstrap.h"
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -29,9 +30,9 @@ const std::vector<const char*> deviceExtensions = {
 };
 
 #ifdef NDEBUG
-const bool _USE_VK_VALIDATION_LAYERS = false;
+constexpr bool _USE_VK_VALIDATION_LAYERS = false;
 #else
-const bool _USE_VK_VALIDATION_LAYERS = true;
+constexpr bool _USE_VK_VALIDATION_LAYERS = true;
 #endif
 
 struct UniformBufferObject {
@@ -102,10 +103,10 @@ class Renderer {
 	private: 
 
 	GLFWwindow* window = nullptr;
-	VkInstance instance = nullptr;
+	vkb::Instance _instance;
 	VkDebugUtilsMessengerEXT debugMessenger = nullptr;
-	VkPhysicalDevice physicalDevice = nullptr;
-	VkDevice logicalDevice = nullptr;
+	vkb::PhysicalDevice physicalDevice;
+	vkb::Device logicalDevice;
 	VkQueue graphicsQueue = nullptr;
 	VkSurfaceKHR surface = nullptr;
 	VkQueue presentQueue = nullptr;
@@ -144,7 +145,6 @@ class Renderer {
 	void initVulkan();
 	void drawFrame();
 	void createSurface();
-	void createLogicalDevice();
 	void createSwapChain();
 	void cleanupSwapChain();
 	void recreateSwapChain();
@@ -165,17 +165,10 @@ class Renderer {
 	void createDescriptorSetLayout();
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) const;
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) const;
-	void createInstance();
-	bool isDeviceSuitable(VkPhysicalDevice device);
+	void createInstanceAndDevice();
 	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 	VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 	VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
-	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
-	void selectPhysicalDevice();
-	void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
-	void setupDebugMessenger();
-	std::vector<const char*> getRequiredExtensions();
-	bool checkValidationLayerSupport();
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);

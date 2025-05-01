@@ -1,4 +1,5 @@
 #include "renderer.h"
+#include "external/vkBootstrap/VkBootstrap.h"
 
 static VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
 	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
@@ -44,11 +45,8 @@ void Renderer::framebufferResizeCallback(GLFWwindow* window, int width, int heig
 
 
 void Renderer::initVulkan() {
-	createInstance();
-	setupDebugMessenger();
+	createInstanceAndDevice();
 	createSurface();
-	selectPhysicalDevice();
-	createLogicalDevice();
 	createSwapChain();
 	createImageViews();
 	createRenderPass();
@@ -152,7 +150,7 @@ void Renderer::updateUniformBuffer(uint32_t current) {
 
 void Renderer::Cleanup() {
 	if (_USE_VK_VALIDATION_LAYERS) {
-		DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
+		DestroyDebugUtilsMessengerEXT(_instance, debugMessenger, nullptr);
 	}
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		vkDestroySemaphore(logicalDevice, renderFinishedSemaphores[i], nullptr);
@@ -177,9 +175,9 @@ void Renderer::Cleanup() {
 	vkDestroyPipeline(logicalDevice, graphicsPipeline, nullptr);
 	vkDestroyPipelineLayout(logicalDevice, pipelineLayout, nullptr);
 	vkDestroyRenderPass(logicalDevice, renderPass, nullptr);
-	vkDestroySurfaceKHR(instance, surface, nullptr);
-	vkDestroyDevice(logicalDevice, nullptr);
-	vkDestroyInstance(instance, nullptr);
+	vkDestroySurfaceKHR(_instance, surface, nullptr);
+	vkb::destroy_device(logicalDevice);
+	vkb::destroy_instance(_instance);
 
 	glfwDestroyWindow(window);
 
@@ -187,56 +185,11 @@ void Renderer::Cleanup() {
 }
 
 void Renderer::createSurface() {
-	if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
+	if (glfwCreateWindowSurface(_instance, window, nullptr, &surface) != VK_SUCCESS) {
 		Log.FatalError("Vulkan", "Failed to create window surface.");
 	}
 }
 
-void Renderer::createLogicalDevice() {
-	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
-
-	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-	std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
-
-	float queuePriority = 1.0f;
-	for (uint32_t queueFamily : uniqueQueueFamilies) {
-		VkDeviceQueueCreateInfo queueCreateInfo{};
-		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-		queueCreateInfo.queueFamilyIndex = queueFamily;
-		queueCreateInfo.queueCount = 1;
-		queueCreateInfo.pQueuePriorities = &queuePriority;
-		queueCreateInfos.push_back(queueCreateInfo);
-	}
-
-	VkPhysicalDeviceFeatures deviceFeatures{};
-
-	VkDeviceCreateInfo createInfo{};
-	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-
-	createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
-	createInfo.pQueueCreateInfos = queueCreateInfos.data();
-
-	createInfo.pEnabledFeatures = &deviceFeatures;
-	createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-	createInfo.ppEnabledExtensionNames = deviceExtensions.data();
-
-
-	if (_USE_VK_VALIDATION_LAYERS) {
-		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-		createInfo.ppEnabledLayerNames = validationLayers.data();
-	}
-	else {
-		createInfo.enabledLayerCount = 0;
-	}
-
-	if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &logicalDevice) != VK_SUCCESS) {
-		Log.FatalError("Vulkan", "Failed to create logical device.");
-	}
-
-	vkGetDeviceQueue(logicalDevice, indices.graphicsFamily.value(), 0, &graphicsQueue);
-	vkGetDeviceQueue(logicalDevice, indices.presentFamily.value(), 0, &presentQueue);
-
-}
 
 void Renderer::createSwapChain() {
 	SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
@@ -670,55 +623,84 @@ SwapChainSupportDetails Renderer::querySwapChainSupport(VkPhysicalDevice device)
 }
 
 
-void Renderer::createInstance() {
-	if (_USE_VK_VALIDATION_LAYERS && !checkValidationLayerSupport()) {
+void Renderer::createInstanceAndDevice() {
+
+	// Create instance
+
+	vkb::InstanceBuilder ibuilder;
+	auto system_info_ret = vkb::SystemInfo::get_system_info();
+	if (!system_info_ret) { Log.FatalError("Vulkan", "Failed to query system info."); }
+	vkb::SystemInfo system_info = system_info_ret.value();
+
+	if (_USE_VK_VALIDATION_LAYERS && !system_info.validation_layers_available) {
 		Log.FatalError("Vulkan", "Validation layers requested, but not available.");
 	}
 
-	VkApplicationInfo appInfo{};
-	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-	appInfo.pApplicationName = "GusEngine";
-	appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-	appInfo.pEngineName = "NA";
-	appInfo.apiVersion = VK_API_VERSION_1_3;
-
-	VkInstanceCreateInfo createInfo{};
-	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-	createInfo.pApplicationInfo = &appInfo;
-
-	auto extensions = getRequiredExtensions();
-	createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-	createInfo.ppEnabledExtensionNames = extensions.data();
-
-	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-	if (_USE_VK_VALIDATION_LAYERS) {
-		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-		createInfo.ppEnabledLayerNames = validationLayers.data();
-
-		populateDebugMessengerCreateInfo(debugCreateInfo);
-		createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
+	ibuilder.set_app_name("GusEngine");
+	ibuilder.set_app_version(1, 0, 0);
+	ibuilder.require_api_version(VK_API_VERSION_1_3);
+	if constexpr (_USE_VK_VALIDATION_LAYERS) {
+		ibuilder.enable_validation_layers(true);
+		ibuilder.use_default_debug_messenger();
 	}
-	else {
-		createInfo.enabledLayerCount = 0;
-
-		createInfo.pNext = nullptr;
+	
+	uint32_t glfwExtensionCount = 0;
+	const char** glfwExtensions;
+	glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+	std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+	for (size_t i = 0; i < extensions.size(); i++)
+	{
+		if (!system_info.is_extension_available(extensions[i])) { Log.FatalError("Vulkan", "Required instance extension not available:" + string(extensions[i])); }
+		ibuilder.enable_extension(extensions[i]);
 	}
 
-	if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
-		Log.FatalError("Vulkan", "Failed to create instance.");
-	}
-}
-
-bool Renderer::isDeviceSuitable(VkPhysicalDevice device) {
-	QueueFamilyIndices indices = findQueueFamilies(device);
-	bool extensionsSupported = checkDeviceExtensionSupport(device);
-	bool swapChainAdequate = false;
-	if (extensionsSupported) {
-		SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device);
-		swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+	auto instance_ret = ibuilder.build();
+	if (!instance_ret) {
+		Log.FatalError("Vulkan", "Failed to create Vulkan instance. " + instance_ret.error().message());
+		return;
 	}
 
-	return indices.isComplete() && extensionsSupported && swapChainAdequate;
+	_instance = instance_ret.value();
+	
+	// Create surface
+
+	VkResult err = glfwCreateWindowSurface(instance_ret.value(), window, NULL, &surface);
+	if (err != VK_SUCCESS) { 
+		Log.FatalError("GLFW", "Failed to create window surface.");
+	}
+
+	// Select physical device
+
+	vkb::PhysicalDeviceSelector device_selector = vkb::PhysicalDeviceSelector(instance_ret.value());
+	device_selector.set_surface(surface);
+	for (size_t i = 0; i < deviceExtensions.size(); i++)
+	{
+		device_selector.add_required_extension(deviceExtensions[i]);
+	}
+	auto pdevice_ret = device_selector.select();
+	if (!pdevice_ret) {
+		Log.FatalError("Vulkan", "Failed to find a suitable GPU. " + pdevice_ret.error().message());
+	}
+
+	physicalDevice = pdevice_ret.value();
+
+	// Create logical device
+
+	vkb::DeviceBuilder device_builder(pdevice_ret.value());
+	auto dev_ret = device_builder.build();
+	if (!dev_ret) {
+		// error
+	}
+	logicalDevice = dev_ret.value();
+	
+	auto graphics_queue_ret = dev_ret.value().get_queue(vkb::QueueType::graphics);
+	auto present_queue_ret = dev_ret.value().get_queue(vkb::QueueType::present);
+
+	if (!graphics_queue_ret || !present_queue_ret) {
+		Log.FatalError("Vulkan", "Failed to create queues.");
+	}
+	presentQueue = present_queue_ret.value();
+	graphicsQueue = graphics_queue_ret.value();
 }
 
 VkSurfaceFormatKHR Renderer::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
@@ -761,104 +743,6 @@ VkExtent2D Renderer::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabiliti
 	}
 }
 
-
-bool Renderer::checkDeviceExtensionSupport(VkPhysicalDevice device) {
-	uint32_t extensionCount;
-	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
-
-	std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
-
-	std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
-
-	for (const auto& extension : availableExtensions) {
-		requiredExtensions.erase(extension.extensionName);
-	}
-
-	return requiredExtensions.empty();
-
-};
-
-void Renderer::selectPhysicalDevice() {
-	uint32_t deviceCount = 0;
-	vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
-	if (deviceCount == 0) {
-		Log.FatalError("Vulkan", "Failed to find GPU(s) with Vulkan support.");
-	}
-
-	std::vector<VkPhysicalDevice> devices(deviceCount);
-	vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
-
-
-	for (const auto& device : devices) {
-		if (isDeviceSuitable(device)) {
-			physicalDevice = device;
-			break;
-		}
-	}
-
-	if (physicalDevice == VK_NULL_HANDLE) {
-		Log.FatalError("Vulkan", "Failed to find a suitable GPU.");
-	}
-}
-
-void Renderer::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
-	createInfo = {};
-	createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-	createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-	createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-	createInfo.pfnUserCallback = debugCallback;
-}
-
-void Renderer::setupDebugMessenger() {
-	if (!_USE_VK_VALIDATION_LAYERS) return;
-
-	VkDebugUtilsMessengerCreateInfoEXT createInfo;
-	populateDebugMessengerCreateInfo(createInfo);
-
-	if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
-		Log.FatalError("Vulkan", "Failed to set up debug messenger.");
-	}
-}
-
-std::vector<const char*> Renderer::getRequiredExtensions() {
-	uint32_t glfwExtensionCount = 0;
-	const char** glfwExtensions;
-	glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-	std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-
-	if (_USE_VK_VALIDATION_LAYERS) {
-		extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-	}
-
-	return extensions;
-}
-
-bool Renderer::checkValidationLayerSupport() {
-	uint32_t layerCount;
-	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-
-	std::vector<VkLayerProperties> availableLayers(layerCount);
-	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
-
-	for (const char* layerName : validationLayers) {
-		bool layerFound = false;
-
-		for (const auto& layerProperties : availableLayers) {
-			if (strcmp(layerName, layerProperties.layerName) == 0) {
-				layerFound = true;
-				break;
-			}
-		}
-
-		if (!layerFound) {
-			return false;
-		}
-	}
-
-	return true;
-}
 
 unsigned int Renderer::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
 {
