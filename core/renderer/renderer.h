@@ -133,8 +133,7 @@ class Renderer {
 	static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 	void initVulkan();
 	void drawFrame();
-	void createSurface();
-	void cleanupSwapChain();
+	void cleanupSwapChain(bool destroySwapchain = true);
 	void createSwapChain();
 	void recreateSwapChain();
 	void createImageViews();
