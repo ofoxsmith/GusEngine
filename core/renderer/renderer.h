@@ -41,15 +41,6 @@ struct UniformBufferObject {
 	glm::mat4 proj;
 };
 
-struct QueueFamilyIndices {
-	std::optional<uint32_t> graphicsFamily;
-	std::optional<uint32_t> presentFamily;
-
-	bool isComplete() const {
-		return graphicsFamily.has_value() && presentFamily.has_value();
-	}
-};
-
 struct SwapChainSupportDetails {
 	VkSurfaceCapabilitiesKHR capabilities{};
 	std::vector<VkSurfaceFormatKHR> formats;
@@ -161,10 +152,7 @@ class Renderer {
 	void createDescriptorPool();
 	void createDescriptorSets();
 	void createDescriptorSetLayout();
-	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) const;
-	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) const;
 	void createInstanceAndDevice();
-	VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
