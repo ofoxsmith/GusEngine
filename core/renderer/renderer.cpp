@@ -1,22 +1,5 @@
 #include "renderer.h"
-#include "external/vkBootstrap/VkBootstrap.h"
-
-static VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
-	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-	if (func != nullptr) {
-		return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-	}
-	else {
-		return VK_ERROR_EXTENSION_NOT_PRESENT;
-	}
-}
-
-static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
-	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-	if (func != nullptr) {
-		func(instance, debugMessenger, pAllocator);
-	}
-}
+#include <external/vkBootstrap/VkBootstrap.h>
 
 void Renderer::Init() {
 	initWindow();
@@ -32,9 +15,9 @@ void Renderer::initWindow() {
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-	window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
-	glfwSetWindowUserPointer(window, this);
-	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
+	_window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+	glfwSetWindowUserPointer(_window, this);
+	glfwSetFramebufferSizeCallback(_window, framebufferResizeCallback);
 }
 
 void Renderer::framebufferResizeCallback(GLFWwindow* window, int width, int height) {
@@ -43,9 +26,10 @@ void Renderer::framebufferResizeCallback(GLFWwindow* window, int width, int heig
 }
 
 
-
 void Renderer::initVulkan() {
 	createInstanceAndDevice();
+	_allocator = new Allocator(&_instance.instance, &_physicalDevice.physical_device, &_device.device);
+
 	createSwapChain();
 	createImageViews();
 	createRenderPass();
@@ -58,23 +42,24 @@ void Renderer::initVulkan() {
 	createUniformBuffers();
 	createDescriptorPool();
 	createDescriptorSets();
-	createCommandBuffers();
-	createSyncObjects();
+	createFrameObjects();
 }
 
 void Renderer::MainLoop() {
-	while (!glfwWindowShouldClose(window)) {
+	while (!glfwWindowShouldClose(_window)) {
 		glfwPollEvents();
 		drawFrame();
 	}
-	vkDeviceWaitIdle(logicalDevice);
+	vkDeviceWaitIdle(_device);
 }
 
 void Renderer::drawFrame() {
-	vkWaitForFences(logicalDevice, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+
+	FrameData current_frame = get_current_frame();
+	vkWaitForFences(_device, 1, &current_frame.renderFence, VK_TRUE, UINT64_MAX);
 
 	uint32_t imageIndex;
-	VkResult result = vkAcquireNextImageKHR(logicalDevice, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+	VkResult result = vkAcquireNextImageKHR(_device, _swapchain, UINT64_MAX, current_frame.imageSemaphore, VK_NULL_HANDLE, &imageIndex);
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
 		recreateSwapChain();
@@ -83,28 +68,28 @@ void Renderer::drawFrame() {
 	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 		Log.FatalError("Vulkan", "Failed to acquire swap chain image.");
 	}
-	vkResetFences(logicalDevice, 1, &inFlightFences[currentFrame]);
-	vkResetCommandBuffer(commandBuffers[currentFrame], 0);
-	recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
+	vkResetFences(_device, 1, &current_frame.renderFence);
+	vkResetCommandBuffer(current_frame.commandBuffer, 0);
+	recordCommandBuffer(current_frame.commandBuffer, imageIndex);
 
-	updateUniformBuffer(currentFrame);
+	updateUniformBuffer(frameNum % MAX_FRAMES_IN_FLIGHT);
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-	VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[currentFrame] };
+	VkSemaphore waitSemaphores[] = { current_frame.imageSemaphore };
 	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 	submitInfo.waitSemaphoreCount = 1;
 	submitInfo.pWaitSemaphores = waitSemaphores;
 	submitInfo.pWaitDstStageMask = waitStages;
 
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &commandBuffers[currentFrame];
+	submitInfo.pCommandBuffers = &current_frame.commandBuffer;
 
-	VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[currentFrame] };
+	VkSemaphore signalSemaphores[] = { current_frame.renderSemaphore };
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = signalSemaphores;
 
-	if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
+	if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, current_frame.renderFence) != VK_SUCCESS) {
 		Log.FatalError("Vulkan", "Failed to submit draw command buffer.");
 	}
 
@@ -114,7 +99,7 @@ void Renderer::drawFrame() {
 	presentInfo.waitSemaphoreCount = 1;
 	presentInfo.pWaitSemaphores = signalSemaphores;
 
-	VkSwapchainKHR swapChains[] = { swapChain };
+	VkSwapchainKHR swapChains[] = { _swapchain };
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = swapChains;
 	presentInfo.pImageIndices = &imageIndex;
@@ -130,7 +115,7 @@ void Renderer::drawFrame() {
 
 
 
-	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+	frameNum++;
 }
 
 void Renderer::updateUniformBuffer(uint32_t current) {
@@ -141,7 +126,7 @@ void Renderer::updateUniformBuffer(uint32_t current) {
 	UniformBufferObject ubo{};
 	ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	ubo.proj = glm::perspective(glm::radians(45.0f), swapChain.extent.width / (float)swapChain.extent.height, 0.1f, 10.0f);
+	ubo.proj = glm::perspective(glm::radians(45.0f), _swapchain.extent.width / (float)_swapchain.extent.height, 0.1f, 10.0f);
 	ubo.proj[1][1] *= -1;
 	memcpy(uniformBuffersMapped[current], &ubo, sizeof(ubo));
 
@@ -149,97 +134,89 @@ void Renderer::updateUniformBuffer(uint32_t current) {
 
 void Renderer::cleanupSwapChain(bool destroySwapchain) {
 	for (auto framebuffer : swapChainFramebuffers) {
-		vkDestroyFramebuffer(logicalDevice, framebuffer, nullptr);
+		vkDestroyFramebuffer(_device, framebuffer, nullptr);
 	}
 
 	for (auto imageView : swapChainImageViews) {
-		vkDestroyImageView(logicalDevice, imageView, nullptr);
+		vkDestroyImageView(_device, imageView, nullptr);
 	}
-	if (destroySwapchain) vkb::destroy_swapchain(swapChain);
+	if (destroySwapchain) vkb::destroy_swapchain(_swapchain);
 }
 
 void Renderer::Cleanup() {
 	cleanupSwapChain();
 
-	vkDestroyPipeline(logicalDevice, graphicsPipeline, nullptr);
-	vkDestroyPipelineLayout(logicalDevice, pipelineLayout, nullptr);
-	vkDestroyRenderPass(logicalDevice, renderPass, nullptr);
+	vkDestroyPipeline(_device, graphicsPipeline, nullptr);
+	vkDestroyPipelineLayout(_device, pipelineLayout, nullptr);
+	vkDestroyRenderPass(_device, renderPass, nullptr);
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 	{
-		vkDestroyBuffer(logicalDevice, uniformBuffers[i], nullptr);
-		vkFreeMemory(logicalDevice, uniformBuffersMemory[i], nullptr);
+		_allocator->destroy(&uniformBuffers[i]);
 	}
 
-	vkDestroyDescriptorPool(logicalDevice, descriptorPool, nullptr);
-	vkDestroyDescriptorSetLayout(logicalDevice, descriptorSetLayout, nullptr);
+	vkDestroyDescriptorPool(_device, descriptorPool, nullptr);
+	vkDestroyDescriptorSetLayout(_device, descriptorSetLayout, nullptr);
 
-	vkDestroyBuffer(logicalDevice, indexBuffer, nullptr);
-	vkFreeMemory(logicalDevice, indexBufferMemory, nullptr);
-
-	vkDestroyBuffer(logicalDevice, vertexBuffer, nullptr);
-	vkFreeMemory(logicalDevice, vertexBufferMemory, nullptr);
+	_allocator->destroy(&vertexBuffer);
+	_allocator->destroy(&indexBuffer);
 
 	resources::Shader* vertShader = ResourceLoader::Load<resources::Shader>("shaders/shader.vert");
 	resources::Shader* fragShader = ResourceLoader::Load<resources::Shader>("shaders/shader.frag");
-	vkDestroyShaderModule(logicalDevice, vertShader->GetShaderModule(logicalDevice), nullptr);
-	vkDestroyShaderModule(logicalDevice, fragShader->GetShaderModule(logicalDevice), nullptr);
+	vkDestroyShaderModule(_device, vertShader->GetShaderModule(_device), nullptr);
+	vkDestroyShaderModule(_device, fragShader->GetShaderModule(_device), nullptr);
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		vkDestroySemaphore(logicalDevice, renderFinishedSemaphores[i], nullptr);
-		vkDestroySemaphore(logicalDevice, imageAvailableSemaphores[i], nullptr);
-		vkDestroyFence(logicalDevice, inFlightFences[i], nullptr);
+		_frames[i].Destroy();
 	}
 
-	vkDestroyCommandPool(logicalDevice, commandPool, nullptr);
+	vkDestroyCommandPool(_device, commandPool, nullptr);
 
-	vkb::destroy_device(logicalDevice);
-	if (_USE_VK_VALIDATION_LAYERS) {
-		DestroyDebugUtilsMessengerEXT(_instance, debugMessenger, nullptr);
-	}
+	delete _allocator;
+	vkb::destroy_device(_device);
 
-	vkDestroySurfaceKHR(_instance, surface, nullptr);
+	vkDestroySurfaceKHR(_instance, _surface, nullptr);
 	vkb::destroy_instance(_instance);
 
-	glfwDestroyWindow(window);
+	glfwDestroyWindow(_window);
 
 	glfwTerminate();
 }
 
 void Renderer::createSwapChain() {
 	unsigned int imageCount = 2;
-	vkb::SwapchainBuilder swapchain_builder{ logicalDevice };
+	vkb::SwapchainBuilder swapchain_builder{ _device };
 	swapchain_builder.use_default_format_selection().use_default_present_mode_selection().use_default_image_usage_flags();
 	swapchain_builder.set_desired_min_image_count(imageCount);
 	swapchain_builder.set_clipped(true);
 	swapchain_builder.set_image_array_layer_count(1);
-	if (swapChain != nullptr) {
-		swapchain_builder.set_old_swapchain(swapChain);
+	if (_swapchain != nullptr) {
+		swapchain_builder.set_old_swapchain(_swapchain);
 	}
 	auto swap_ret = swapchain_builder.build();
 	if (!swap_ret) {
 		Log.FatalError("Vulkan", "Failed to create swapchain.");
 	}
 
-	if (swapChain != nullptr) {
-		vkb::destroy_swapchain(swapChain);
+	if (_swapchain != nullptr) {
+		vkb::destroy_swapchain(_swapchain);
 	}
-	swapChain = swap_ret.value();
-	vkGetSwapchainImagesKHR(logicalDevice, swapChain, &imageCount, nullptr);
+	_swapchain = swap_ret.value();
+	vkGetSwapchainImagesKHR(_device, _swapchain, &imageCount, nullptr);
 	swapChainImages.resize(imageCount);
-	vkGetSwapchainImagesKHR(logicalDevice, swapChain, &imageCount, swapChainImages.data());
+	vkGetSwapchainImagesKHR(_device, _swapchain, &imageCount, swapChainImages.data());
 }
 
 void Renderer::recreateSwapChain() {
-	Log.Info("Vulkan", "Recreating suboptimal swapchain.");
+	Log.Debug("Vulkan", "Recreating suboptimal swapchain.");
 	int width = 0, height = 0;
-	glfwGetFramebufferSize(window, &width, &height);
+	glfwGetFramebufferSize(_window, &width, &height);
 	while (width == 0 || height == 0) {
-		glfwGetFramebufferSize(window, &width, &height);
+		glfwGetFramebufferSize(_window, &width, &height);
 		glfwWaitEvents();
 	}
 
-	vkDeviceWaitIdle(logicalDevice);
+	vkDeviceWaitIdle(_device);
 	cleanupSwapChain(false);
 	createSwapChain();
 	createImageViews();
@@ -255,7 +232,7 @@ void Renderer::createImageViews() {
 		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		createInfo.image = swapChainImages[i];
 		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		createInfo.format = swapChain.image_format;
+		createInfo.format = _swapchain.image_format;
 		createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 		createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
 		createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -266,7 +243,7 @@ void Renderer::createImageViews() {
 		createInfo.subresourceRange.baseArrayLayer = 0;
 		createInfo.subresourceRange.layerCount = 1;
 
-		if (vkCreateImageView(logicalDevice, &createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS) {
+		if (vkCreateImageView(_device, &createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS) {
 			Log.FatalError("Vulkan", "Failed to create swapchain image views.");
 		}
 	}
@@ -275,7 +252,7 @@ void Renderer::createImageViews() {
 
 void Renderer::createRenderPass() {
 	VkAttachmentDescription colorAttachment{};
-	colorAttachment.format = swapChain.image_format;
+	colorAttachment.format = _swapchain.image_format;
 	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 	colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -310,7 +287,7 @@ void Renderer::createRenderPass() {
 	renderPassInfo.dependencyCount = 1;
 	renderPassInfo.pDependencies = &dependency;
 
-	if (vkCreateRenderPass(logicalDevice, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
+	if (vkCreateRenderPass(_device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
 		Log.FatalError("Vulkan", "Failed to create render pass.");
 	}
 }
@@ -322,12 +299,12 @@ void Renderer::createGraphicsPipeline() {
 	VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 	vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-	vertShaderStageInfo.module = vertShader->GetShaderModule(logicalDevice);
+	vertShaderStageInfo.module = vertShader->GetShaderModule(_device);
 	vertShaderStageInfo.pName = "main";
 	VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
 	fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	fragShaderStageInfo.module = fragShader->GetShaderModule(logicalDevice);
+	fragShaderStageInfo.module = fragShader->GetShaderModule(_device);
 	fragShaderStageInfo.pName = "main";
 	VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
@@ -391,7 +368,7 @@ void Renderer::createGraphicsPipeline() {
 	pipelineLayoutInfo.setLayoutCount = 1;
 	pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 
-	if (vkCreatePipelineLayout(logicalDevice, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
+	if (vkCreatePipelineLayout(_device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
 		Log.FatalError("Vulkan", "Failed to create pipeline layout.");
 	}
 
@@ -410,7 +387,7 @@ void Renderer::createGraphicsPipeline() {
 	pipelineInfo.renderPass = renderPass;
 	pipelineInfo.subpass = 0;
 
-	if (vkCreateGraphicsPipelines(logicalDevice, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
+	if (vkCreateGraphicsPipelines(_device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
 		Log.FatalError("Vulkan", "Failed to create graphics pipeline.");
 	}
 }
@@ -427,11 +404,11 @@ void Renderer::createFramebuffers() {
 		framebufferInfo.renderPass = renderPass;
 		framebufferInfo.attachmentCount = 1;
 		framebufferInfo.pAttachments = attachments;
-		framebufferInfo.width = swapChain.extent.width;
-		framebufferInfo.height = swapChain.extent.height;
+		framebufferInfo.width = _swapchain.extent.width;
+		framebufferInfo.height = _swapchain.extent.height;
 		framebufferInfo.layers = 1;
 
-		if (vkCreateFramebuffer(logicalDevice, &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS) {
+		if (vkCreateFramebuffer(_device, &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS) {
 			Log.FatalError("Vulkan", "Failed to create framebuffer.");
 		}
 	}
@@ -441,25 +418,43 @@ void Renderer::createCommandPool() {
 	VkCommandPoolCreateInfo poolInfo{};
 	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	auto queue = logicalDevice.get_queue_index(vkb::QueueType::graphics);
+	auto queue = _device.get_queue_index(vkb::QueueType::graphics);
 	poolInfo.queueFamilyIndex = queue.value();
-	if (vkCreateCommandPool(logicalDevice, &poolInfo, nullptr, &commandPool) != VK_SUCCESS) {
+	if (vkCreateCommandPool(_device, &poolInfo, nullptr, &commandPool) != VK_SUCCESS) {
 		Log.FatalError("Vulkan", "Failed to create command pool.");
 	}
 }
 
-void Renderer::createCommandBuffers() {
-	commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+void Renderer::createFrameObjects() {
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+	{
+		_frames[i]._device = &_device;
+		// Command buffer creation
+		VkCommandBufferAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.commandPool = commandPool;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandBufferCount = 1;
 
-	VkCommandBufferAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocInfo.commandPool = commandPool;
-	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandBufferCount = 1;
-	allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
+		if (vkAllocateCommandBuffers(_device, &allocInfo, &_frames[i].commandBuffer) != VK_SUCCESS) {
+			Log.FatalError("Vulkan", "Failed to allocate command buffer.");
+		}
 
-	if (vkAllocateCommandBuffers(logicalDevice, &allocInfo, commandBuffers.data()) != VK_SUCCESS) {
-		Log.FatalError("Vulkan", "Failed to allocate command buffers.");
+		// Semaphore and fence creation
+
+		VkSemaphoreCreateInfo semaphoreInfo{};
+		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+		VkFenceCreateInfo fenceInfo{};
+		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+		if (vkCreateSemaphore(_device, &semaphoreInfo, nullptr, &_frames[i].imageSemaphore) != VK_SUCCESS ||
+			vkCreateSemaphore(_device, &semaphoreInfo, nullptr, &_frames[i].renderSemaphore) != VK_SUCCESS ||
+			vkCreateFence(_device, &fenceInfo, nullptr, &_frames[i].renderFence) != VK_SUCCESS) {
+
+			Log.FatalError("Vulkan", "Failed to create frame synchronization objects.");
+		}
+
 	}
 }
 
@@ -476,7 +471,7 @@ void Renderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
 
 	renderPassInfo.renderArea.offset = { 0, 0 };
-	renderPassInfo.renderArea.extent = swapChain.extent;
+	renderPassInfo.renderArea.extent = _swapchain.extent;
 
 	VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
 	renderPassInfo.clearValueCount = 1;
@@ -489,50 +484,28 @@ void Renderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	VkViewport viewport{};
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
-	viewport.width = static_cast<float>(swapChain.extent.width);
-	viewport.height = static_cast<float>(swapChain.extent.height);
+	viewport.width = static_cast<float>(_swapchain.extent.width);
+	viewport.height = static_cast<float>(_swapchain.extent.height);
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
 	VkRect2D scissor{};
 	scissor.offset = { 0, 0 };
-	scissor.extent = swapChain.extent;
+	scissor.extent = _swapchain.extent;
 	
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-	VkBuffer vertexBuffers[] = { vertexBuffer };
+	VkBuffer vertexBuffers[] = { *vertexBuffer.buffer };
 	VkDeviceSize offsets[] = { 0 };
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-	vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr);
+	vkCmdBindIndexBuffer(commandBuffer, *indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[frameNum % MAX_FRAMES_IN_FLIGHT], 0, nullptr);
 
 	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
 	vkCmdEndRenderPass(commandBuffer);
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
 		Log.FatalError("Vulkan", "Failed to record command buffer.");
-	}
-}
-
-void Renderer::createSyncObjects() {
-	imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-	renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-	inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-
-	VkSemaphoreCreateInfo semaphoreInfo{};
-	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-	VkFenceCreateInfo fenceInfo{};
-	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		if (vkCreateSemaphore(logicalDevice, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
-			vkCreateSemaphore(logicalDevice, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
-			vkCreateFence(logicalDevice, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS) {
-
-			Log.FatalError("Vulkan", "Failed to create frame synchronization objects.");
-		}
 	}
 }
 
@@ -577,7 +550,7 @@ void Renderer::createInstanceAndDevice() {
 	
 	// Create surface
 
-	VkResult err = glfwCreateWindowSurface(instance_ret.value(), window, NULL, &surface);
+	VkResult err = glfwCreateWindowSurface(instance_ret.value(), _window, NULL, &_surface);
 	if (err != VK_SUCCESS) { 
 		Log.FatalError("GLFW", "Failed to create window surface.");
 	}
@@ -585,7 +558,7 @@ void Renderer::createInstanceAndDevice() {
 	// Select physical device
 
 	vkb::PhysicalDeviceSelector device_selector = vkb::PhysicalDeviceSelector(instance_ret.value());
-	device_selector.set_surface(surface);
+	device_selector.set_surface(_surface);
 	for (size_t i = 0; i < deviceExtensions.size(); i++)
 	{
 		device_selector.add_required_extension(deviceExtensions[i]);
@@ -595,7 +568,7 @@ void Renderer::createInstanceAndDevice() {
 		Log.FatalError("Vulkan", "Failed to find a suitable GPU. " + pdevice_ret.error().message());
 	}
 
-	physicalDevice = pdevice_ret.value();
+	_physicalDevice = pdevice_ret.value();
 
 	// Create logical device
 
@@ -604,7 +577,7 @@ void Renderer::createInstanceAndDevice() {
 	if (!dev_ret) {
 		// error
 	}
-	logicalDevice = dev_ret.value();
+	_device = dev_ret.value();
 	
 	auto graphics_queue_ret = dev_ret.value().get_queue(vkb::QueueType::graphics);
 	auto present_queue_ret = dev_ret.value().get_queue(vkb::QueueType::present);
@@ -616,49 +589,6 @@ void Renderer::createInstanceAndDevice() {
 	graphicsQueue = graphics_queue_ret.value();
 }
 
-unsigned int Renderer::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
-{
-	VkPhysicalDeviceMemoryProperties memProperties;
-	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
-	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
-		if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
-			return i;
-		}
-	}
-
-	Log.FatalError("Vulkan", "Failed to find suitable memory type.");
-	return 0;
-}
-
-void Renderer::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
-	if (size <= 0) return Log.FatalError("Vulkan", "createBuffer: cannot create a buffer with size <= 0");
-	VkBufferCreateInfo bufferInfo{};
-	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferInfo.size = size;
-	bufferInfo.usage = usage;
-	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-	if (vkCreateBuffer(logicalDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
-		Log.FatalError("Vulkan", "Failed to create buffer.");
-	}
-
-	VkMemoryRequirements memRequirements;
-	vkGetBufferMemoryRequirements(logicalDevice, buffer, &memRequirements);
-
-	VkMemoryAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	allocInfo.allocationSize = memRequirements.size;
-	allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
-
-	if (vkAllocateMemory(logicalDevice, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
-		Log.FatalError("Vulkan", "Failed to allocate buffer memory.");
-	}
-
-	vkBindBufferMemory(logicalDevice, buffer, bufferMemory, 0);
-}
-
-
-
 void Renderer::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
 {
 	VkCommandBufferAllocateInfo allocInfo{};
@@ -668,7 +598,7 @@ void Renderer::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize s
 	allocInfo.commandBufferCount = 1;
 
 	VkCommandBuffer commandBuffer;
-	vkAllocateCommandBuffers(logicalDevice, &allocInfo, &commandBuffer);
+	vkAllocateCommandBuffers(_device, &allocInfo, &commandBuffer);
 
 	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -690,60 +620,46 @@ void Renderer::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize s
 	vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
 	vkQueueWaitIdle(graphicsQueue);
 
-	vkFreeCommandBuffers(logicalDevice, commandPool, 1, &commandBuffer);
+	vkFreeCommandBuffers(_device, commandPool, 1, &commandBuffer);
 }
 
 void Renderer::createVertexBuffer() {
 	VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
-	VkBuffer stagingBuffer;
-	VkDeviceMemory stagingBufferMemory;
-	createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+	BufferAlloc stagingBuffer =_allocator->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+		
+	_allocator->copyIntoAllocation(*stagingBuffer.alloc, (void*)vertices.data(), 0, bufferSize);
 
-	void* data;
-	vkMapMemory(logicalDevice, stagingBufferMemory, 0, bufferSize, 0, &data);
-	memcpy(data, vertices.data(), (size_t)bufferSize);
-	vkUnmapMemory(logicalDevice, stagingBufferMemory);
+	vertexBuffer = _allocator->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 0, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
 
-	createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
+	copyBuffer(*stagingBuffer.buffer, *vertexBuffer.buffer, bufferSize);
 
-	copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
-
-	vkDestroyBuffer(logicalDevice, stagingBuffer, nullptr);
-	vkFreeMemory(logicalDevice, stagingBufferMemory, nullptr);
+	_allocator->destroy(&stagingBuffer);
 }
 
 void Renderer::createIndexBuffer() {
 	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
-	VkBuffer stagingBuffer;
-	VkDeviceMemory stagingBufferMemory;
-	createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+	BufferAlloc stagingBuffer = _allocator->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
 
-	void* data;
-	vkMapMemory(logicalDevice, stagingBufferMemory, 0, bufferSize, 0, &data);
-	memcpy(data, indices.data(), (size_t)bufferSize);
-	vkUnmapMemory(logicalDevice, stagingBufferMemory);
+	_allocator->copyIntoAllocation(*stagingBuffer.alloc, (void*)indices.data(), 0, bufferSize);
 
-	createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
+	indexBuffer = _allocator->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 0, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
 
-	copyBuffer(stagingBuffer, indexBuffer, bufferSize);
-
-	vkDestroyBuffer(logicalDevice, stagingBuffer, nullptr);
-	vkFreeMemory(logicalDevice, stagingBufferMemory, nullptr);
+	copyBuffer(*stagingBuffer.buffer, *indexBuffer.buffer, bufferSize);
+	_allocator->destroy(&stagingBuffer);
 }
 
 void Renderer::createUniformBuffers() {
 	VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
 	uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-	uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
 	uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
+		uniformBuffers[i] = _allocator->createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_ALLOCATION_CREATE_MAPPED_BIT);
 
-		vkMapMemory(logicalDevice, uniformBuffersMemory[i], 0, bufferSize, 0, &uniformBuffersMapped[i]);
+		_allocator->mapMemory(*uniformBuffers[i].alloc, &uniformBuffersMapped[i]);
 	}
 
 }
@@ -758,7 +674,7 @@ void Renderer::createDescriptorPool() {
 	poolInfo.poolSizeCount = 1;
 	poolInfo.pPoolSizes = &poolSize;
 	poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-	if (vkCreateDescriptorPool(logicalDevice, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
+	if (vkCreateDescriptorPool(_device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
 		Log.FatalError("Vulkan", "failed to create descriptor pool!");
 	}
 
@@ -773,13 +689,13 @@ void Renderer::createDescriptorSets() {
 	allocInfo.pSetLayouts = layouts.data();
 
 	descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-	if (vkAllocateDescriptorSets(logicalDevice, &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
+	if (vkAllocateDescriptorSets(_device, &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
 		Log.FatalError("Vulkan", "Failed to allocate descriptor sets.");
 	}
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		VkDescriptorBufferInfo bufferInfo{};
-		bufferInfo.buffer = uniformBuffers[i];
+		bufferInfo.buffer = *uniformBuffers[i].buffer;
 		bufferInfo.offset = 0;
 		bufferInfo.range = sizeof(UniformBufferObject);
 		VkWriteDescriptorSet descriptorWrite{};
@@ -790,7 +706,7 @@ void Renderer::createDescriptorSets() {
 		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		descriptorWrite.descriptorCount = 1;
 		descriptorWrite.pBufferInfo = &bufferInfo;
-		vkUpdateDescriptorSets(logicalDevice, 1, &descriptorWrite, 0, nullptr);
+		vkUpdateDescriptorSets(_device, 1, &descriptorWrite, 0, nullptr);
 	}
 
 
@@ -808,25 +724,8 @@ void Renderer::createDescriptorSetLayout() {
 	layoutInfo.bindingCount = 1;
 	layoutInfo.pBindings = &uboLayoutBinding;
 
-	if (vkCreateDescriptorSetLayout(logicalDevice, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
+	if (vkCreateDescriptorSetLayout(_device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
 		Log.FatalError("Vulkan", "Failed to create descriptor set layout.");
 	}
 
-}
-
-VKAPI_ATTR VkBool32 VKAPI_CALL Renderer::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
-	switch (messageSeverity) {
-	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-		Log.Debug("Vulkan", pCallbackData->pMessage);
-		return VK_FALSE;
-	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-		Log.Info("Vulkan", pCallbackData->pMessage);
-		return VK_FALSE;
-	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-		Log.Warn("Vulkan", pCallbackData->pMessage);
-		return VK_FALSE;
-
-	}
-	return VK_FALSE;
 }

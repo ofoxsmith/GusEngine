@@ -24,9 +24,6 @@
     <ClCompile Include="core\globals.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="core\vkGraphics.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="core\engine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -54,15 +51,21 @@
     <ClCompile Include="project\resources\image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="core\renderer\renderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="external\vkBootstrap\VkBootstrap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="core\renderer\vkAllocator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utils\logger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="core\globals.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="core\vkGraphics.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="core\engine.h">
@@ -90,6 +93,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="project\resources\image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="core\renderer\renderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="external\vkBootstrap\VkBootstrap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="external\vkBootstrap\VkBootstrapDispatch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="core\renderer\vkAllocator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

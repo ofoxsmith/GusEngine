@@ -12,18 +12,15 @@
 #include <cstdlib>
 #include "filesystem/resource_loader.h"
 #include "core/globals.h"
-#include "external/vkBootstrap/VkBootstrap.h"
+#include <external/vkBootstrap/VkBootstrap.h>
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
+
+#include "vkAllocator.h"
+
 const int MAX_FRAMES_IN_FLIGHT = 2;
-
-
-
-const std::vector<const char*> validationLayers = {
-	"VK_LAYER_KHRONOS_validation"
-};
 
 const std::vector<const char*> deviceExtensions = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -39,12 +36,6 @@ struct UniformBufferObject {
 	glm::mat4 model;
 	glm::mat4 view;
 	glm::mat4 proj;
-};
-
-struct SwapChainSupportDetails {
-	VkSurfaceCapabilitiesKHR capabilities{};
-	std::vector<VkSurfaceFormatKHR> formats;
-	std::vector<VkPresentModeKHR> presentModes;
 };
 
 struct Vertex {
@@ -86,74 +77,84 @@ const std::vector<uint16_t> indices = {
 	0, 1, 2, 2, 3, 0
 };
 
+struct FrameData {
+	VkCommandBuffer commandBuffer;
+	VkSemaphore imageSemaphore, renderSemaphore;
+	VkFence renderFence;
+	vkb::Device* _device;
+	void Destroy() const {
+		vkDestroySemaphore(*_device, imageSemaphore, nullptr);
+		vkDestroySemaphore(*_device, renderSemaphore, nullptr);
+		vkDestroyFence(*_device, renderFence, nullptr);
+	}
+};
+
 class Renderer {
 	public:
+	FrameData _frames[MAX_FRAMES_IN_FLIGHT];
+	FrameData& get_current_frame() { return _frames[frameNum % MAX_FRAMES_IN_FLIGHT]; };
+
 	void Init();
 	void MainLoop();
 	void Cleanup();
 	private: 
 
-	GLFWwindow* window = nullptr;
+	Allocator* _allocator = nullptr;
+	GLFWwindow* _window = nullptr;
 	vkb::Instance _instance;
-	VkDebugUtilsMessengerEXT debugMessenger = nullptr;
-	vkb::PhysicalDevice physicalDevice;
-	vkb::Device logicalDevice;
+	vkb::PhysicalDevice _physicalDevice;
+	vkb::Device _device;
+	VkSurfaceKHR _surface = nullptr;
+	vkb::Swapchain _swapchain;
 	VkQueue graphicsQueue = nullptr;
-	VkSurfaceKHR surface = nullptr;
 	VkQueue presentQueue = nullptr;
-	vkb::Swapchain swapChain;
+
+	VkDescriptorPool descriptorPool = nullptr;
 	VkDescriptorSetLayout descriptorSetLayout;
 	VkPipelineLayout pipelineLayout = nullptr;
 	VkRenderPass renderPass = nullptr;
 	VkPipeline graphicsPipeline = nullptr;
 	VkCommandPool commandPool = nullptr;
-	uint32_t currentFrame = 0;
-	VkBuffer vertexBuffer = nullptr;
-	VkDeviceMemory vertexBufferMemory = nullptr;
-	VkBuffer indexBuffer = nullptr;
-	VkDeviceMemory indexBufferMemory = nullptr;
-	VkDescriptorPool descriptorPool = nullptr;
+	uint32_t frameNum = 0;
+	
+	BufferAlloc vertexBuffer;
+	BufferAlloc indexBuffer;
 
 	std::vector<VkImage> swapChainImages;
 	std::vector<VkImageView> swapChainImageViews;
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 	std::vector<VkDescriptorSet> descriptorSets;
-	std::vector<VkBuffer> uniformBuffers;
-	std::vector<VkDeviceMemory> uniformBuffersMemory;
+	std::vector<BufferAlloc> uniformBuffers;
 	std::vector<void*> uniformBuffersMapped;
-
-	std::vector<VkCommandBuffer> commandBuffers;
-	std::vector<VkSemaphore> imageAvailableSemaphores;
-	std::vector<VkSemaphore> renderFinishedSemaphores;
-	std::vector<VkFence> inFlightFences;
 
 	bool framebufferResized = false;
 
+
+	/// Rendering init and cleanup
 	void initWindow();
-	static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 	void initVulkan();
-	void drawFrame();
-	void cleanupSwapChain(bool destroySwapchain = true);
+	void createInstanceAndDevice();
 	void createSwapChain();
-	void recreateSwapChain();
 	void createImageViews();
 	void createRenderPass();
+	void createDescriptorSetLayout();
 	void createGraphicsPipeline();
 	void createFramebuffers();
 	void createCommandPool();
-	void createCommandBuffers();
-	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
-	void createSyncObjects();
 	void createVertexBuffer();
 	void createIndexBuffer();
 	void createUniformBuffers();
-	void updateUniformBuffer(uint32_t currentImage);
 	void createDescriptorPool();
 	void createDescriptorSets();
-	void createDescriptorSetLayout();
-	void createInstanceAndDevice();
-	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+	void createFrameObjects();
+
+	static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
+	void cleanupSwapChain(bool destroySwapchain = true);
+	void recreateSwapChain();
+
+	void drawFrame();
+
+	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+	void updateUniformBuffer(uint32_t currentImage);
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
 };

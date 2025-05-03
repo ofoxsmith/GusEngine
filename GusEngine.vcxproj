@@ -151,6 +151,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="core\globals.cpp" />
+    <ClCompile Include="core\renderer\vkAllocator.cpp" />
     <ClCompile Include="core\types\object.cpp" />
     <ClCompile Include="core\types\variant_type.cpp" />
     <ClCompile Include="core\types\type_registry.cpp" />
@@ -167,6 +168,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\globals.h" />
+    <ClInclude Include="core\renderer\vkAllocator.h" />
     <ClInclude Include="core\types\variant_type.h" />
     <ClInclude Include="core\types\object.h" />
     <ClInclude Include="core\types\type_registry.h" />
