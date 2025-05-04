@@ -495,10 +495,10 @@ void Renderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	scissor.extent = _swapchain.extent;
 	
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-	VkBuffer vertexBuffers[] = { *vertexBuffer.buffer };
+	VkBuffer vertexBuffers[] = { vertexBuffer.buffer };
 	VkDeviceSize offsets[] = { 0 };
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-	vkCmdBindIndexBuffer(commandBuffer, *indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+	vkCmdBindIndexBuffer(commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[frameNum % MAX_FRAMES_IN_FLIGHT], 0, nullptr);
 
 	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
@@ -625,28 +625,28 @@ void Renderer::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize s
 
 void Renderer::createVertexBuffer() {
 	VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
-
-	BufferAlloc stagingBuffer =_allocator->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+	BufferAlloc stagingBuffer;
+	_allocator->createBuffer(&stagingBuffer, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT|VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
 		
-	_allocator->copyIntoAllocation(*stagingBuffer.alloc, (void*)vertices.data(), 0, bufferSize);
+	_allocator->copyIntoAllocation(&stagingBuffer, (void*)vertices.data(), 0, bufferSize);
 
-	vertexBuffer = _allocator->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 0, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
+	_allocator->createBuffer(&vertexBuffer, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 0, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
 
-	copyBuffer(*stagingBuffer.buffer, *vertexBuffer.buffer, bufferSize);
+	copyBuffer(stagingBuffer.buffer, vertexBuffer.buffer, bufferSize);
 
 	_allocator->destroy(&stagingBuffer);
 }
 
 void Renderer::createIndexBuffer() {
 	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+	BufferAlloc stagingBuffer;
+	_allocator->createBuffer(&stagingBuffer, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
 
-	BufferAlloc stagingBuffer = _allocator->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+	_allocator->copyIntoAllocation(&stagingBuffer, (void*)indices.data(), 0, bufferSize);
 
-	_allocator->copyIntoAllocation(*stagingBuffer.alloc, (void*)indices.data(), 0, bufferSize);
+	_allocator->createBuffer(&indexBuffer, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 0, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
 
-	indexBuffer = _allocator->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 0, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
-
-	copyBuffer(*stagingBuffer.buffer, *indexBuffer.buffer, bufferSize);
+	copyBuffer(stagingBuffer.buffer, indexBuffer.buffer, bufferSize);
 	_allocator->destroy(&stagingBuffer);
 }
 
@@ -657,9 +657,9 @@ void Renderer::createUniformBuffers() {
 	uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		uniformBuffers[i] = _allocator->createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_ALLOCATION_CREATE_MAPPED_BIT);
+		_allocator->createBuffer(&uniformBuffers[i], bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_ALLOCATION_CREATE_MAPPED_BIT|VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
 
-		_allocator->mapMemory(*uniformBuffers[i].alloc, &uniformBuffersMapped[i]);
+		_allocator->mapMemory(&uniformBuffers[i], &uniformBuffersMapped[i]);
 	}
 
 }
@@ -695,7 +695,7 @@ void Renderer::createDescriptorSets() {
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		VkDescriptorBufferInfo bufferInfo{};
-		bufferInfo.buffer = *uniformBuffers[i].buffer;
+		bufferInfo.buffer = uniformBuffers[i].buffer;
 		bufferInfo.offset = 0;
 		bufferInfo.range = sizeof(UniformBufferObject);
 		VkWriteDescriptorSet descriptorWrite{};

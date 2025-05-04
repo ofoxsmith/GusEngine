@@ -1,6 +1,7 @@
 #define VMA_IMPLEMENTATION
 #include <external/VulkanMemoryAllocator/vk_mem_alloc.h>
 #include "vkAllocator.h"
+#include "core/globals.h"
 #undef VMA_IMPLEMENTATION
 
 Allocator::Allocator(VkInstance* instance, VkPhysicalDevice* physDevice, VkDevice* device)
@@ -14,12 +15,12 @@ Allocator::Allocator(VkInstance* instance, VkPhysicalDevice* physDevice, VkDevic
 	vmaCreateAllocator(&allocInfo, &_allocator);
 }
 
-BufferAlloc Allocator::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaAllocationCreateFlags memFlags, VmaMemoryUsage memUsage) const
+void Allocator::createBuffer(BufferAlloc* alloc, VkDeviceSize size, VkBufferUsageFlags usage, VmaAllocationCreateFlags memFlags, VmaMemoryUsage memUsage) const
 {
-	BufferAlloc newBuffer{};
-	VkBuffer newB;
-	VmaAllocation newA;
-
+	if (alloc->inUse) {
+		Log.Error("VMA", "Attempted to create buffer using a BufferAlloc object that is already in use.");
+		return;
+	}
 	VkBufferCreateInfo bufferInfo{};
 	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	bufferInfo.size = size;
@@ -29,41 +30,45 @@ BufferAlloc Allocator::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
 	memoryInfo.flags = memFlags;
 	memoryInfo.usage = memUsage;
 
-	vmaCreateBuffer(_allocator, &bufferInfo, &memoryInfo, &newB, &newA, nullptr);
-	newBuffer.buffer = &newB;
-	newBuffer.alloc = &newA;
-	return newBuffer;
+	alloc->inUse = true;
+	VkResult r = vmaCreateBuffer(_allocator, &bufferInfo, &memoryInfo, &alloc->buffer, &alloc->alloc, nullptr);
 }
 
 
-void Allocator::copyIntoAllocation(VmaAllocation allocation, void* data, VkDeviceSize offset, VkDeviceSize size) const
+void Allocator::copyIntoAllocation(Alloc* allocation, void* data, VkDeviceSize offset, VkDeviceSize size) const
 {
-	vmaCopyMemoryToAllocation(_allocator, data, allocation, offset, size);
+	vmaCopyMemoryToAllocation(_allocator, data, allocation->alloc, offset, size);
 }
 
-void Allocator::copyFromAllocation(VmaAllocation allocation, void** data, VkDeviceSize offset, VkDeviceSize size) const
+void Allocator::copyFromAllocation(Alloc* allocation, void** data, VkDeviceSize offset, VkDeviceSize size) const
 {
-	vmaCopyAllocationToMemory(_allocator, allocation, offset, data, size);
+	vmaCopyAllocationToMemory(_allocator, allocation->alloc, offset, data, size);
 }
 
-void Allocator::mapMemory(VmaAllocation allocation, void** data) const
+void Allocator::mapMemory(Alloc* allocation, void** data) const
 {
-	vmaMapMemory(_allocator, allocation, data);
+	allocation->mapped = true;
+	vmaMapMemory(_allocator, allocation->alloc, data);
 }
 
-void Allocator::unmapMemory(VmaAllocation allocation) const
+void Allocator::unmapMemory(Alloc* allocation) const
 {
-	vmaUnmapMemory(_allocator, allocation);
+	vmaUnmapMemory(_allocator, allocation->alloc);
+	allocation->mapped = false;
 }
 
 void Allocator::destroy(BufferAlloc* buffer) const
 {
-	vmaDestroyBuffer(_allocator, *buffer->buffer, *buffer->alloc);
+	if (buffer->mapped) unmapMemory(buffer);
+	vmaDestroyBuffer(_allocator, buffer->buffer, buffer->alloc);
+	buffer->inUse = false;
 }
 
 void Allocator::destroy(ImageAlloc* image) const
 {
-	vmaDestroyImage(_allocator, *image->image, *image->alloc);
+	if (image->mapped) unmapMemory(image);
+	vmaDestroyImage(_allocator, image->image, image->alloc);
+	image->inUse = false;
 }
 
 
