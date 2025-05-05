@@ -36,7 +36,7 @@ void Renderer::initVulkan() {
 	createDescriptorSetLayout();
 	createGraphicsPipeline();
 	createFramebuffers();
-	createCommandPool();
+	createCommandPools();
 	createVertexBuffer();
 	createIndexBuffer();
 	createUniformBuffers();
@@ -89,7 +89,7 @@ void Renderer::drawFrame() {
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = signalSemaphores;
 
-	if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, current_frame.renderFence) != VK_SUCCESS) {
+	if (vkQueueSubmit(queues[vkb::QueueType::graphics], 1, &submitInfo, current_frame.renderFence) != VK_SUCCESS) {
 		Log.FatalError("Vulkan", "Failed to submit draw command buffer.");
 	}
 
@@ -103,7 +103,7 @@ void Renderer::drawFrame() {
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = swapChains;
 	presentInfo.pImageIndices = &imageIndex;
-	result = vkQueuePresentKHR(presentQueue, &presentInfo);
+	result = vkQueuePresentKHR(queues[vkb::QueueType::present], &presentInfo);
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
 		framebufferResized = false;
@@ -170,7 +170,10 @@ void Renderer::Cleanup() {
 		_frames[i].Destroy();
 	}
 
-	vkDestroyCommandPool(_device, commandPool, nullptr);
+	for (std::pair<const vkb::QueueType, VkCommandPool> var: commandPools)
+	{
+		vkDestroyCommandPool(_device, var.second, nullptr);
+	}
 
 	delete _allocator;
 	vkb::destroy_device(_device);
@@ -414,13 +417,19 @@ void Renderer::createFramebuffers() {
 	}
 }
 
-void Renderer::createCommandPool() {
-	VkCommandPoolCreateInfo poolInfo{};
-	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	auto queue = _device.get_queue_index(vkb::QueueType::graphics);
-	poolInfo.queueFamilyIndex = queue.value();
-	if (vkCreateCommandPool(_device, &poolInfo, nullptr, &commandPool) != VK_SUCCESS) {
+void Renderer::createCommandPools() {
+	VkCommandPoolCreateInfo graphicsPoolInfo{};
+	graphicsPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	graphicsPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	graphicsPoolInfo.queueFamilyIndex = _device.get_queue_index(vkb::QueueType::graphics).value();
+	if (vkCreateCommandPool(_device, &graphicsPoolInfo, nullptr, &commandPools[vkb::QueueType::graphics]) != VK_SUCCESS) {
+		Log.FatalError("Vulkan", "Failed to create graphics command pool.");
+	}
+	VkCommandPoolCreateInfo transferPoolInfo{};
+	transferPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	transferPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	transferPoolInfo.queueFamilyIndex = _device.get_queue_index(vkb::QueueType::transfer).value();
+	if (vkCreateCommandPool(_device, &transferPoolInfo, nullptr, &commandPools[vkb::QueueType::transfer]) != VK_SUCCESS) {
 		Log.FatalError("Vulkan", "Failed to create command pool.");
 	}
 }
@@ -432,7 +441,7 @@ void Renderer::createFrameObjects() {
 		// Command buffer creation
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.commandPool = commandPool;
+		allocInfo.commandPool = commandPools[vkb::QueueType::graphics];
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		allocInfo.commandBufferCount = 1;
 
@@ -581,12 +590,13 @@ void Renderer::createInstanceAndDevice() {
 	
 	auto graphics_queue_ret = dev_ret.value().get_queue(vkb::QueueType::graphics);
 	auto present_queue_ret = dev_ret.value().get_queue(vkb::QueueType::present);
-
-	if (!graphics_queue_ret || !present_queue_ret) {
+	auto transfer_queue_ret = dev_ret.value().get_dedicated_queue(vkb::QueueType::transfer);
+	if (!graphics_queue_ret || !present_queue_ret || !transfer_queue_ret) {
 		Log.FatalError("Vulkan", "Failed to create queues.");
 	}
-	presentQueue = present_queue_ret.value();
-	graphicsQueue = graphics_queue_ret.value();
+	queues[vkb::QueueType::present] = present_queue_ret.value();
+	queues[vkb::QueueType::graphics] = graphics_queue_ret.value();
+	queues[vkb::QueueType::transfer] = transfer_queue_ret.value();
 }
 
 void Renderer::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
@@ -594,7 +604,7 @@ void Renderer::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize s
 	VkCommandBufferAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandPool = commandPool;
+	allocInfo.commandPool = commandPools[vkb::QueueType::transfer];
 	allocInfo.commandBufferCount = 1;
 
 	VkCommandBuffer commandBuffer;
@@ -617,10 +627,10 @@ void Renderer::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize s
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &commandBuffer;
 
-	vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-	vkQueueWaitIdle(graphicsQueue);
+	vkQueueSubmit(queues[vkb::QueueType::transfer], 1, &submitInfo, VK_NULL_HANDLE);
+	vkQueueWaitIdle(queues[vkb::QueueType::transfer]);
 
-	vkFreeCommandBuffers(_device, commandPool, 1, &commandBuffer);
+	vkFreeCommandBuffers(_device, commandPools[vkb::QueueType::transfer], 1, &commandBuffer);
 }
 
 void Renderer::createVertexBuffer() {

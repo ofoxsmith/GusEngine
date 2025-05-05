@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <set>
+#include <map>
 #include <vector>
 #include <cstring>
 #include <cstdlib>
@@ -106,17 +107,16 @@ class Renderer {
 	vkb::Device _device;
 	VkSurfaceKHR _surface = nullptr;
 	vkb::Swapchain _swapchain;
-	VkQueue graphicsQueue = nullptr;
-	VkQueue presentQueue = nullptr;
 
 	VkDescriptorPool descriptorPool = nullptr;
 	VkDescriptorSetLayout descriptorSetLayout;
 	VkPipelineLayout pipelineLayout = nullptr;
 	VkRenderPass renderPass = nullptr;
 	VkPipeline graphicsPipeline = nullptr;
-	VkCommandPool commandPool = nullptr;
 	uint32_t frameNum = 0;
 	
+	std::map<vkb::QueueType, VkQueue> queues{};
+	std::map<vkb::QueueType, VkCommandPool> commandPools{};
 	BufferAlloc vertexBuffer;
 	BufferAlloc indexBuffer;
 
@@ -140,7 +140,7 @@ class Renderer {
 	void createDescriptorSetLayout();
 	void createGraphicsPipeline();
 	void createFramebuffers();
-	void createCommandPool();
+	void createCommandPools();
 	void createVertexBuffer();
 	void createIndexBuffer();
 	void createUniformBuffers();
