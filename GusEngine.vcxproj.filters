@@ -60,6 +60,9 @@
     <ClCompile Include="core\renderer\vkAllocator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="core\renderer\graphicsPipeline.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utils\logger.h">
@@ -105,6 +108,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="core\renderer\vkAllocator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="core\renderer\graphicsPipeline.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

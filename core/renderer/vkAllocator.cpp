@@ -3,7 +3,7 @@
 #include "vkAllocator.h"
 #include "core/globals.h"
 #undef VMA_IMPLEMENTATION
-
+using namespace vkAllocator;
 Allocator::Allocator(VkInstance* instance, VkPhysicalDevice* physDevice, VkDevice* device)
 {
 	VmaAllocatorCreateInfo allocInfo = {};
@@ -31,7 +31,7 @@ void Allocator::createBuffer(BufferAlloc* alloc, VkDeviceSize size, VkBufferUsag
 	memoryInfo.usage = memUsage;
 
 	alloc->inUse = true;
-	VkResult r = vmaCreateBuffer(_allocator, &bufferInfo, &memoryInfo, &alloc->buffer, &alloc->alloc, nullptr);
+	VkResult r = vmaCreateBuffer(_allocator, &bufferInfo, &memoryInfo, &alloc->buffer, &alloc->alloc, &alloc->info);
 }
 
 
