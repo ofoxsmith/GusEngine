@@ -29,7 +29,6 @@ void Renderer::framebufferResizeCallback(GLFWwindow* window, int width, int heig
 void Renderer::initVulkan() {
 	createInstanceAndDevice();
 	_allocator = new Allocator(&_instance.instance, &_physicalDevice.physical_device, &_device.device);
-
 	createSwapChain();
 	createImageViews();
 	createRenderPass();

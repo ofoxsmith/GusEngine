@@ -16,6 +16,9 @@ namespace vkAllocator {
 
 	struct ImageAlloc : public Alloc {
 		VkImage image;
+		VkImageView imageView;
+		VkFormat format;
+		VkExtent3D extent;
 	};
 
 	class Allocator {
@@ -24,7 +27,7 @@ namespace vkAllocator {
 		public:
 		Allocator(VkInstance* instance, VkPhysicalDevice* physDevice, VkDevice* device);
 		void createBuffer(BufferAlloc* alloc, VkDeviceSize size, VkBufferUsageFlags usage, VmaAllocationCreateFlags memFlags = 0, VmaMemoryUsage memUsage = VMA_MEMORY_USAGE_AUTO) const;
-		void createImage(ImageAlloc* alloc);
+		void createImage(ImageAlloc* alloc, VkFormat format, VkImageTiling tiling, uint32_t extent[3]);
 
 
 		void copyIntoAllocation(Alloc* allocation, void* data, VkDeviceSize offset, VkDeviceSize size) const;

@@ -34,6 +34,21 @@ void Allocator::createBuffer(BufferAlloc* alloc, VkDeviceSize size, VkBufferUsag
 	VkResult r = vmaCreateBuffer(_allocator, &bufferInfo, &memoryInfo, &alloc->buffer, &alloc->alloc, &alloc->info);
 }
 
+void Allocator::createImage(ImageAlloc* alloc, VkImageUsageFlags usage, VkFormat format, VkImageTiling tiling, uint32_t extent[3])
+{
+	if (alloc->inUse) {
+		Log.Error("VMA", "Attempted to create image using an ImageAlloc object that is already in use.");
+		return;
+	}
+	VkImageCreateInfo imageInfo{};
+	imageInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	imageInfo.usage = usage;
+	imageInfo.format = format;
+	imageInfo.tiling = tiling;
+	imageInfo.extent.width = extent[0];
+	imageInfo.extent.height = extent[1];
+	imageInfo.extent.depth = extent[2];
+}
 
 void Allocator::copyIntoAllocation(Alloc* allocation, void* data, VkDeviceSize offset, VkDeviceSize size) const
 {
