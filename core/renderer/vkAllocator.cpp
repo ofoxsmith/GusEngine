@@ -13,6 +13,7 @@ Allocator::Allocator(VkInstance* instance, VkPhysicalDevice* physDevice, VkDevic
 	allocInfo.vulkanApiVersion = VK_API_VERSION_1_3;
 	allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
 	vmaCreateAllocator(&allocInfo, &_allocator);
+	_device = device;
 }
 
 void Allocator::createBuffer(BufferAlloc* alloc, VkDeviceSize size, VkBufferUsageFlags usage, VmaAllocationCreateFlags memFlags, VmaMemoryUsage memUsage) const
@@ -60,6 +61,19 @@ void Allocator::createImage(ImageAlloc* alloc, ImageParams params, VkExtent3D ex
 	alloc->layout = params.layout;
 	VkResult r = vmaCreateImage(_allocator, &imageInfo, &memoryInfo, &alloc->image, &alloc->alloc, &alloc->info);
 
+	VkImageViewCreateInfo viewInfo{};
+	viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	viewInfo.image = alloc->image;
+	viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	viewInfo.format = params.format;
+	viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	viewInfo.subresourceRange.baseMipLevel = 0;
+	viewInfo.subresourceRange.levelCount = 1;
+	viewInfo.subresourceRange.baseArrayLayer = 0;
+	viewInfo.subresourceRange.layerCount = 1;
+
+	vkCreateImageView(*_device, &viewInfo, nullptr, &alloc->imageView);
+
 }
 
 void Allocator::copyBufferToBufferCmd(VkCommandBuffer buffer, BufferAlloc* src, BufferAlloc* dst, VkDeviceSize size, bool freeOldBuffer) const
@@ -86,19 +100,28 @@ void Allocator::copyBufferToImageCmd(VkCommandBuffer buffer, BufferAlloc* src, I
 	vkCmdCopyBufferToImage(buffer, src->buffer, dst->image, dst->layout, 1, &region);
 }
 
-void Allocator::transitionImageLayoutCmd(VkCommandBuffer cmdBuffer, ImageAlloc* image, TransitionImageParams params)
+void Allocator::transitionImageLayoutCmd(VkCommandBuffer cmdBuffer, ImageAlloc* image, VkImageLayout oldLayout, VkImageLayout newLayout)
 {
+	VkImageAspectFlags aspectMask = (newLayout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
 	VkImageMemoryBarrier barrier{};
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-	barrier.oldLayout = params.oldLayout;
-	barrier.newLayout = params.newLayout;
-	barrier.srcQueueFamilyIndex = params.srcQueueFamilyIndex;
-	barrier.dstQueueFamilyIndex = params.dstQueueFamilyIndex;
-	barrier.srcAccessMask = params.srcAccessMask;
-	barrier.dstAccessMask = params.dstAccessMask;
-	barrier.subresourceRange = params.subresourceRange;
+	barrier.oldLayout = oldLayout;
+	barrier.newLayout = newLayout;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+	barrier.dstAccessMask = VK_ACCESS_MEMORY_WRITE_BIT | VK_ACCESS_MEMORY_READ_BIT;
 
-	vkCmdPipelineBarrier(cmdBuffer, 0, 0, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+	VkImageSubresourceRange subImage{};
+	subImage.aspectMask = aspectMask;
+	subImage.baseMipLevel = 0;
+	subImage.levelCount = VK_REMAINING_MIP_LEVELS;
+	subImage.baseArrayLayer = 0;
+	subImage.layerCount = VK_REMAINING_ARRAY_LAYERS;
+
+	barrier.subresourceRange = subImage;
+
+	vkCmdPipelineBarrier(cmdBuffer, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
 void Allocator::copyIntoAllocation(Alloc* allocation, void* data, VkDeviceSize offset, VkDeviceSize size) const

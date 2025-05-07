@@ -38,17 +38,7 @@ namespace vkAllocator {
 			VkSampleCountFlagBits samples;
 		};
 
-		struct TransitionImageParams {
-			VkImageLayout oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-			VkImageLayout newLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-			uint32_t srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			uint32_t dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			VkAccessFlags srcAccessMask = 0;
-			VkAccessFlags dstAccessMask = 0;
-			VkImageSubresourceRange subresourceRange{};
-
-		};
-
+		VkDevice* _device;
 		Allocator(VkInstance* instance, VkPhysicalDevice* physDevice, VkDevice* device);
 		void createBuffer(BufferAlloc* alloc, VkDeviceSize size, VkBufferUsageFlags usage, VmaAllocationCreateFlags memFlags = 0, VmaMemoryUsage memUsage = VMA_MEMORY_USAGE_AUTO) const;
 		void createImage(ImageAlloc* alloc, ImageParams params, VkExtent3D extent, uint32_t flags = 0, VmaAllocationCreateFlags memFlags = 0, VmaMemoryUsage memUsage = VMA_MEMORY_USAGE_AUTO) const;
@@ -57,7 +47,7 @@ namespace vkAllocator {
 
 		void copyBufferToBufferCmd(VkCommandBuffer buffer, BufferAlloc* src, BufferAlloc* dst, VkDeviceSize size, bool freeOldBuffer = false) const;
 		void copyBufferToImageCmd(VkCommandBuffer buffer, BufferAlloc* src, ImageAlloc* dst, VkExtent3D extent, bool freeOldBuffer = false);
-		void transitionImageLayoutCmd(VkCommandBuffer cmdBuffer, ImageAlloc* image, TransitionImageParams params);
+		void transitionImageLayoutCmd(VkCommandBuffer cmdBuffer, ImageAlloc* image, VkImageLayout oldLayout, VkImageLayout newLayout);
 		void mapMemory(Alloc* allocation, void** data) const;
 		void unmapMemory(Alloc* allocation) const;
 
