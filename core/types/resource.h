@@ -8,6 +8,8 @@ namespace resources {
 	class Resource : public Object
 	{
 		GUS_DECLARE_CLASS(Resource, Object)
+			
+		static IdGen _idGen;
 		protected:
 		// The name of the resource.
 		string _name = "";
@@ -15,7 +17,7 @@ namespace resources {
 		string _resourcePath = "";
 		// If this resource is saved on disk.
 		bool _saved = false;
-
+		Id _resourceId;
 		public:
 
 		string Name() { return _name; }
@@ -24,7 +26,7 @@ namespace resources {
 		string GetPath() { return _resourcePath; }
 		void SetPath(string path) { _resourcePath = path; }
 
-		Resource() {}
+		Resource(): _resourceId(_idGen.Next()) {}
 		virtual ~Resource() {}
 	};
 }

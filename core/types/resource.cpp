@@ -1,6 +1,7 @@
 #include "resource.h"
 using namespace engine_type_registry;
 using namespace resources;
+IdGen Resource::_idGen = IdGen();
 void Resource::_register_type()
 {
 	using namespace ObjectRTTIModel;

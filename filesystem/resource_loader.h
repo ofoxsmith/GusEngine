@@ -20,7 +20,6 @@ class ResourceLoader
 	// A map containing pointers to all loaded resource instances.
 	static std::unordered_map<string, Resource*> loadedResources;
 	static std::unordered_map<string, ImportedResource> projectResources;
-
 	static Resource* _load(const string filePath);
 	public:
 	enum class ImportResult {

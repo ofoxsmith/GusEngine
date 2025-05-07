@@ -167,6 +167,7 @@
     <ClCompile Include="project\resources\image.cpp" />
     <ClCompile Include="project\resources\shader.cpp" />
     <ClCompile Include="utils\logger.cpp" />
+    <ClCompile Include="utils\uniqueId.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\globals.h" />
