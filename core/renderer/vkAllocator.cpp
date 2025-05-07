@@ -57,8 +57,48 @@ void Allocator::createImage(ImageAlloc* alloc, ImageParams params, VkExtent3D ex
 	alloc->inUse = true;
 	alloc->format = params.format;
 	alloc->extent = extent;
+	alloc->layout = params.layout;
 	VkResult r = vmaCreateImage(_allocator, &imageInfo, &memoryInfo, &alloc->image, &alloc->alloc, &alloc->info);
 
+}
+
+void Allocator::copyBufferToBufferCmd(VkCommandBuffer buffer, BufferAlloc* src, BufferAlloc* dst, VkDeviceSize size, bool freeOldBuffer) const
+{
+	VkBufferCopy copyRegion{};
+	copyRegion.size = size;
+	vkCmdCopyBuffer(buffer, src->buffer, dst->buffer, 1, &copyRegion);
+	if (freeOldBuffer) destroy(src);
+}
+
+void Allocator::copyBufferToImageCmd(VkCommandBuffer buffer, BufferAlloc* src, ImageAlloc* dst, VkExtent3D extent, bool freeOldBuffer)
+{
+	VkBufferImageCopy region{};
+	region.bufferOffset = 0;
+	region.bufferRowLength = 0;
+	region.bufferImageHeight = 0;
+	region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	region.imageSubresource.mipLevel = 0;
+	region.imageSubresource.baseArrayLayer = 0;
+	region.imageSubresource.layerCount = 1;
+	region.imageOffset = { 0, 0, 0 };
+	region.imageExtent = extent;
+
+	vkCmdCopyBufferToImage(buffer, src->buffer, dst->image, dst->layout, 1, &region);
+}
+
+void Allocator::transitionImageLayoutCmd(VkCommandBuffer cmdBuffer, ImageAlloc* image, TransitionImageParams params)
+{
+	VkImageMemoryBarrier barrier{};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.oldLayout = params.oldLayout;
+	barrier.newLayout = params.newLayout;
+	barrier.srcQueueFamilyIndex = params.srcQueueFamilyIndex;
+	barrier.dstQueueFamilyIndex = params.dstQueueFamilyIndex;
+	barrier.srcAccessMask = params.srcAccessMask;
+	barrier.dstAccessMask = params.dstAccessMask;
+	barrier.subresourceRange = params.subresourceRange;
+
+	vkCmdPipelineBarrier(cmdBuffer, 0, 0, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
 void Allocator::copyIntoAllocation(Alloc* allocation, void* data, VkDeviceSize offset, VkDeviceSize size) const

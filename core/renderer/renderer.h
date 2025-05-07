@@ -23,6 +23,8 @@
 using namespace vkAllocator;
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
+using QueueType = vkb::QueueType;
+
 const std::vector<const char*> deviceExtensions = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
@@ -115,8 +117,8 @@ class Renderer {
 	VkPipeline graphicsPipeline = nullptr;
 	uint32_t frameNum = 0;
 	
-	std::map<vkb::QueueType, VkQueue> queues{};
-	std::map<vkb::QueueType, VkCommandPool> commandPools{};
+	std::map<QueueType, VkQueue> queues{};
+	std::map<QueueType, VkCommandPool> commandPools{};
 	BufferAlloc vertexBuffer;
 	BufferAlloc indexBuffer;
 
@@ -125,7 +127,6 @@ class Renderer {
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 	std::vector<VkDescriptorSet> descriptorSets;
 	std::vector<BufferAlloc> uniformBuffers;
-	std::vector<void*> uniformBuffersMapped;
 
 	bool framebufferResized = false;
 
@@ -154,7 +155,10 @@ class Renderer {
 
 	void drawFrame();
 
+
+	VkCommandBuffer createOneTimeCommandBuffer(QueueType queue);
+	void submitOneTimeCommandBuffer(VkCommandBuffer buffer, QueueType queue);
+
 	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 	void updateUniformBuffer(uint32_t currentImage);
-	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 };
