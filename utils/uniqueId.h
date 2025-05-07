@@ -4,7 +4,7 @@
 // An integer id used to uniquely identify objects.
 class Id {
 	private:
-	uint32_t _id;
+	unsigned int _id;
 
 	public:
 

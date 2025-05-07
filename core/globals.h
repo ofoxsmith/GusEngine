@@ -2,10 +2,11 @@
 
 #include "utils/logger.h"
 #include <stdint.h>
+#include "utils/uniqueId.h"
 extern Logger Log;
 const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 600;
-constexpr unsigned long long VARIANT_ENUM_SIZE = sizeof(short);
+constexpr uint64_t VARIANT_ENUM_SIZE = sizeof(short);
 
 // Helper for enum conversions and casting
 

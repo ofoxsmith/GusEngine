@@ -18,7 +18,7 @@ namespace resources {
 			StageComp
 		};
 
-		std::vector<uint32_t> spirvBinary{};
+		std::vector<unsigned int> spirvBinary{};
 		string shaderTextCode = "";
 		ShaderLanguage language = ShaderLanguage::LanguageGLSL;
 		ShaderStage stage = ShaderStage::StageUnknown;
@@ -28,7 +28,7 @@ namespace resources {
 		GUS_DECLARE_CLASS(Shader, Resource)
 		public:
 
-		static vector<uint32_t> CompileGLSLtoSPIRV(const std::string& source, ShaderResourceOptions::ShaderLanguage lang, ShaderResourceOptions::ShaderStage stage);
+		static vector<unsigned int> CompileGLSLtoSPIRV(const std::string& source, ShaderResourceOptions::ShaderLanguage lang, ShaderResourceOptions::ShaderStage stage);
 		
 		Shader() {};
 
@@ -38,10 +38,10 @@ namespace resources {
 		}
 
 		VkShaderModule GetShaderModule(VkDevice device);
-		void SetShaderSPIRV(vector<uint32_t> spirv) {
+		void SetShaderSPIRV(vector<unsigned int> spirv) {
 			compiledCode = spirv;
 		}
-		vector<uint32_t> GetShaderSPIRV() const {
+		vector<unsigned int> GetShaderSPIRV() const {
 			return compiledCode;
 		}
 
@@ -52,7 +52,7 @@ namespace resources {
 
 		private:
 		VkShaderModule _shaderModule = nullptr;
-		vector<uint32_t> compiledCode;
+		vector<unsigned int> compiledCode;
 		ShaderResourceOptions::ShaderLanguage lang = ShaderResourceOptions::ShaderLanguage::LanguageGLSL;
 		ShaderResourceOptions::ShaderStage stage = ShaderResourceOptions::ShaderStage::StageUnknown;
 	};

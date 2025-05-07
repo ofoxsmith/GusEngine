@@ -17,10 +17,10 @@ struct Variant {
 
 		// Primitive types:
 		Bool = (1u << 1),
-		Int = (1u << 2),
-		UInt = (1u << 3),
-		LongLong = (1u << 4),
-		ULongLong = (1u << 5),
+		Int32 = (1u << 2),
+		UInt32 = (1u << 3),
+		Int64 = (1u << 4),
+		UInt64 = (1u << 5),
 		Float = (1u << 6),
 		Double = (1u << 7),
 
@@ -38,14 +38,14 @@ struct Variant {
 				return "Void";
 			case StoredType::Bool:
 				return "Bool";
-			case StoredType::Int:
-				return "Int";
-			case StoredType::UInt:
-				return "UInt";
-			case StoredType::LongLong:
-				return "LongLong";
-			case StoredType::ULongLong:
-				return "ULongLong";
+			case StoredType::Int32:
+				return "Int32";
+			case StoredType::UInt32:
+				return "UInt32";
+			case StoredType::Int64:
+				return "Int64";
+			case StoredType::UInt64:
+				return "UInt64";
 			case StoredType::Float:
 				return "Float";
 			case StoredType::Double:
@@ -63,8 +63,8 @@ struct Variant {
 		bool _bool;
 		int _int;
 		unsigned int _uint;
-		long long _llong;
-		unsigned long long _ullong;
+		int64_t _llong;
+		uint64_t _ullong;
 		float _float;
 		double _double;
 
@@ -100,15 +100,15 @@ struct Variant {
 	}
 
 	bool IsInt() inline const {
-		return (_currentType & (StoredType::Int | StoredType::UInt | StoredType::LongLong | StoredType::ULongLong));
+		return (_currentType & (StoredType::Int32 | StoredType::UInt32 | StoredType::Int64 | StoredType::UInt64));
 	};
 
 	bool IsNumeric() inline const {
-		return (_currentType & (StoredType::Int | StoredType::UInt | StoredType::LongLong | StoredType::ULongLong | StoredType::Float | StoredType::Double));
+		return (_currentType & (StoredType::Int32 | StoredType::UInt32 | StoredType::Int64 | StoredType::UInt64 | StoredType::Float | StoredType::Double));
 	};
 
 	bool IsSignedInt() inline const {
-		return (_currentType & (StoredType::Int | StoredType::LongLong));
+		return (_currentType & (StoredType::Int32 | StoredType::Int64));
 	};
 
 	void CastTo(StoredType newType);
@@ -131,8 +131,8 @@ struct Variant {
 	Variant(bool data);
 	Variant(int data);
 	Variant(unsigned int data);
-	Variant(long long data);
-	Variant(unsigned long long data);
+	Variant(int64_t data);
+	Variant(uint64_t data);
 	Variant(float data);
 	Variant(double data);
 	Variant(std::string data);
@@ -144,13 +144,13 @@ struct Variant {
 				return false;
 			case StoredType::Bool:
 				return _primitiveData._bool;
-			case StoredType::Int:
+			case StoredType::Int32:
 				return _primitiveData._int;
-			case StoredType::UInt:
+			case StoredType::UInt32:
 				return _primitiveData._uint;
-			case StoredType::LongLong:
+			case StoredType::Int64:
 				return _primitiveData._llong;
-			case StoredType::ULongLong:
+			case StoredType::UInt64:
 				return _primitiveData._ullong;
 			case StoredType::Float:
 				return _primitiveData._float;
@@ -164,9 +164,9 @@ struct Variant {
 			case StoredType::Empty:
 			case StoredType::Void:
 				return 0;
-			case StoredType::LongLong:
+			case StoredType::Int64:
 				return static_cast<int>(_primitiveData._llong);
-			case StoredType::ULongLong:
+			case StoredType::UInt64:
 				return static_cast<int>(_primitiveData._ullong);
 			case StoredType::Float:
 				return static_cast<int>(_primitiveData._float);
@@ -174,9 +174,9 @@ struct Variant {
 				return static_cast<int>(_primitiveData._double);
 			case StoredType::Bool:
 				return _primitiveData._bool;
-			case StoredType::Int:
+			case StoredType::Int32:
 				return _primitiveData._int;
-			case StoredType::UInt:
+			case StoredType::UInt32:
 				return _primitiveData._uint;
 		}
 		return 0;
@@ -188,13 +188,13 @@ struct Variant {
 				return 0;
 			case StoredType::Bool:
 				return _primitiveData._bool;
-			case StoredType::Int:
+			case StoredType::Int32:
 				return _primitiveData._int;
-			case StoredType::UInt:
+			case StoredType::UInt32:
 				return _primitiveData._uint;
-			case StoredType::LongLong:
+			case StoredType::Int64:
 				return static_cast<unsigned int>(_primitiveData._llong);
-			case StoredType::ULongLong:
+			case StoredType::UInt64:
 				return static_cast<unsigned int>(_primitiveData._ullong);
 			case StoredType::Float:
 				return static_cast<unsigned int>(_primitiveData._float);
@@ -204,48 +204,48 @@ struct Variant {
 		return 0;
 	};
 
-	operator long long() const {
+	operator int64_t() const {
 		switch (_currentType) {
 			case StoredType::Empty:
 			case StoredType::Void:
 				return 0;
 			case StoredType::Bool:
 				return _primitiveData._bool;
-			case StoredType::Int:
+			case StoredType::Int32:
 				return _primitiveData._int;
-			case StoredType::UInt:
+			case StoredType::UInt32:
 				return _primitiveData._uint;
-			case StoredType::LongLong:
+			case StoredType::Int64:
 				return _primitiveData._llong;
-			case StoredType::ULongLong:
+			case StoredType::UInt64:
 				return _primitiveData._ullong;
 			case StoredType::Float:
-				return static_cast<long long>(_primitiveData._float);
+				return static_cast<int64_t>(_primitiveData._float);
 			case StoredType::Double:
-				return static_cast<long long>(_primitiveData._double);
+				return static_cast<int64_t>(_primitiveData._double);
 		}
 		return 0;
 
 	};
-	operator unsigned long long() const {
+	operator uint64_t() const {
 		switch (_currentType) {
 			case StoredType::Empty:
 			case StoredType::Void:
 				return 0;
 			case StoredType::Bool:
 				return _primitiveData._bool;
-			case StoredType::Int:
+			case StoredType::Int32:
 				return _primitiveData._int;
-			case StoredType::UInt:
+			case StoredType::UInt32:
 				return _primitiveData._uint;
-			case StoredType::LongLong:
+			case StoredType::Int64:
 				return _primitiveData._llong;
-			case StoredType::ULongLong:
+			case StoredType::UInt64:
 				return _primitiveData._ullong;
 			case StoredType::Float:
-				return static_cast<unsigned long long>(_primitiveData._float);
+				return static_cast<uint64_t>(_primitiveData._float);
 			case StoredType::Double:
-				return static_cast<unsigned long long>(_primitiveData._double);
+				return static_cast<uint64_t>(_primitiveData._double);
 		}
 		return 0;
 	}
@@ -256,13 +256,13 @@ struct Variant {
 				return 0;
 			case StoredType::Bool:
 				return _primitiveData._bool;
-			case StoredType::Int:
+			case StoredType::Int32:
 				return static_cast<float>(_primitiveData._int);
-			case StoredType::UInt:
+			case StoredType::UInt32:
 				return static_cast<float>(_primitiveData._uint);
-			case StoredType::LongLong:
+			case StoredType::Int64:
 				return static_cast<float>(_primitiveData._llong);
-			case StoredType::ULongLong:
+			case StoredType::UInt64:
 				return static_cast<float>(_primitiveData._ullong);
 			case StoredType::Double:
 				return static_cast<float>(_primitiveData._double);
@@ -278,15 +278,15 @@ struct Variant {
 				return 0;
 			case StoredType::Bool:
 				return _primitiveData._bool;
-			case StoredType::Int:
+			case StoredType::Int32:
 				return _primitiveData._int;
-			case StoredType::UInt:
+			case StoredType::UInt32:
 				return _primitiveData._uint;
 			case StoredType::Double:
 				return _primitiveData._double;
-			case StoredType::LongLong:
+			case StoredType::Int64:
 				return static_cast<double>(_primitiveData._llong);
-			case StoredType::ULongLong:
+			case StoredType::UInt64:
 				return static_cast<double>(_primitiveData._ullong);
 			case StoredType::Float:
 				return static_cast<double>(_primitiveData._float);
@@ -301,13 +301,13 @@ struct Variant {
 				return "";
 			case StoredType::Bool:
 				return _primitiveData._bool ? "true" : "false";
-			case StoredType::Int:
+			case StoredType::Int32:
 				return std::to_string(_primitiveData._int);
-			case StoredType::UInt:
+			case StoredType::UInt32:
 				return std::to_string(_primitiveData._uint);
-			case StoredType::LongLong:
+			case StoredType::Int64:
 				return std::to_string(_primitiveData._llong);
-			case StoredType::ULongLong:
+			case StoredType::UInt64:
 				return std::to_string(_primitiveData._ullong);
 			case StoredType::Float:
 				return std::to_string(_primitiveData._float);
@@ -323,7 +323,7 @@ struct Variant {
 	template <typename E> requires IsIntegerEnum<E>
 	Variant(E data) noexcept {
 		_primitiveData._int = static_cast<int>(data);
-		_currentType = StoredType::Int;
+		_currentType = StoredType::Int32;
 	}
 
 	template <typename E> requires IsIntegerEnum<E>

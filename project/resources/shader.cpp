@@ -24,19 +24,19 @@ void resources::Shader::_register_type() {
 
 	type_registry::register_new_class("Shader", "Resource");
 	type_registry::class_expose_method("Shader", ObjectMethodDefinition("SetLanguage", Variant::StoredType::Void), &Shader::SetLanguage);
-	type_registry::class_expose_method("Shader", ObjectMethodDefinition("GetLanguage", Variant::StoredType::Int), &Shader::GetLanguage);
+	type_registry::class_expose_method("Shader", ObjectMethodDefinition("GetLanguage", Variant::StoredType::Int32), &Shader::GetLanguage);
 	type_registry::class_expose_method("Shader", ObjectMethodDefinition("SetStage", Variant::StoredType::Void), &Shader::SetStage);
-	type_registry::class_expose_method("Shader", ObjectMethodDefinition("GetStage", Variant::StoredType::Int), &Shader::GetStage);
+	type_registry::class_expose_method("Shader", ObjectMethodDefinition("GetStage", Variant::StoredType::Int32), &Shader::GetStage);
 	
-	ObjectRTTIModel::ObjectPropertyDefinition langProp = ObjectPropertyDefinition("Language", Variant::StoredType::Int, ObjectPropertyDefinition::NONE, "GetLanguage", "SetLanguage");
-	ObjectRTTIModel::ObjectPropertyDefinition stageProp = ObjectPropertyDefinition("Stage", Variant::StoredType::Int, ObjectPropertyDefinition::NONE, "GetStage", "SetStage");
+	ObjectRTTIModel::ObjectPropertyDefinition langProp = ObjectPropertyDefinition("Language", Variant::StoredType::Int32, ObjectPropertyDefinition::NONE, "GetLanguage", "SetLanguage");
+	ObjectRTTIModel::ObjectPropertyDefinition stageProp = ObjectPropertyDefinition("Stage", Variant::StoredType::Int32, ObjectPropertyDefinition::NONE, "GetStage", "SetStage");
 	type_registry::class_define_property("Shader", langProp);
 	type_registry::class_define_property("Shader", stageProp);
 }
 
-vector<uint32_t> resources::Shader::CompileGLSLtoSPIRV(const std::string& source, ShaderResourceOptions::ShaderLanguage lang, ShaderResourceOptions::ShaderStage type)
+vector<unsigned int> resources::Shader::CompileGLSLtoSPIRV(const std::string& source, ShaderResourceOptions::ShaderLanguage lang, ShaderResourceOptions::ShaderStage type)
 {
-	std::vector<uint32_t> spirv;
+	std::vector<unsigned int> spirv;
 	std::string	info_log;
 	glslang::InitializeProcess();
 

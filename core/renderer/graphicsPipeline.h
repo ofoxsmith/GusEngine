@@ -15,7 +15,7 @@ class GraphicsPipelineBuilder {
     VkPipelineDepthStencilStateCreateInfo depthStencilState;
     VkPipelineColorBlendStateCreateInfo colorBlendState;
     VkPipelineDynamicStateCreateInfo dynamicState;
-    uint32_t subpass = 0;
+    unsigned int subpass = 0;
     VkPipeline basePipelineHandle = nullptr;
     int32_t basePipelineIndex = 0;
 
@@ -55,8 +55,8 @@ class GraphicsPipelineBuilder {
         vertexInputBindingDescriptions = std::vector<VkVertexInputBindingDescription>(bindings);
         
         vertexInputState.flags = flags;
-        vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInputAttributeDescriptions.size());
-        vertexInputState.vertexBindingDescriptionCount = static_cast<uint32_t>(vertexInputBindingDescriptions.size());
+        vertexInputState.vertexAttributeDescriptionCount = static_cast<unsigned int>(vertexInputAttributeDescriptions.size());
+        vertexInputState.vertexBindingDescriptionCount = static_cast<unsigned int>(vertexInputBindingDescriptions.size());
         vertexInputState.pVertexAttributeDescriptions = vertexInputAttributeDescriptions.data();
         vertexInputState.pVertexBindingDescriptions = vertexInputBindingDescriptions.data();
         return *this;
@@ -69,18 +69,18 @@ class GraphicsPipelineBuilder {
         return *this;
     }
 
-    GraphicsPipelineBuilder SetTessellationState(VkPipelineTessellationStateCreateFlags flags, uint32_t patchControlPoints) {
+    GraphicsPipelineBuilder SetTessellationState(VkPipelineTessellationStateCreateFlags flags, unsigned int patchControlPoints) {
         tessellationState.flags = flags;
         tessellationState.patchControlPoints = patchControlPoints;
         return *this;
     }
 
-    GraphicsPipelineBuilder SetViewportState(VkPipelineViewportStateCreateFlags flags, std::vector<VkViewport> viewports, std::vector<VkRect2D> scissors, uint32_t viewportOverrideSize=0, uint32_t scissorOverrideSize=0) {
+    GraphicsPipelineBuilder SetViewportState(VkPipelineViewportStateCreateFlags flags, std::vector<VkViewport> viewports, std::vector<VkRect2D> scissors, unsigned int viewportOverrideSize=0, unsigned int scissorOverrideSize=0) {
         viewportStateViewports = std::vector<VkViewport>(viewports);
         viewportScissors = std::vector<VkRect2D>(scissors);
         viewportState.flags = flags;
-        viewportState.viewportCount = viewportOverrideSize != 0 ? viewportOverrideSize : static_cast<uint32_t>(viewportStateViewports.size());
-        viewportState.scissorCount = scissorOverrideSize != 0 ? scissorOverrideSize : static_cast<uint32_t>(viewportScissors.size());
+        viewportState.viewportCount = viewportOverrideSize != 0 ? viewportOverrideSize : static_cast<unsigned int>(viewportStateViewports.size());
+        viewportState.scissorCount = scissorOverrideSize != 0 ? scissorOverrideSize : static_cast<unsigned int>(viewportScissors.size());
         viewportState.pScissors = viewportScissors.data();
         viewportState.pViewports = viewportStateViewports.data();
         return *this;
@@ -130,13 +130,13 @@ class GraphicsPipelineBuilder {
         colorBlendState.flags = flags;
         colorBlendState.logicOpEnable = logicOpEnable;
         colorBlendState.logicOp = logicOp;
-        colorBlendState.attachmentCount = static_cast<uint32_t>(colorBlendAttachments.size());
+        colorBlendState.attachmentCount = static_cast<unsigned int>(colorBlendAttachments.size());
         colorBlendState.pAttachments = colorBlendAttachments.data();
         return *this;
     }
     GraphicsPipelineBuilder SetDynamicStates(VkPipelineDynamicStateCreateFlags flags, std::vector<VkDynamicState> states) {
         dynamicStates = std::vector<VkDynamicState>(states);
-        dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+        dynamicState.dynamicStateCount = static_cast<unsigned int>(dynamicStates.size());
         dynamicState.flags = flags;
         dynamicState.pDynamicStates = dynamicStates.data();
         return *this;
@@ -147,7 +147,7 @@ class GraphicsPipelineBuilder {
         VkGraphicsPipelineCreateInfo info{};
         info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         info.flags = flags;
-        info.stageCount = static_cast<uint32_t>(stages.size());
+        info.stageCount = static_cast<unsigned int>(stages.size());
         info.pStages = stages.data();
         info.pVertexInputState = &vertexInputState;
         info.pInputAssemblyState = &inputAssemblyState;

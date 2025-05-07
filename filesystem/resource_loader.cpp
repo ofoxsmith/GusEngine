@@ -28,7 +28,7 @@ namespace md5 {
     @brief Simple C++ implementation of the [MD5 Hashing
     Algorithm](https://en.wikipedia.org/wiki/MD5)
     */
-    static uint32_t leftRotate32bits(uint32_t n, std::size_t rotate) {
+    static unsigned int leftRotate32bits(uint32_t n, std::size_t rotate) {
         return (n << rotate) | (n >> (32 - rotate));
     }
     static bool isBigEndian() {

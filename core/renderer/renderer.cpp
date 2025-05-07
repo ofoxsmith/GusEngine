@@ -20,7 +20,7 @@ void Renderer::initWindow() {
 	glfwSetFramebufferSizeCallback(_window, framebufferResizeCallback);
 }
 
-void Renderer::framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+void Renderer::framebufferResizeCallback(GLFWwindow* window, int32_t width, int32_t height) {
 	auto app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
 	app->framebufferResized = true;
 }
@@ -57,7 +57,7 @@ void Renderer::drawFrame() {
 	FrameData current_frame = get_current_frame();
 	vkWaitForFences(_device, 1, &current_frame.renderFence, VK_TRUE, UINT64_MAX);
 
-	uint32_t imageIndex;
+	unsigned int imageIndex;
 	VkResult result = vkAcquireNextImageKHR(_device, _swapchain, UINT64_MAX, current_frame.imageSemaphore, VK_NULL_HANDLE, &imageIndex);
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
@@ -117,7 +117,7 @@ void Renderer::drawFrame() {
 	frameNum++;
 }
 
-void Renderer::updateUniformBuffer(uint32_t current) {
+void Renderer::updateUniformBuffer(unsigned int current) {
 	static auto startTime = std::chrono::high_resolution_clock::now();
 
 	auto currentTime = std::chrono::high_resolution_clock::now();
@@ -211,7 +211,7 @@ void Renderer::createSwapChain() {
 
 void Renderer::recreateSwapChain() {
 	Log.Debug("Vulkan", "Recreating suboptimal swapchain.");
-	int width = 0, height = 0;
+	int32_t width = 0, height = 0;
 	glfwGetFramebufferSize(_window, &width, &height);
 	while (width == 0 || height == 0) {
 		glfwGetFramebufferSize(_window, &width, &height);
@@ -400,7 +400,7 @@ void Renderer::createFrameObjects() {
 	}
 }
 
-void Renderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
+void Renderer::recordCommandBuffer(VkCommandBuffer commandBuffer, unsigned int imageIndex) {
 	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
@@ -443,7 +443,7 @@ void Renderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	vkCmdBindIndexBuffer(commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[frameNum % MAX_FRAMES_IN_FLIGHT], 0, nullptr);
 
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+	vkCmdDrawIndexed(commandBuffer, static_cast<unsigned int>(indices.size()), 1, 0, 0, 0);
 
 	vkCmdEndRenderPass(commandBuffer);
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
@@ -472,7 +472,7 @@ void Renderer::createInstanceAndDevice() {
 		ibuilder.use_default_debug_messenger();
 	}
 	
-	uint32_t glfwExtensionCount = 0;
+	unsigned int glfwExtensionCount = 0;
 	const char** glfwExtensions;
 	glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 	std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
@@ -619,13 +619,13 @@ void Renderer::createUniformBuffers() {
 void Renderer::createDescriptorPool() {
 	VkDescriptorPoolSize poolSize{};
 	poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSize.descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	poolSize.descriptorCount = static_cast<unsigned int>(MAX_FRAMES_IN_FLIGHT);
 
 	VkDescriptorPoolCreateInfo poolInfo{};
 	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	poolInfo.poolSizeCount = 1;
 	poolInfo.pPoolSizes = &poolSize;
-	poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	poolInfo.maxSets = static_cast<unsigned int>(MAX_FRAMES_IN_FLIGHT);
 	if (vkCreateDescriptorPool(_device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
 		Log.FatalError("Vulkan", "failed to create descriptor pool!");
 	}
@@ -637,7 +637,7 @@ void Renderer::createDescriptorSets() {
 	VkDescriptorSetAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	allocInfo.descriptorPool = descriptorPool;
-	allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	allocInfo.descriptorSetCount = static_cast<unsigned int>(MAX_FRAMES_IN_FLIGHT);
 	allocInfo.pSetLayouts = layouts.data();
 
 	descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);

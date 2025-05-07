@@ -56,8 +56,8 @@ Variant EngineIO::ObjectLoader::LoadBinaryVariant(File* input)
 	char valB = 0;
 	int valInt = 0;
 	unsigned int valUInt = 0;
-	long long valLLong = 0;
-	unsigned long long valULLong = 0;
+	int64_t valLLong = 0;
+	uint64_t valULLong = 0;
 	float valFl = 0;
 	double valDb = 0;
 	int strSize = 0;
@@ -69,17 +69,17 @@ Variant EngineIO::ObjectLoader::LoadBinaryVariant(File* input)
 		case Variant::Bool:
 			inStream->read(&valB, 1);
 			return valB == 0xFF;
-		case Variant::Int:
+		case Variant::Int32:
 			inStream->read((char*)&valInt, sizeof(int));
 			return valInt;
-		case Variant::UInt:
+		case Variant::UInt32:
 			inStream->read((char*)&valUInt, sizeof(unsigned int));
 			return valUInt;
-		case Variant::LongLong:
-			inStream->read((char*)&valLLong, sizeof(long long));
+		case Variant::Int64:
+			inStream->read((char*)&valLLong, sizeof(int64_t));
 			return valLLong;
-		case Variant::ULongLong:
-			inStream->read((char*)&valULLong, sizeof(unsigned long long));
+		case Variant::UInt64:
+			inStream->read((char*)&valULLong, sizeof(uint64_t));
 			return valULLong;
 		case Variant::Float:
 			inStream->read((char*)&valFl, sizeof(float));

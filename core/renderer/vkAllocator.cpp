@@ -35,7 +35,7 @@ void Allocator::createBuffer(BufferAlloc* alloc, VkDeviceSize size, VkBufferUsag
 	VkResult r = vmaCreateBuffer(_allocator, &bufferInfo, &memoryInfo, &alloc->buffer, &alloc->alloc, &alloc->info);
 }
 
-void Allocator::createImage(ImageAlloc* alloc, ImageParams params, VkExtent3D extent, uint32_t flags, VmaAllocationCreateFlags memFlags, VmaMemoryUsage memUsage) const
+void Allocator::createImage(ImageAlloc* alloc, ImageParams params, VkExtent3D extent, unsigned int flags, VmaAllocationCreateFlags memFlags, VmaMemoryUsage memUsage) const
 {
 	if (alloc->inUse) {
 		Log.Error("VMA", "Attempted to create image using an ImageAlloc object that is already in use.");

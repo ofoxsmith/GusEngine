@@ -186,6 +186,7 @@
     <ClInclude Include="core\types\resource.h" />
     <ClInclude Include="filesystem\resource_loader.h" />
     <ClInclude Include="utils\logger.h" />
+    <ClInclude Include="utils\uniqueId.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
