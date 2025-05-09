@@ -5,6 +5,8 @@
 #include <vector>
 class GraphicsPipelineBuilder {
     VkPipelineCreateFlags flags = 0;
+    VkPipelineLayout layout = nullptr;
+    VkPipelineLayoutCreateInfo layoutInfo;
     std::vector<VkPipelineShaderStageCreateInfo> stages;
     VkPipelineVertexInputStateCreateInfo vertexInputState;
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyState;
@@ -19,7 +21,8 @@ class GraphicsPipelineBuilder {
     VkPipeline basePipelineHandle = nullptr;
     int32_t basePipelineIndex = 0;
 
-
+    std::vector<VkPushConstantRange> pushConstantRanges{};
+    std::vector<VkDescriptorSetLayout> descriptorLayouts{};
     std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptions{};
     std::vector<VkVertexInputBindingDescription> vertexInputBindingDescriptions{};
     std::vector<VkViewport> viewportStateViewports{};
@@ -29,6 +32,7 @@ class GraphicsPipelineBuilder {
     public:
     GraphicsPipelineBuilder() {
         stages = {};
+        layoutInfo = { .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
         vertexInputState = { .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
         inputAssemblyState = { .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
         tessellationState = { .sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO };
@@ -142,8 +146,24 @@ class GraphicsPipelineBuilder {
         return *this;
     }
 
+    GraphicsPipelineBuilder SetPipelineLayout(VkPipelineLayoutCreateFlags flags, std::vector<VkPushConstantRange> pushConstants, std::vector<VkDescriptorSetLayout> descSetLayouts) {
+        pushConstantRanges = std::vector<VkPushConstantRange>(pushConstants);
+        descriptorLayouts = std::vector<VkDescriptorSetLayout>(descSetLayouts);
+        layoutInfo.pPushConstantRanges = pushConstantRanges.data();
+        layoutInfo.pSetLayouts = descriptorLayouts.data();
+        layoutInfo.pushConstantRangeCount = static_cast<unsigned int>(pushConstantRanges.size());
+        layoutInfo.setLayoutCount = static_cast<unsigned int>(descriptorLayouts.size());
+        return *this;
+    }
 
-    VkPipeline BuildPipeline(vkb::Device* device, VkPipelineLayout layout, VkRenderPass renderPass) {
+    VkPipelineLayout BuildLayout(vkb::Device* device) {
+        if (vkCreatePipelineLayout(*device, &layoutInfo, nullptr, &layout) != VK_SUCCESS) {
+            Log.FatalError("Vulkan", "Failed to build graphics pipeline layout.");
+        }
+        return layout;
+    }
+    VkPipeline BuildPipeline(vkb::Device* device, VkRenderPass renderPass) {
+
         VkGraphicsPipelineCreateInfo info{};
         info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         info.flags = flags;

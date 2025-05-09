@@ -151,7 +151,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="core\globals.cpp" />
-    <ClCompile Include="core\renderer\graphicsPipeline.cpp" />
     <ClCompile Include="core\renderer\vkUtils.cpp" />
     <ClCompile Include="core\renderer\vkAllocator.cpp" />
     <ClCompile Include="core\types\object.cpp" />

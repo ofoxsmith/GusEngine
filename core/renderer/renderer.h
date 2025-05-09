@@ -84,6 +84,8 @@ struct FrameData {
 	VkCommandBuffer commandBuffer;
 	VkSemaphore imageSemaphore, renderSemaphore;
 	VkFence renderFence;
+	VkDescriptorSet descriptorSet;
+	BufferAlloc uniformBuffer;
 	vkb::Device* _device;
 	void Destroy() const {
 		vkDestroySemaphore(*_device, imageSemaphore, nullptr);
@@ -92,6 +94,11 @@ struct FrameData {
 	}
 };
 
+struct SwapchainImage {
+	VkImage image;
+	VkImageView imageView;
+	VkFramebuffer framebuffer;
+};
 class Renderer {
 	public:
 	FrameData _frames[MAX_FRAMES_IN_FLIGHT];
@@ -121,12 +128,7 @@ class Renderer {
 	std::map<QueueType, VkCommandPool> commandPools{};
 	BufferAlloc vertexBuffer;
 	BufferAlloc indexBuffer;
-
-	std::vector<VkImage> swapChainImages;
-	std::vector<VkImageView> swapChainImageViews;
-	std::vector<VkFramebuffer> swapChainFramebuffers;
-	std::vector<VkDescriptorSet> descriptorSets;
-	std::vector<BufferAlloc> uniformBuffers;
+	std::vector<SwapchainImage> swapchainImages;
 
 	bool framebufferResized = false;
 
@@ -136,7 +138,6 @@ class Renderer {
 	void initVulkan();
 	void createInstanceAndDevice();
 	void createSwapChain();
-	void createImageViews();
 	void createRenderPass();
 	void createDescriptorSetLayout();
 	void createGraphicsPipeline();

@@ -20,7 +20,7 @@ void Renderer::initWindow() {
 	glfwSetFramebufferSizeCallback(_window, framebufferResizeCallback);
 }
 
-void Renderer::framebufferResizeCallback(GLFWwindow* window, int32_t width, int32_t height) {
+void Renderer::framebufferResizeCallback(GLFWwindow* window, int width, int height) {
 	auto app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
 	app->framebufferResized = true;
 }
@@ -30,7 +30,6 @@ void Renderer::initVulkan() {
 	createInstanceAndDevice();
 	_allocator = new Allocator(&_instance.instance, &_physicalDevice.physical_device, &_device.device);
 	createSwapChain();
-	createImageViews();
 	createRenderPass();
 	createDescriptorSetLayout();
 	createGraphicsPipeline();
@@ -127,18 +126,19 @@ void Renderer::updateUniformBuffer(unsigned int current) {
 	ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	ubo.proj = glm::perspective(glm::radians(45.0f), _swapchain.extent.width / (float)_swapchain.extent.height, 0.1f, 10.0f);
 	ubo.proj[1][1] *= -1;
-	memcpy(uniformBuffers[current].info.pMappedData, &ubo, sizeof(ubo));
+	memcpy(_frames[current].uniformBuffer.info.pMappedData, &ubo, sizeof(ubo));
 
 }
 
 void Renderer::cleanupSwapChain(bool destroySwapchain) {
-	for (auto framebuffer : swapChainFramebuffers) {
-		vkDestroyFramebuffer(_device, framebuffer, nullptr);
+
+	for (size_t i = 0; i < swapchainImages.size(); i++)
+	{
+		vkDestroyFramebuffer(_device, swapchainImages[i].framebuffer, nullptr);
+		vkDestroyImageView(_device, swapchainImages[i].imageView, nullptr);
+
 	}
 
-	for (auto imageView : swapChainImageViews) {
-		vkDestroyImageView(_device, imageView, nullptr);
-	}
 	if (destroySwapchain) vkb::destroy_swapchain(_swapchain);
 }
 
@@ -151,7 +151,7 @@ void Renderer::Cleanup() {
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 	{
-		_allocator->destroy(&uniformBuffers[i]);
+		_allocator->destroy(&_frames[i].uniformBuffer);
 	}
 
 	vkDestroyDescriptorPool(_device, descriptorPool, nullptr);
@@ -186,7 +186,7 @@ void Renderer::Cleanup() {
 }
 
 void Renderer::createSwapChain() {
-	unsigned int imageCount = 2;
+	unsigned int imageCount = MAX_FRAMES_IN_FLIGHT;
 	vkb::SwapchainBuilder swapchain_builder{ _device };
 	swapchain_builder.use_default_format_selection().use_default_present_mode_selection().use_default_image_usage_flags();
 	swapchain_builder.set_desired_min_image_count(imageCount);
@@ -204,9 +204,37 @@ void Renderer::createSwapChain() {
 		vkb::destroy_swapchain(_swapchain);
 	}
 	_swapchain = swap_ret.value();
+
+	// Setup swapchain images
+	std::vector<VkImage> images{};
 	vkGetSwapchainImagesKHR(_device, _swapchain, &imageCount, nullptr);
-	swapChainImages.resize(imageCount);
-	vkGetSwapchainImagesKHR(_device, _swapchain, &imageCount, swapChainImages.data());
+	images.resize(imageCount);
+	vkGetSwapchainImagesKHR(_device, _swapchain, &imageCount, images.data());
+
+	swapchainImages.resize(imageCount);
+	for (size_t i = 0; i < imageCount; i++)
+	{
+		swapchainImages[i].image = images[i];
+		VkImageViewCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		createInfo.image = swapchainImages[i].image;
+		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		createInfo.format = _swapchain.image_format;
+		createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		createInfo.subresourceRange.baseMipLevel = 0;
+		createInfo.subresourceRange.levelCount = 1;
+		createInfo.subresourceRange.baseArrayLayer = 0;
+		createInfo.subresourceRange.layerCount = 1;
+
+		if (vkCreateImageView(_device, &createInfo, nullptr, &swapchainImages[i].imageView) != VK_SUCCESS) {
+			Log.FatalError("Vulkan", "Failed to create swapchain image views.");
+		}
+
+	}
 }
 
 void Renderer::recreateSwapChain() {
@@ -221,36 +249,9 @@ void Renderer::recreateSwapChain() {
 	vkDeviceWaitIdle(_device);
 	cleanupSwapChain(false);
 	createSwapChain();
-	createImageViews();
 	createFramebuffers();
 }
 
-
-void Renderer::createImageViews() {
-	swapChainImageViews.resize(swapChainImages.size());
-
-	for (size_t i = 0; i < swapChainImages.size(); i++) {
-		VkImageViewCreateInfo createInfo{};
-		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		createInfo.image = swapChainImages[i];
-		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		createInfo.format = _swapchain.image_format;
-		createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-		createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-		createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-		createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-		createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		createInfo.subresourceRange.baseMipLevel = 0;
-		createInfo.subresourceRange.levelCount = 1;
-		createInfo.subresourceRange.baseArrayLayer = 0;
-		createInfo.subresourceRange.layerCount = 1;
-
-		if (vkCreateImageView(_device, &createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS) {
-			Log.FatalError("Vulkan", "Failed to create swapchain image views.");
-		}
-	}
-
-}
 
 void Renderer::createRenderPass() {
 	VkAttachmentDescription colorAttachment{};
@@ -315,24 +316,16 @@ void Renderer::createGraphicsPipeline() {
 	colorBlendAttachment.blendEnable = VK_FALSE;
 	
 	pipeline.SetColorBlendState(0, false, VK_LOGIC_OP_MAX_ENUM, { colorBlendAttachment });
+	pipeline.SetPipelineLayout(0, {}, { descriptorSetLayout });
 
-	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = 1;
-	pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
-
-	if (vkCreatePipelineLayout(_device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
-		Log.FatalError("Vulkan", "Failed to create pipeline layout.");
-	}
-
-	graphicsPipeline = pipeline.BuildPipeline(&_device, pipelineLayout, renderPass);
+	pipelineLayout = pipeline.BuildLayout(&_device);
+	graphicsPipeline = pipeline.BuildPipeline(&_device, renderPass);
 }
 
 void Renderer::createFramebuffers() {
-	swapChainFramebuffers.resize(swapChainImageViews.size());
-	for (size_t i = 0; i < swapChainImageViews.size(); i++) {
+	for (size_t i = 0; i < swapchainImages.size(); i++) {
 		VkImageView attachments[] = {
-			swapChainImageViews[i]
+			swapchainImages[i].imageView
 		};
 
 		VkFramebufferCreateInfo framebufferInfo{};
@@ -344,7 +337,7 @@ void Renderer::createFramebuffers() {
 		framebufferInfo.height = _swapchain.extent.height;
 		framebufferInfo.layers = 1;
 
-		if (vkCreateFramebuffer(_device, &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS) {
+		if (vkCreateFramebuffer(_device, &framebufferInfo, nullptr, &swapchainImages[i].framebuffer) != VK_SUCCESS) {
 			Log.FatalError("Vulkan", "Failed to create framebuffer.");
 		}
 	}
@@ -410,7 +403,7 @@ void Renderer::recordCommandBuffer(VkCommandBuffer commandBuffer, unsigned int i
 	VkRenderPassBeginInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderPassInfo.renderPass = renderPass;
-	renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
+	renderPassInfo.framebuffer = swapchainImages[imageIndex].framebuffer;
 
 	renderPassInfo.renderArea.offset = { 0, 0 };
 	renderPassInfo.renderArea.extent = _swapchain.extent;
@@ -441,7 +434,7 @@ void Renderer::recordCommandBuffer(VkCommandBuffer commandBuffer, unsigned int i
 	VkDeviceSize offsets[] = { 0 };
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 	vkCmdBindIndexBuffer(commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[frameNum % MAX_FRAMES_IN_FLIGHT], 0, nullptr);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &_frames[frameNum % MAX_FRAMES_IN_FLIGHT].descriptorSet, 0, nullptr);
 
 	vkCmdDrawIndexed(commandBuffer, static_cast<unsigned int>(indices.size()), 1, 0, 0, 0);
 
@@ -608,10 +601,8 @@ void Renderer::createIndexBuffer() {
 void Renderer::createUniformBuffers() {
 	VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
-	uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		_allocator->createBuffer(&uniformBuffers[i], bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_ALLOCATION_CREATE_MAPPED_BIT|VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+		_allocator->createBuffer(&_frames[i].uniformBuffer, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_ALLOCATION_CREATE_MAPPED_BIT|VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
 	}
 
 }
@@ -639,20 +630,21 @@ void Renderer::createDescriptorSets() {
 	allocInfo.descriptorPool = descriptorPool;
 	allocInfo.descriptorSetCount = static_cast<unsigned int>(MAX_FRAMES_IN_FLIGHT);
 	allocInfo.pSetLayouts = layouts.data();
-
+	std::vector<VkDescriptorSet> descriptorSets;
 	descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
 	if (vkAllocateDescriptorSets(_device, &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
 		Log.FatalError("Vulkan", "Failed to allocate descriptor sets.");
 	}
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		_frames[i].descriptorSet = descriptorSets[i];
 		VkDescriptorBufferInfo bufferInfo{};
-		bufferInfo.buffer = uniformBuffers[i].buffer;
+		bufferInfo.buffer = _frames[i].uniformBuffer.buffer;
 		bufferInfo.offset = 0;
 		bufferInfo.range = sizeof(UniformBufferObject);
 		VkWriteDescriptorSet descriptorWrite{};
 		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrite.dstSet = descriptorSets[i];
+		descriptorWrite.dstSet = _frames[i].descriptorSet;
 		descriptorWrite.dstBinding = 0;
 		descriptorWrite.dstArrayElement = 0;
 		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
