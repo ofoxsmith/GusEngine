@@ -101,16 +101,18 @@ struct SwapchainImage {
 };
 class Renderer {
 	public:
+
+	void Init(GLFWwindow* window);
+	void RefreshFramebuffer();
+	void ProcessFrame();
+	void Cleanup();
+	private:
+
 	FrameData _frames[MAX_FRAMES_IN_FLIGHT];
 	FrameData& get_current_frame() { return _frames[frameNum % MAX_FRAMES_IN_FLIGHT]; };
 
-	void Init();
-	void MainLoop();
-	void Cleanup();
-	private: 
-
+	GLFWwindow* _window;
 	Allocator* _allocator = nullptr;
-	GLFWwindow* _window = nullptr;
 	vkb::Instance _instance;
 	vkb::PhysicalDevice _physicalDevice;
 	vkb::Device _device;
@@ -130,27 +132,24 @@ class Renderer {
 	BufferAlloc indexBuffer;
 	std::vector<SwapchainImage> swapchainImages;
 
-	bool framebufferResized = false;
-
-
 	/// Rendering init and cleanup
-	void initWindow();
 	void initVulkan();
 	void createInstanceAndDevice();
-	void createSwapChain();
+	void createCommandPools();
+
+	void createSwapchain();
+	void createFrameObjects();
+	void createVertexBuffer();
+	void createIndexBuffer();
+
 	void createRenderPass();
 	void createDescriptorSetLayout();
 	void createGraphicsPipeline();
 	void createFramebuffers();
-	void createCommandPools();
-	void createVertexBuffer();
-	void createIndexBuffer();
-	void createUniformBuffers();
+
 	void createDescriptorPool();
 	void createDescriptorSets();
-	void createFrameObjects();
 
-	static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 	void cleanupSwapChain(bool destroySwapchain = true);
 	void recreateSwapChain();
 

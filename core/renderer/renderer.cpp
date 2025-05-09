@@ -1,53 +1,40 @@
 #include "renderer.h"
 #include <external/vkBootstrap/VkBootstrap.h>
 #include "graphicsPipeline.h"
-void Renderer::Init() {
-	initWindow();
-	Log.Info("Core", "GLFW: Window Init Done");
+
+void Renderer::Init(GLFWwindow* window) {
+	_window = window;
 	initVulkan();
-	Log.Info("Core", "Vulkan: Init Done");
-}
-
-
-void Renderer::initWindow() {
-	glfwInit();
-
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-
-	_window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
-	glfwSetWindowUserPointer(_window, this);
-	glfwSetFramebufferSizeCallback(_window, framebufferResizeCallback);
-}
-
-void Renderer::framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-	auto app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
-	app->framebufferResized = true;
+	Log.Info("Renderer", "Vulkan: Init Done");
 }
 
 
 void Renderer::initVulkan() {
 	createInstanceAndDevice();
+	createCommandPools();
+
 	_allocator = new Allocator(&_instance.instance, &_physicalDevice.physical_device, &_device.device);
-	createSwapChain();
+	
+	createSwapchain();
+	createFrameObjects();
+	createVertexBuffer();
+	createIndexBuffer();
+
 	createRenderPass();
 	createDescriptorSetLayout();
 	createGraphicsPipeline();
 	createFramebuffers();
-	createCommandPools();
-	createVertexBuffer();
-	createIndexBuffer();
-	createUniformBuffers();
+
 	createDescriptorPool();
 	createDescriptorSets();
-	createFrameObjects();
 }
 
-void Renderer::MainLoop() {
-	while (!glfwWindowShouldClose(_window)) {
-		glfwPollEvents();
-		drawFrame();
-	}
+void Renderer::RefreshFramebuffer() {
+	recreateSwapChain();
+}
+
+void Renderer::ProcessFrame() {
+	drawFrame();
 	vkDeviceWaitIdle(_device);
 }
 
@@ -103,15 +90,12 @@ void Renderer::drawFrame() {
 	presentInfo.pImageIndices = &imageIndex;
 	result = vkQueuePresentKHR(queues[QueueType::present], &presentInfo);
 
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
-		framebufferResized = false;
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 		recreateSwapChain();
 	}
 	else if (result != VK_SUCCESS) {
 		Log.FatalError("Vulkan", "Failed to present swap chain image!");
 	}
-
-
 
 	frameNum++;
 }
@@ -179,13 +163,9 @@ void Renderer::Cleanup() {
 
 	vkDestroySurfaceKHR(_instance, _surface, nullptr);
 	vkb::destroy_instance(_instance);
-
-	glfwDestroyWindow(_window);
-
-	glfwTerminate();
 }
 
-void Renderer::createSwapChain() {
+void Renderer::createSwapchain() {
 	unsigned int imageCount = MAX_FRAMES_IN_FLIGHT;
 	vkb::SwapchainBuilder swapchain_builder{ _device };
 	swapchain_builder.use_default_format_selection().use_default_present_mode_selection().use_default_image_usage_flags();
@@ -248,7 +228,7 @@ void Renderer::recreateSwapChain() {
 
 	vkDeviceWaitIdle(_device);
 	cleanupSwapChain(false);
-	createSwapChain();
+	createSwapchain();
 	createFramebuffers();
 }
 
@@ -374,6 +354,12 @@ void Renderer::createFrameObjects() {
 		if (vkAllocateCommandBuffers(_device, &allocInfo, &_frames[i].commandBuffer) != VK_SUCCESS) {
 			Log.FatalError("Vulkan", "Failed to allocate command buffer.");
 		}
+
+		// Uniform buffer creation
+
+		VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+		_allocator->createBuffer(&_frames[i].uniformBuffer, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+
 
 		// Semaphore and fence creation
 
@@ -596,15 +582,6 @@ void Renderer::createIndexBuffer() {
 	_allocator->copyBufferToBufferCmd(commandBuffer, &stagingBuffer, &indexBuffer, bufferSize);
 	submitOneTimeCommandBuffer(commandBuffer, QueueType::transfer);
 	_allocator->destroy(&stagingBuffer);
-}
-
-void Renderer::createUniformBuffers() {
-	VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		_allocator->createBuffer(&_frames[i].uniformBuffer, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_ALLOCATION_CREATE_MAPPED_BIT|VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
-	}
-
 }
 
 void Renderer::createDescriptorPool() {

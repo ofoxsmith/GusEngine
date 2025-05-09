@@ -15,17 +15,46 @@ void Engine::Run(vector<string> args) {
 void Engine::Init() {
 	EngineIO::FileSystem::Init();
 	ResourceLoader::Init();
-	graphics.Init();
+
+	initWindow();
+	_renderer.Init(_window);
+}
+
+void Engine::initWindow() {
+	glfwInit();
+
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+
+	_window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+	glfwSetWindowUserPointer(_window, this);
+	glfwSetFramebufferSizeCallback(_window, framebufferResizeCallback);
+	Log.Info("Core", "GLFW: Window Init Done");
+}
+
+void Engine::framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+	auto app = reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
+	app->_framebufferChanged = true;
 }
 
 void Engine::MainLoop() {
-	graphics.MainLoop();
+	while (!glfwWindowShouldClose(_window)) {
+		glfwPollEvents();
+		if (_framebufferChanged) {
+			_renderer.RefreshFramebuffer();
+			_framebufferChanged = false;
+		}
+		_renderer.ProcessFrame();
+	}
+
 }
 
 void Engine::Cleanup() {
 	Log.Info("Core", "Cleaning up vulkan");
-	graphics.Cleanup();
+	_renderer.Cleanup();
 	Log.Info("Core", "Cleaning up resources");
 	ResourceLoader::Cleanup();
 	Log.Info("Core", "Exiting");
+	glfwDestroyWindow(_window);
+	glfwTerminate();
 }
