@@ -1,6 +1,7 @@
 #include "renderer.h"
 #include <external/vkBootstrap/VkBootstrap.h>
 #include "graphicsPipeline.h"
+#include "descriptorBuilder.h"
 
 void Renderer::Init(GLFWwindow* window) {
 	_window = window;
@@ -21,12 +22,12 @@ void Renderer::initVulkan() {
 	createIndexBuffer();
 
 	createRenderPass();
-	createDescriptorSetLayout();
+	createDescriptorAllocator();
+	createDescriptorPool();
+	createDescriptorSets();
 	createGraphicsPipeline();
 	createFramebuffers();
 
-	createDescriptorPool();
-	createDescriptorSets();
 }
 
 void Renderer::RefreshFramebuffer() {
@@ -110,7 +111,7 @@ void Renderer::updateUniformBuffer(unsigned int current) {
 	ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	ubo.proj = glm::perspective(glm::radians(45.0f), _swapchain.extent.width / (float)_swapchain.extent.height, 0.1f, 10.0f);
 	ubo.proj[1][1] *= -1;
-	memcpy(_frames[current].uniformBuffer.info.pMappedData, &ubo, sizeof(ubo));
+	memcpy(get_current_frame().uniformBuffer.info.pMappedData, &ubo, sizeof(ubo));
 
 }
 
@@ -138,8 +139,7 @@ void Renderer::Cleanup() {
 		_allocator->destroy(&_frames[i].uniformBuffer);
 	}
 
-	vkDestroyDescriptorPool(_device, descriptorPool, nullptr);
-	vkDestroyDescriptorSetLayout(_device, descriptorSetLayout, nullptr);
+	delete _descriptorAllocator;
 
 	_allocator->destroy(&vertexBuffer);
 	_allocator->destroy(&indexBuffer);
@@ -296,7 +296,7 @@ void Renderer::createGraphicsPipeline() {
 	colorBlendAttachment.blendEnable = VK_FALSE;
 	
 	pipeline.SetColorBlendState(0, false, VK_LOGIC_OP_MAX_ENUM, { colorBlendAttachment });
-	pipeline.SetPipelineLayout(0, {}, { descriptorSetLayout });
+	pipeline.SetPipelineLayout(0, {}, { _descriptorAllocator->GetLayoutObj()});
 
 	pipelineLayout = pipeline.BuildLayout(&_device);
 	graphicsPipeline = pipeline.BuildPipeline(&_device, renderPass);
@@ -601,7 +601,7 @@ void Renderer::createDescriptorPool() {
 }
 
 void Renderer::createDescriptorSets() {
-	std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
+	std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, _descriptorLayout.ObjPtr());
 	VkDescriptorSetAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	allocInfo.descriptorPool = descriptorPool;
@@ -633,20 +633,10 @@ void Renderer::createDescriptorSets() {
 
 }
 
-void Renderer::createDescriptorSetLayout() {
-	VkDescriptorSetLayoutBinding uboLayoutBinding{};
-	uboLayoutBinding.binding = 0;
-	uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	uboLayoutBinding.descriptorCount = 1;
-	uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-	VkDescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutInfo.bindingCount = 1;
-	layoutInfo.pBindings = &uboLayoutBinding;
-
-	if (vkCreateDescriptorSetLayout(_device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
-		Log.FatalError("Vulkan", "Failed to create descriptor set layout.");
-	}
-
+void Renderer::createDescriptorAllocator() {
+	VkDescriptorSetLayoutBinding binding{};
+	binding.descriptorCount = 1;
+	binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	_descriptorAllocator = new DescriptorAllocator(_device, {binding});
 }

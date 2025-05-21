@@ -122,6 +122,9 @@
     <ClInclude Include="utils\uniqueId.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="core\renderer\descriptorBuilder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

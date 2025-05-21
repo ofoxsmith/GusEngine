@@ -20,6 +20,7 @@
 #include <chrono>
 
 #include "vkAllocator.h"
+#include "descriptorBuilder.h"
 using namespace vkAllocator;
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -109,7 +110,7 @@ class Renderer {
 	private:
 
 	FrameData _frames[MAX_FRAMES_IN_FLIGHT];
-	FrameData& get_current_frame() { return _frames[frameNum % MAX_FRAMES_IN_FLIGHT]; };
+	FrameData& get_current_frame() { return _frames[frameNum % MAX_FRAMES_IN_FLIGHT]; }
 
 	GLFWwindow* _window;
 	Allocator* _allocator = nullptr;
@@ -119,8 +120,8 @@ class Renderer {
 	VkSurfaceKHR _surface = nullptr;
 	vkb::Swapchain _swapchain;
 
+	DescriptorAllocator* _descriptorAllocator = nullptr;
 	VkDescriptorPool descriptorPool = nullptr;
-	VkDescriptorSetLayout descriptorSetLayout;
 	VkPipelineLayout pipelineLayout = nullptr;
 	VkRenderPass renderPass = nullptr;
 	VkPipeline graphicsPipeline = nullptr;
@@ -143,7 +144,7 @@ class Renderer {
 	void createIndexBuffer();
 
 	void createRenderPass();
-	void createDescriptorSetLayout();
+	void createDescriptorAllocator();
 	void createGraphicsPipeline();
 	void createFramebuffers();
 

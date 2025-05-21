@@ -170,6 +170,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\globals.h" />
+    <ClInclude Include="core\renderer\descriptorBuilder.h" />
     <ClInclude Include="core\renderer\graphicsPipeline.h" />
     <ClInclude Include="core\renderer\vkAllocator.h" />
     <ClInclude Include="core\renderer\vkUtils.h" />
