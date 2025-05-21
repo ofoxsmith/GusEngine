@@ -121,7 +121,6 @@ class Renderer {
 	vkb::Swapchain _swapchain;
 
 	DescriptorAllocator* _descriptorAllocator = nullptr;
-	VkDescriptorPool descriptorPool = nullptr;
 	VkPipelineLayout pipelineLayout = nullptr;
 	VkRenderPass renderPass = nullptr;
 	VkPipeline graphicsPipeline = nullptr;
@@ -147,9 +146,6 @@ class Renderer {
 	void createDescriptorAllocator();
 	void createGraphicsPipeline();
 	void createFramebuffers();
-
-	void createDescriptorPool();
-	void createDescriptorSets();
 
 	void cleanupSwapChain(bool destroySwapchain = true);
 	void recreateSwapChain();

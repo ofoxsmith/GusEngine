@@ -23,8 +23,6 @@ void Renderer::initVulkan() {
 
 	createRenderPass();
 	createDescriptorAllocator();
-	createDescriptorPool();
-	createDescriptorSets();
 	createGraphicsPipeline();
 	createFramebuffers();
 
@@ -584,36 +582,19 @@ void Renderer::createIndexBuffer() {
 	_allocator->destroy(&stagingBuffer);
 }
 
-void Renderer::createDescriptorPool() {
-	VkDescriptorPoolSize poolSize{};
-	poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSize.descriptorCount = static_cast<unsigned int>(MAX_FRAMES_IN_FLIGHT);
+void Renderer::createDescriptorAllocator() {
+	VkDescriptorSetLayoutBinding binding{};
+	binding.descriptorCount = 1;
+	binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	
+	_descriptorAllocator = new DescriptorAllocator(_device, {binding});
+	_descriptorAllocator->CreatePool(MAX_FRAMES_IN_FLIGHT);
 
-	VkDescriptorPoolCreateInfo poolInfo{};
-	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolInfo.poolSizeCount = 1;
-	poolInfo.pPoolSizes = &poolSize;
-	poolInfo.maxSets = static_cast<unsigned int>(MAX_FRAMES_IN_FLIGHT);
-	if (vkCreateDescriptorPool(_device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
-		Log.FatalError("Vulkan", "failed to create descriptor pool!");
-	}
+	std::vector<VkDescriptorSet> descriptorSets = _descriptorAllocator->AllocateDescriptorSets(MAX_FRAMES_IN_FLIGHT);
 
-}
-
-void Renderer::createDescriptorSets() {
-	std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, _descriptorLayout.ObjPtr());
-	VkDescriptorSetAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool = descriptorPool;
-	allocInfo.descriptorSetCount = static_cast<unsigned int>(MAX_FRAMES_IN_FLIGHT);
-	allocInfo.pSetLayouts = layouts.data();
-	std::vector<VkDescriptorSet> descriptorSets;
-	descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-	if (vkAllocateDescriptorSets(_device, &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
-		Log.FatalError("Vulkan", "Failed to allocate descriptor sets.");
-	}
-
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+	for (size_t i = 0; i < descriptorSets.size(); i++)
+	{
 		_frames[i].descriptorSet = descriptorSets[i];
 		VkDescriptorBufferInfo bufferInfo{};
 		bufferInfo.buffer = _frames[i].uniformBuffer.buffer;
@@ -628,15 +609,6 @@ void Renderer::createDescriptorSets() {
 		descriptorWrite.descriptorCount = 1;
 		descriptorWrite.pBufferInfo = &bufferInfo;
 		vkUpdateDescriptorSets(_device, 1, &descriptorWrite, 0, nullptr);
+
 	}
-
-
-}
-
-void Renderer::createDescriptorAllocator() {
-	VkDescriptorSetLayoutBinding binding{};
-	binding.descriptorCount = 1;
-	binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-	_descriptorAllocator = new DescriptorAllocator(_device, {binding});
 }

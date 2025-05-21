@@ -7,12 +7,12 @@ namespace vkAllocator {
 	struct Alloc {
 		bool inUse = false;
 		bool mapped = false;
-		VmaAllocation alloc;
-		VmaAllocationInfo info;
+		VmaAllocation alloc = nullptr;
+		VmaAllocationInfo info{};
 	};
 
 	struct BufferAlloc : public Alloc {
-		VkBuffer buffer;
+		VkBuffer buffer = nullptr;
 	};
 
 	struct ImageAlloc : public Alloc {
