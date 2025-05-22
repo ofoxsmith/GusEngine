@@ -156,6 +156,6 @@ class Renderer {
 	VkCommandBuffer createOneTimeCommandBuffer(QueueType queue);
 	void submitOneTimeCommandBuffer(VkCommandBuffer buffer, QueueType queue);
 
-	void recordCommandBuffer(VkCommandBuffer commandBuffer, unsigned int imageIndex);
+	void recordFrameCmdBuffer(VkCommandBuffer commandBuffer, unsigned int imageIndex);
 	void updateUniformBuffer(unsigned int currentImage);
 };

@@ -54,7 +54,7 @@ void Renderer::drawFrame() {
 	}
 	vkResetFences(_device, 1, &current_frame.renderFence);
 	vkResetCommandBuffer(current_frame.commandBuffer, 0);
-	recordCommandBuffer(current_frame.commandBuffer, imageIndex);
+	recordFrameCmdBuffer(current_frame.commandBuffer, imageIndex);
 
 	updateUniformBuffer(frameNum % MAX_FRAMES_IN_FLIGHT);
 	VkSubmitInfo submitInfo{};
@@ -377,7 +377,7 @@ void Renderer::createFrameObjects() {
 	}
 }
 
-void Renderer::recordCommandBuffer(VkCommandBuffer commandBuffer, unsigned int imageIndex) {
+void Renderer::recordFrameCmdBuffer(VkCommandBuffer commandBuffer, unsigned int imageIndex) {
 	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
