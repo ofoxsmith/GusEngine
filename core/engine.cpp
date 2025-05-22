@@ -44,6 +44,8 @@ void Engine::MainLoop() {
 			_renderer.RefreshFramebuffer();
 			_framebufferChanged = false;
 		}
+
+		_renderer.BeginFrameProcessing();
 		_renderer.ProcessFrame();
 	}
 

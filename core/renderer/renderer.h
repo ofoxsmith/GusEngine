@@ -105,6 +105,7 @@ class Renderer {
 
 	void Init(GLFWwindow* window);
 	void RefreshFramebuffer();
+	void BeginFrameProcessing();
 	void ProcessFrame();
 	void Cleanup();
 	private:
@@ -132,6 +133,8 @@ class Renderer {
 	BufferAlloc indexBuffer;
 	std::vector<SwapchainImage> swapchainImages;
 
+	void initImGUI();
+
 	/// Rendering init and cleanup
 	void initVulkan();
 	void createInstanceAndDevice();
@@ -151,7 +154,6 @@ class Renderer {
 	void recreateSwapChain();
 
 	void drawFrame();
-
 
 	VkCommandBuffer createOneTimeCommandBuffer(QueueType queue);
 	void submitOneTimeCommandBuffer(VkCommandBuffer buffer, QueueType queue);

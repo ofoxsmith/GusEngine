@@ -1,7 +1,17 @@
 #include "renderer.h"
 #include <external/vkBootstrap/VkBootstrap.h>
+
+#include <external/imGUI/imgui.h>
+#include <external/imGUI/imgui_impl_glfw.h>
+#include <external/imGUI/imgui_impl_vulkan.h>
+
 #include "graphicsPipeline.h"
 #include "descriptorBuilder.h"
+
+#define VK_ASSERT(x) \
+if (x != VK_SUCCESS) { \
+Log.FatalError("Vulkan", "Call failure: " +  #x);	\
+} \
 
 void Renderer::Init(GLFWwindow* window) {
 	_window = window;
@@ -9,6 +19,37 @@ void Renderer::Init(GLFWwindow* window) {
 	Log.Info("Renderer", "Vulkan: Init Done");
 }
 
+void Renderer::initImGUI()
+{
+
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+	ImGui_ImplGlfw_InitForVulkan(_window, false);
+
+	ImGui_ImplVulkan_InitInfo init_info = {};
+	init_info.Instance = _instance;
+	init_info.PhysicalDevice = _physicalDevice;
+	init_info.Device = _device;
+	init_info.Queue = queues[QueueType::graphics];
+	init_info.DescriptorPoolSize = IMGUI_IMPL_VULKAN_MINIMUM_IMAGE_SAMPLER_POOL_SIZE+2;
+	init_info.MinImageCount = 2;
+	init_info.ImageCount = 2;
+	init_info.UseDynamicRendering = true;
+	init_info.PipelineRenderingCreateInfo = { .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO };
+	init_info.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
+	init_info.PipelineRenderingCreateInfo.pColorAttachmentFormats = &_swapchain.image_format;
+	init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+
+	ImGui_ImplVulkan_Init(&init_info);
+
+	ImGui_ImplVulkan_CreateFontsTexture();
+
+}
 
 void Renderer::initVulkan() {
 	createInstanceAndDevice();
@@ -26,14 +67,27 @@ void Renderer::initVulkan() {
 	createGraphicsPipeline();
 	createFramebuffers();
 
+	initImGUI();
 }
 
 void Renderer::RefreshFramebuffer() {
 	recreateSwapChain();
 }
 
+void Renderer::BeginFrameProcessing() {
+	bool demoshow = true;
+	ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+	
+	ImGui::ShowDemoWindow(&demoshow);
+}
+
 void Renderer::ProcessFrame() {
 	drawFrame();
+	ImGui::Render();
+	ImGui::UpdatePlatformWindows();
+	ImGui::RenderPlatformWindowsDefault();
 	vkDeviceWaitIdle(_device);
 }
 
@@ -54,9 +108,36 @@ void Renderer::drawFrame() {
 	}
 	vkResetFences(_device, 1, &current_frame.renderFence);
 	vkResetCommandBuffer(current_frame.commandBuffer, 0);
+
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	if (vkBeginCommandBuffer(current_frame.commandBuffer, &beginInfo) != VK_SUCCESS) {
+		Log.FatalError("Vulkan", "Failed to begin recording command buffer.");
+	}
+
+	VkRenderPassBeginInfo renderPassInfo{};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassInfo.renderPass = renderPass;
+	renderPassInfo.framebuffer = swapchainImages[imageIndex].framebuffer;
+
+	renderPassInfo.renderArea.offset = { 0, 0 };
+	renderPassInfo.renderArea.extent = _swapchain.extent;
+
+	VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
+	renderPassInfo.clearValueCount = 1;
+	renderPassInfo.pClearValues = &clearColor;
+
+	vkCmdBeginRenderPass(current_frame.commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
 	recordFrameCmdBuffer(current_frame.commandBuffer, imageIndex);
 
 	updateUniformBuffer(frameNum % MAX_FRAMES_IN_FLIGHT);
+	
+	vkCmdEndRenderPass(current_frame.commandBuffer);
+	if (vkEndCommandBuffer(current_frame.commandBuffer) != VK_SUCCESS) {
+		Log.FatalError("Vulkan", "Failed to record command buffer.");
+	}
+
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -155,6 +236,10 @@ void Renderer::Cleanup() {
 	{
 		vkDestroyCommandPool(_device, var.second, nullptr);
 	}
+
+	ImGui_ImplVulkan_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
 
 	delete _allocator;
 	vkb::destroy_device(_device);
@@ -378,25 +463,7 @@ void Renderer::createFrameObjects() {
 }
 
 void Renderer::recordFrameCmdBuffer(VkCommandBuffer commandBuffer, unsigned int imageIndex) {
-	VkCommandBufferBeginInfo beginInfo{};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
-		Log.FatalError("Vulkan", "Failed to begin recording command buffer.");
-	}
 
-	VkRenderPassBeginInfo renderPassInfo{};
-	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassInfo.renderPass = renderPass;
-	renderPassInfo.framebuffer = swapchainImages[imageIndex].framebuffer;
-
-	renderPassInfo.renderArea.offset = { 0, 0 };
-	renderPassInfo.renderArea.extent = _swapchain.extent;
-
-	VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
-	renderPassInfo.clearValueCount = 1;
-	renderPassInfo.pClearValues = &clearColor;
-
-	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
@@ -421,11 +488,6 @@ void Renderer::recordFrameCmdBuffer(VkCommandBuffer commandBuffer, unsigned int 
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &_frames[frameNum % MAX_FRAMES_IN_FLIGHT].descriptorSet, 0, nullptr);
 
 	vkCmdDrawIndexed(commandBuffer, static_cast<unsigned int>(indices.size()), 1, 0, 0, 0);
-
-	vkCmdEndRenderPass(commandBuffer);
-	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
-		Log.FatalError("Vulkan", "Failed to record command buffer.");
-	}
 }
 
 void Renderer::createInstanceAndDevice() {
