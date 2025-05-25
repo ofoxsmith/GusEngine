@@ -5,11 +5,6 @@ namespace resources {
 	class Image : public Resource {
 		GUS_DECLARE_CLASS(Image, Resource)
 		
-		private:
-
-		vector<unsigned char> _pixelData {};
-		public:
-
 		enum class ImageFormat {
 			FORMAT_ERR,
 
@@ -23,7 +18,23 @@ namespace resources {
 			FORMAT_16RGBA
 		};
 
-		ImageFormat format = ImageFormat::FORMAT_ERR;
+		private:
+
+		vector<uint8_t> _pixelData {};
+		int _width, _height, _channels = 0;
+		ImageFormat _format = ImageFormat::FORMAT_ERR;
+
+		public:
+
+		ImageFormat GetFormat() inline const {return _format; };
+		int GetWidth() inline const {return _width; };
+		int GetHeight() inline const {return _height; };
+		int GetChannels() inline const {return _channels; };
+		bool Is16Bit() inline const {
+			return (_format == ImageFormat::FORMAT_16L || _format == ImageFormat::FORMAT_16LA || _format == ImageFormat::FORMAT_16RGB || _format == ImageFormat::FORMAT_16RGBA);
+		}
+
+
 		static Image* CreateFromFile(string filePath);
 
 
