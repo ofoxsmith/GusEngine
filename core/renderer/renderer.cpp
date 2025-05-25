@@ -8,10 +8,7 @@
 #include "graphicsPipeline.h"
 #include "descriptorBuilder.h"
 
-#define VK_ASSERT(x) \
-if (x != VK_SUCCESS) { \
-Log.FatalError("Vulkan", "Call failure: " +  #x);	\
-} \
+#define VK_ASSERT(x) if (x != VK_SUCCESS) Log.FatalError("Vulkan", "Call failure: " +  std::string(#x))
 
 void Renderer::Init(GLFWwindow* window) {
 	_window = window;
@@ -88,13 +85,13 @@ void Renderer::ProcessFrame() {
 	ImGui::Render();
 	ImGui::UpdatePlatformWindows();
 	ImGui::RenderPlatformWindowsDefault();
-	vkDeviceWaitIdle(_device);
+	VK_ASSERT(vkDeviceWaitIdle(_device));
 }
 
 void Renderer::drawFrame() {
 
 	FrameData current_frame = get_current_frame();
-	vkWaitForFences(_device, 1, &current_frame.renderFence, VK_TRUE, UINT64_MAX);
+	VK_ASSERT(vkWaitForFences(_device, 1, &current_frame.renderFence, VK_TRUE, UINT64_MAX));
 
 	unsigned int imageIndex;
 	VkResult result = vkAcquireNextImageKHR(_device, _swapchain, UINT64_MAX, current_frame.imageSemaphore, VK_NULL_HANDLE, &imageIndex);
