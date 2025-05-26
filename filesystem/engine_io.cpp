@@ -1,8 +1,14 @@
 #include "engine_io.h"
 #include "core/types/object.h"
-
+#include <external/md5.h>
 using namespace resources;
 using namespace EngineIO;
+
+string EngineIO::File::GetHash() {
+	string data = ReadAllText();
+	return md5::hash(data.data(), data.size());
+}
+
 void EngineIO::ObjectSaver::SerialiseResourceBinary(Resource res, std::string filepath)
 {
 	File outFile = EngineIO::FileSystem::OpenOrCreateFile(filepath, std::ios::binary | std::ios::out);

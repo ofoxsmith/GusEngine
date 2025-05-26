@@ -5,21 +5,22 @@
 
 // Resource Types
 #include "project/resources/shader.h"
+#include "project/resources/image.h"
 using namespace resources;
-
 
 class ResourceLoader
 {
 	private:
 	struct ImportedResource {
 		string location;
-		string cacheLocation;
 		string hash;
 	};
 
 	// A map containing pointers to all loaded resource instances.
 	static std::unordered_map<string, Resource*> loadedResources;
 	static std::unordered_map<string, ImportedResource> projectResources;
+	
+	static void _updateCache(string hash, string filePath, Resource* res);
 	static Resource* _load(const string filePath);
 	public:
 	enum class ImportResult {

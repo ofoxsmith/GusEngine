@@ -21,6 +21,8 @@
 
 #include "vkAllocator.h"
 #include "descriptorBuilder.h"
+#include "utils/uniqueId.h"
+
 using namespace vkAllocator;
 const int MAX_FRAMES_IN_FLIGHT = 2;
 

@@ -14,8 +14,6 @@ namespace ObjectRTTIModel {
 			READ_ONLY = 1 << 0,
 			// The property won't be saved when serialising a resource.
 			NO_SAVE = 1 << 1,
-			// The property is imported and cached internally by the engine.
-			IMPORTED = 1 << 2 & 1 << 1 & 1 << 0,
 		};
 
 		string propertyName = "";

@@ -194,6 +194,7 @@
     <ClInclude Include="external\imGUI\imstb_rectpack.h" />
     <ClInclude Include="external\imGUI\imstb_textedit.h" />
     <ClInclude Include="external\imGUI\imstb_truetype.h" />
+    <ClInclude Include="external\md5.h" />
     <ClInclude Include="external\vkBootstrap\VkBootstrap.h" />
     <ClInclude Include="external\vkBootstrap\VkBootstrapDispatch.h" />
     <ClInclude Include="filesystem\engine_io.h" />
