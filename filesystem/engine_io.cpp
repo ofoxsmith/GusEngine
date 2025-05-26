@@ -9,24 +9,24 @@ string EngineIO::File::GetHash() {
 	return md5::hash(data.data(), data.size());
 }
 
-void EngineIO::ObjectSaver::SerialiseResourceBinary(Resource res, std::string filepath)
+void EngineIO::ObjectSaver::SerialiseResourceBinary(Resource* res, std::string filepath)
 {
 	File outFile = EngineIO::FileSystem::OpenOrCreateFile(filepath, std::ios::binary | std::ios::out);
 	fstream* outStream = outFile.GetFileStream();
-	string className = res._ClassName();
-	string resourceName = res.Name();
+	string className = res->_ClassName();
+	string resourceName = res->Name();
 	outStream->write(className.c_str(), className.size());
 	outStream->put(0x00);
 	outStream->write(resourceName.c_str(), resourceName.size());
 	outStream->put(0x00);
 
-	map<string, ObjectRTTIModel::ObjectPropertyDefinition> properties = res._GetPropertyList();
+	map<string, ObjectRTTIModel::ObjectPropertyDefinition> properties = res->_GetPropertyList();
 	map<string, ObjectRTTIModel::ObjectPropertyDefinition>::iterator it = properties.begin();
 
 	while (it != properties.end()) {
 		outStream->write(it->first.c_str(), it->first.size());
 		outStream->put(0x00);
-		Variant value = res._Call(it->second.getterName);
+		Variant value = res->_Call(it->second.getterName);
 		char* val = Variant::BinarySerialise(value);
 		outStream->write(val, Variant::BinarySerialisationLength(val));
 		delete val;

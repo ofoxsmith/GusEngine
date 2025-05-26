@@ -94,7 +94,7 @@ namespace EngineIO {
 
 	class ObjectSaver {
 		public:
-		static void SerialiseResourceBinary(Resource res, std::string filepath);
+		static void SerialiseResourceBinary(Resource* res, std::string filepath);
 		static void SerialiseResourceText(Resource res, std::string filepath);
 	};
 

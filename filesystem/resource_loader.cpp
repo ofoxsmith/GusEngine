@@ -56,7 +56,7 @@ void ResourceLoader::_updateCache(string hash, string filePath, Resource* res) {
     }
 
 
-    EngineIO::ObjectSaver::SerialiseResourceBinary(*res, ".gusengine/" + newCache.hash);
+    EngineIO::ObjectSaver::SerialiseResourceBinary(res, ".gusengine/" + newCache.hash);
 }
 
 bool ResourceLoader::IsResourceImported(string filePath) {
