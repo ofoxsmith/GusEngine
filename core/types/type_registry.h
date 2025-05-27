@@ -155,9 +155,13 @@ namespace engine_type_registry {
 
 	class type_registry {
 		private:
+		static string _currentClass;
 		public:
 		static void register_all_types();
 		static void register_new_class(string new_class_name, string parent_class_name = "Object");
+		static void end_class() {
+			_currentClass = "";
+		};
 		static map<string, EngineClass> _registered_classes;
 
 		template <typename T>
@@ -169,29 +173,29 @@ namespace engine_type_registry {
 		};
 
 		template <typename R, typename T, typename... Args> requires IsDerivedFromObject<T>
-		static void class_expose_method(string class_name, ObjectRTTIModel::ObjectMethodDefinition methodInfo, R(T::* func)(Args...)) {
-			if (_registered_classes[class_name]._methods.contains(methodInfo.methodName)) {
-				Log.Warn("TypeRegistry", "Attempted to redefine method " + class_name + "::" + methodInfo.methodName);
+		static void class_expose_method(ObjectRTTIModel::ObjectMethodDefinition methodInfo, R(T::* func)(Args...)) {
+			if (_registered_classes[_currentClass]._methods.contains(methodInfo.methodName)) {
+				Log.Warn("TypeRegistry", "Attempted to redefine method " + _currentClass + "::" + methodInfo.methodName);
 				return;
 			}
-			_registered_classes[class_name]._methods[methodInfo.methodName] = methodInfo;
-			_registered_classes[class_name]._methodBinds[methodInfo.methodName] = new BindedObjectMethod<R, T, Args...>(func, methodInfo);
+			_registered_classes[_currentClass]._methods[methodInfo.methodName] = methodInfo;
+			_registered_classes[_currentClass]._methodBinds[methodInfo.methodName] = new BindedObjectMethod<R, T, Args...>(func, methodInfo);
 			return;
 		};
 
 		// Overload to expose member functions declared const
 		template <typename R, typename T, typename... Args> requires IsDerivedFromObject<T>
-		static void class_expose_method(string class_name, ObjectRTTIModel::ObjectMethodDefinition methodInfo, R(T::* func)(Args...) const) {
-			if (_registered_classes[class_name]._methods.contains(methodInfo.methodName)) {
-				Log.Warn("TypeRegistry", "Attempted to redefine method " + class_name + "::" + methodInfo.methodName);
+		static void class_expose_method(ObjectRTTIModel::ObjectMethodDefinition methodInfo, R(T::* func)(Args...) const) {
+			if (_registered_classes[_currentClass]._methods.contains(methodInfo.methodName)) {
+				Log.Warn("TypeRegistry", "Attempted to redefine method " + _currentClass + "::" + methodInfo.methodName);
 				return;
 			}
-			_registered_classes[class_name]._methods[methodInfo.methodName] = methodInfo;
-			_registered_classes[class_name]._methodBinds[methodInfo.methodName] = new BindedObjectMethod<R, T, Args...>(func, methodInfo);
+			_registered_classes[_currentClass]._methods[methodInfo.methodName] = methodInfo;
+			_registered_classes[_currentClass]._methodBinds[methodInfo.methodName] = new BindedObjectMethod<R, T, Args...>(func, methodInfo);
 			return;
 		};
 
-		static void class_define_property(string class_name, ObjectRTTIModel::ObjectPropertyDefinition def);
+		static void class_define_property(ObjectRTTIModel::ObjectPropertyDefinition def);
 
 	};
 }

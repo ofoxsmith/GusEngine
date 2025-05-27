@@ -92,17 +92,14 @@ ResourceLoader::ImportResult ResourceLoader::ImportResource(string extResourcePa
     };
 
     if (std::find(supportedShaderTypes.begin(), supportedShaderTypes.end(), sourceType) != supportedShaderTypes.end()) {
-        ShaderResourceOptions shaderOpts{};
-        if (sourceType == "vert") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageVert;
-        if (sourceType == "frag") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageFrag;
-        if (sourceType == "tesc") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageTessControl;
-        if (sourceType == "tese") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageTessEval;
-        if (sourceType == "geom") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageGeom;
-        if (sourceType == "comp") shaderOpts.stage = ShaderResourceOptions::ShaderStage::StageComp;
-        shaderOpts.spirvBinary = Shader::CompileGLSLtoSPIRV(extResource.ReadAllText(), shaderOpts.language, shaderOpts.stage);
-
-        Shader* shader = new Shader();
-        shader->SetShaderSPIRV(shaderOpts.spirvBinary);
+        Shader::ShaderStage stage{};
+        if (sourceType == "vert") stage = Shader::ShaderStage::StageVert;
+        if (sourceType == "frag") stage = Shader::ShaderStage::StageFrag;
+        if (sourceType == "tesc") stage = Shader::ShaderStage::StageTessControl;
+        if (sourceType == "tese") stage = Shader::ShaderStage::StageTessEval;
+        if (sourceType == "geom") stage = Shader::ShaderStage::StageGeom;
+        if (sourceType == "comp") stage = Shader::ShaderStage::StageComp;
+        Shader* shader = Shader::Create(extResource.ReadAllText(), Shader::ShaderLanguage::LanguageGLSL, stage);
         _updateCache(resHash, extResourcePath, shader);
         loadedResources[extResourcePath] = shader;
 

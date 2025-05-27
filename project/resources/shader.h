@@ -3,11 +3,15 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 namespace resources {
-	struct ShaderResourceOptions {
+	class Shader: public Resource {
+		GUS_DECLARE_CLASS(Shader, Resource)
+		public:
+
 		enum class ShaderLanguage {
 			LanguageGLSL,
 			LanguageHLSL
 		};
+
 		enum class ShaderStage {
 			StageUnknown,
 			StageVert,
@@ -18,17 +22,7 @@ namespace resources {
 			StageComp
 		};
 
-		std::vector<unsigned int> spirvBinary{};
-		string shaderTextCode = "";
-		ShaderLanguage language = ShaderLanguage::LanguageGLSL;
-		ShaderStage stage = ShaderStage::StageUnknown;
-	};
-
-	class Shader: public Resource {
-		GUS_DECLARE_CLASS(Shader, Resource)
-		public:
-
-		static vector<unsigned int> CompileGLSLtoSPIRV(const std::string& source, ShaderResourceOptions::ShaderLanguage lang, ShaderResourceOptions::ShaderStage stage);
+		static Shader* Create(const std::string& source, ShaderLanguage lang, ShaderStage stage);
 		
 		Shader() {};
 
@@ -38,22 +32,18 @@ namespace resources {
 		}
 
 		VkShaderModule GetShaderModule(VkDevice device);
-		void SetShaderSPIRV(vector<unsigned int> spirv) {
-			compiledCode = spirv;
-		}
+
 		vector<unsigned int> GetShaderSPIRV() const {
-			return compiledCode;
+			return _spirvBinary;
 		}
 
-		void SetLanguage(ShaderResourceOptions::ShaderLanguage lng) { lang = lng; };
-		ShaderResourceOptions::ShaderLanguage GetLanguage() const { return lang; };
-		void SetStage(ShaderResourceOptions::ShaderStage stg) { stage = stg; };
-		ShaderResourceOptions::ShaderStage GetStage() const { return stage; };
+		ShaderLanguage GetLanguage() const { return _lang; };
+		ShaderStage GetStage() const { return _stage; };
 
 		private:
 		VkShaderModule _shaderModule = nullptr;
-		vector<unsigned int> compiledCode;
-		ShaderResourceOptions::ShaderLanguage lang = ShaderResourceOptions::ShaderLanguage::LanguageGLSL;
-		ShaderResourceOptions::ShaderStage stage = ShaderResourceOptions::ShaderStage::StageUnknown;
+		vector<unsigned int> _spirvBinary;
+		ShaderLanguage _lang = ShaderLanguage::LanguageGLSL;
+		ShaderStage _stage = ShaderStage::StageUnknown;
 	};
 }

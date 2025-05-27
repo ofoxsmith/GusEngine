@@ -9,8 +9,8 @@ VkShaderModule resources::Shader::GetShaderModule(VkDevice device)
 	if (_shaderModule) return _shaderModule;
 	VkShaderModuleCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	createInfo.codeSize = 4 * compiledCode.size();
-	createInfo.pCode = compiledCode.data();
+	createInfo.codeSize = 4 * _spirvBinary.size();
+	createInfo.pCode = _spirvBinary.data();
 	if (vkCreateShaderModule(device, &createInfo, nullptr, &_shaderModule) != VK_SUCCESS) {
 		Log.FatalError("Vulkan", "Failed to create shader module.");
 	}
@@ -23,18 +23,17 @@ void resources::Shader::_register_type() {
 	using namespace ObjectRTTIModel;
 
 	type_registry::register_new_class("Shader", "Resource");
-	type_registry::class_expose_method("Shader", ObjectMethodDefinition("SetLanguage", Variant::StoredType::Void), &Shader::SetLanguage);
-	type_registry::class_expose_method("Shader", ObjectMethodDefinition("GetLanguage", Variant::StoredType::Int32), &Shader::GetLanguage);
-	type_registry::class_expose_method("Shader", ObjectMethodDefinition("SetStage", Variant::StoredType::Void), &Shader::SetStage);
-	type_registry::class_expose_method("Shader", ObjectMethodDefinition("GetStage", Variant::StoredType::Int32), &Shader::GetStage);
+	type_registry::class_expose_method(ObjectMethodDefinition("GetLanguage", Variant::StoredType::Int32), &Shader::GetLanguage);
+	type_registry::class_expose_method(ObjectMethodDefinition("GetStage", Variant::StoredType::Int32), &Shader::GetStage);
 	
-	ObjectRTTIModel::ObjectPropertyDefinition langProp = ObjectPropertyDefinition("Language", Variant::StoredType::Int32, ObjectPropertyDefinition::NONE, "GetLanguage", "SetLanguage");
-	ObjectRTTIModel::ObjectPropertyDefinition stageProp = ObjectPropertyDefinition("Stage", Variant::StoredType::Int32, ObjectPropertyDefinition::NONE, "GetStage", "SetStage");
-	type_registry::class_define_property("Shader", langProp);
-	type_registry::class_define_property("Shader", stageProp);
+	ObjectRTTIModel::ObjectPropertyDefinition langProp = ObjectPropertyDefinition("Language", Variant::StoredType::Int32, ObjectPropertyDefinition::INTERNAL_SAVE, "GetLanguage");
+	ObjectRTTIModel::ObjectPropertyDefinition stageProp = ObjectPropertyDefinition("Stage", Variant::StoredType::Int32, ObjectPropertyDefinition::INTERNAL_SAVE, "GetStage");
+	type_registry::class_define_property(langProp);
+	type_registry::class_define_property(stageProp);
+	type_registry::end_class();
 }
 
-vector<unsigned int> resources::Shader::CompileGLSLtoSPIRV(const std::string& source, ShaderResourceOptions::ShaderLanguage lang, ShaderResourceOptions::ShaderStage type)
+resources::Shader* resources::Shader::Create(const std::string& source, ShaderLanguage lang, ShaderStage type)
 {
 	std::vector<unsigned int> spirv;
 	std::string	info_log;
@@ -44,12 +43,12 @@ vector<unsigned int> resources::Shader::CompileGLSLtoSPIRV(const std::string& so
 
 	EShLanguage stage{};
 
-	if (type == ShaderResourceOptions::ShaderStage::StageVert) stage = EShLangVertex;
-	if (type == ShaderResourceOptions::ShaderStage::StageFrag) stage = EShLangFragment;
-	if (type == ShaderResourceOptions::ShaderStage::StageTessControl) stage = EShLangTessControl;
-	if (type == ShaderResourceOptions::ShaderStage::StageTessEval) stage = EShLangTessEvaluation;
-	if (type == ShaderResourceOptions::ShaderStage::StageGeom) stage = EShLangGeometry;
-	if (type == ShaderResourceOptions::ShaderStage::StageComp) stage = EShLangCompute;
+	if (type == ShaderStage::StageVert) stage = EShLangVertex;
+	if (type == ShaderStage::StageFrag) stage = EShLangFragment;
+	if (type == ShaderStage::StageTessControl) stage = EShLangTessControl;
+	if (type == ShaderStage::StageTessEval) stage = EShLangTessEvaluation;
+	if (type == ShaderStage::StageGeom) stage = EShLangGeometry;
+	if (type == ShaderStage::StageComp) stage = EShLangCompute;
 
 	const char* shader_source = reinterpret_cast<const char*>(source.data());
 
@@ -84,11 +83,14 @@ vector<unsigned int> resources::Shader::CompileGLSLtoSPIRV(const std::string& so
 	}
 
 	spv::SpvBuildLogger logger;
-
 	glslang::GlslangToSpv(*intermediate, spirv, &logger);
-
 	glslang::FinalizeProcess();
-	return spirv;
+
+	Shader* newShader = new Shader();
+	newShader->_spirvBinary = spirv;
+	newShader->_stage = type;
+	newShader->_lang = lang;
+	return newShader;
 }
 
 resources::Shader::~Shader() {

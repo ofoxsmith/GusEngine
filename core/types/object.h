@@ -12,8 +12,10 @@ namespace ObjectRTTIModel {
 			NONE = 0,
 			// The property is readonly.
 			READ_ONLY = 1 << 0,
-			// The property won't be saved when serialising a resource.
-			NO_SAVE = 1 << 1,
+
+			CONFIG_SAVE = 1 << 1,
+			INTERNAL_SAVE = 1 << 2 & READ_ONLY,
+
 		};
 
 		string propertyName = "";

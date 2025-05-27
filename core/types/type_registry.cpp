@@ -9,6 +9,7 @@
 
 using namespace engine_type_registry;
 map<string, EngineClass> type_registry::_registered_classes{};
+string type_registry::_currentClass = "";
 void type_registry::register_all_types()
 {
 	using namespace resources;
@@ -30,13 +31,16 @@ void type_registry::register_new_class(string new_class_name, string parent_clas
 		newClass._inherits = &_registered_classes[newClass._parentClassName];
 	}
 	_registered_classes[new_class_name] = newClass;
+
+	_currentClass = new_class_name;
+
 }
 
-void engine_type_registry::type_registry::class_define_property(string class_name, ObjectRTTIModel::ObjectPropertyDefinition def) {
-	if (_registered_classes[class_name]._properties.contains(def.propertyName)) {
-		Log.Warn("TypeRegistry", "Attempted to redefine property " + class_name + "::" + def.propertyName);
+void engine_type_registry::type_registry::class_define_property(ObjectRTTIModel::ObjectPropertyDefinition def) {
+	if (_registered_classes[_currentClass]._properties.contains(def.propertyName)) {
+		Log.Warn("TypeRegistry", "Attempted to redefine property " + _currentClass + "::" + def.propertyName);
 		return;
 	}
-	_registered_classes[class_name]._properties[def.propertyName] = def;
+	_registered_classes[_currentClass]._properties[def.propertyName] = def;
 }
 

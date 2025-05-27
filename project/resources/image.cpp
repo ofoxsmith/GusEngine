@@ -14,6 +14,7 @@ void Image::_register_type() {
 	using namespace ObjectRTTIModel;
 
 	type_registry::register_new_class("Image", "Resource");
+	type_registry::end_class();
 }
 
 Image* Image::CreateFromFile(string filePath) {
