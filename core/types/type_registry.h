@@ -58,14 +58,14 @@ static Variant call_class_method_helper_impl(T* obj, R(T::* method)(Args...)cons
 }
 
 template <typename R, typename T, typename... Args> requires IsDerivedFromObject<T>
-static Variant call_class_method_helper(T* obj, R(T::* method)(Args...), const vector<Variant> args, int requiredArgCount, const vector<Variant>& defaultArgs, bool& callSuccessfull) {
+static Variant call_class_method_helper(T* obj, R(T::* method)(Args...), const vector<Variant> args, int32_t requiredArgCount, const vector<Variant>& defaultArgs, bool& callSuccessfull) {
 	if (args.size() < requiredArgCount) {
 		callSuccessfull = false;
 		return Variant(Variant::Void);
 	}
 
 	Variant resolvedArgs[sizeof...(Args) == 0 ? 1 : sizeof...(Args)]{};
-	for (int i = 0; i < (int)sizeof...(Args); i++) {
+	for (int32_t i = 0; i < (int32_t)sizeof...(Args); i++) {
 		if (i >= args.size()-1) {
 			resolvedArgs[i] = args[i];
 		}
@@ -78,14 +78,14 @@ static Variant call_class_method_helper(T* obj, R(T::* method)(Args...), const v
 }
 
 template <typename R, typename T, typename... Args> requires IsDerivedFromObject<T>
-static Variant call_class_method_helper(T* obj, R(T::* method)(Args...) const, const vector<Variant> args, int requiredArgCount, const vector<Variant>& defaultArgs, bool& callSuccessfull) {
+static Variant call_class_method_helper(T* obj, R(T::* method)(Args...) const, const vector<Variant> args, int32_t requiredArgCount, const vector<Variant>& defaultArgs, bool& callSuccessfull) {
 	if (args.size() < requiredArgCount) {
 		callSuccessfull = false;
 		return Variant(Variant::Void);
 	}
 
 	Variant resolvedArgs[sizeof...(Args) == 0 ? 1 : sizeof...(Args)]{};
-	for (int i = 0; i < (int)sizeof...(Args); i++) {
+	for (int32_t i = 0; i < (int32_t)sizeof...(Args); i++) {
 		if (i >= args.size() - 1) {
 			resolvedArgs[i] = args[i];
 		}

@@ -33,7 +33,7 @@ namespace resources {
 
 		VkShaderModule GetShaderModule(VkDevice device);
 
-		vector<unsigned int> GetShaderSPIRV() const {
+		vector<uint32_t> GetShaderSPIRV() const {
 			return _spirvBinary;
 		}
 
@@ -42,7 +42,7 @@ namespace resources {
 
 		private:
 		VkShaderModule _shaderModule = nullptr;
-		vector<unsigned int> _spirvBinary;
+		vector<uint32_t> _spirvBinary;
 		ShaderLanguage _lang = ShaderLanguage::LanguageGLSL;
 		ShaderStage _stage = ShaderStage::StageUnknown;
 	};

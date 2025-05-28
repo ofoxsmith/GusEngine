@@ -26,7 +26,7 @@ class DescriptorAllocator {
 		VkDescriptorSetLayoutCreateInfo info = { .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
 		info.flags = layoutCreateFlags;
 		info.pBindings = _bindings.data();
-		info.bindingCount = static_cast<unsigned int>(_bindings.size());
+		info.bindingCount = static_cast<uint32_t>(_bindings.size());
 
 		if (vkCreateDescriptorSetLayout(_device, &info, nullptr, &_layout) != VK_SUCCESS) {
 			Log.FatalError("Vulkan", "Failed to build descriptor set layout");
@@ -41,7 +41,7 @@ class DescriptorAllocator {
 		{
 			VkDescriptorPoolSize poolSize{};
 			poolSize.type = _bindings[i].descriptorType;
-			poolSize.descriptorCount = static_cast<unsigned int>(_bindings[i].descriptorCount) * totalLayouts;
+			poolSize.descriptorCount = static_cast<uint32_t>(_bindings[i].descriptorCount) * totalLayouts;
 			
 			poolSizes.push_back(poolSize);
 
@@ -49,7 +49,7 @@ class DescriptorAllocator {
 
 		VkDescriptorPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		poolInfo.poolSizeCount = static_cast<unsigned int>(poolSizes.size());
+		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
 		poolInfo.pPoolSizes = poolSizes.data();
 		poolInfo.maxSets = totalLayouts;
 		if (vkCreateDescriptorPool(_device, &poolInfo, nullptr, &_pool) != VK_SUCCESS) {

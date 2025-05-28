@@ -32,7 +32,7 @@ void Engine::initWindow() {
 	Log.Info("Core", "GLFW: Window Init Done");
 }
 
-void Engine::framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+void Engine::framebufferResizeCallback(GLFWwindow* window, int32_t width, int32_t height) {
 	auto app = reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
 	app->_framebufferChanged = true;
 }

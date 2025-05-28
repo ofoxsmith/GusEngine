@@ -21,15 +21,15 @@ namespace resources {
 		private:
 
 		vector<uint8_t> _pixelData {};
-		int _width, _height, _channels = 0;
+		int32_t _width, _height, _channels = 0;
 		ImageFormat _format = ImageFormat::FORMAT_ERR;
 
 		public:
 
 		ImageFormat GetFormat() inline const {return _format; };
-		int GetWidth() inline const {return _width; };
-		int GetHeight() inline const {return _height; };
-		int GetChannels() inline const {return _channels; };
+		int32_t GetWidth() inline const {return _width; };
+		int32_t GetHeight() inline const {return _height; };
+		int32_t GetChannels() inline const {return _channels; };
 		bool Is16Bit() inline const {
 			return (_format == ImageFormat::FORMAT_16L || _format == ImageFormat::FORMAT_16LA || _format == ImageFormat::FORMAT_16RGB || _format == ImageFormat::FORMAT_16RGBA);
 		}

@@ -5,7 +5,7 @@
 #include <type_traits>
 
 template <typename T>
-concept IsIntegerEnum = (std::is_enum<T>::value) && (std::is_same_v<std::underlying_type_t<T>, int>);
+concept IsIntegerEnum = (std::is_enum<T>::value) && (std::is_same_v<std::underlying_type_t<T>, int32_t>);
 
 
 // Implementation of a variant data type, which can dynamically hold primitve data types, used to correctly cast data for use with RTTI.
@@ -61,8 +61,8 @@ struct Variant {
 
 	union variantData {
 		bool _bool;
-		int _int;
-		unsigned int _uint;
+		int32_t _int;
+		uint32_t _uint;
 		int64_t _llong;
 		uint64_t _ullong;
 		float _float;
@@ -113,7 +113,7 @@ struct Variant {
 
 	void CastTo(StoredType newType);
 	static char* BinarySerialise(Variant v);
-	static int BinarySerialisationLength(char* bin);
+	static int32_t BinarySerialisationLength(char* bin);
 	static std::string StringSerialise(Variant v);
 	static Variant FromString(std::string* str);
 	
@@ -129,8 +129,8 @@ struct Variant {
 	}
 	
 	Variant(bool data);
-	Variant(int data);
-	Variant(unsigned int data);
+	Variant(int32_t data);
+	Variant(uint32_t data);
 	Variant(int64_t data);
 	Variant(uint64_t data);
 	Variant(float data);
@@ -159,19 +159,19 @@ struct Variant {
 		}
 		return false;
 	};
-	operator int() const {
+	operator int32_t() const {
 		switch (_currentType) {
 			case StoredType::Empty:
 			case StoredType::Void:
 				return 0;
 			case StoredType::Int64:
-				return static_cast<int>(_primitiveData._llong);
+				return static_cast<int32_t>(_primitiveData._llong);
 			case StoredType::UInt64:
-				return static_cast<int>(_primitiveData._ullong);
+				return static_cast<int32_t>(_primitiveData._ullong);
 			case StoredType::Float:
-				return static_cast<int>(_primitiveData._float);
+				return static_cast<int32_t>(_primitiveData._float);
 			case StoredType::Double:
-				return static_cast<int>(_primitiveData._double);
+				return static_cast<int32_t>(_primitiveData._double);
 			case StoredType::Bool:
 				return _primitiveData._bool;
 			case StoredType::Int32:
@@ -181,7 +181,7 @@ struct Variant {
 		}
 		return 0;
 	};
-	operator unsigned int() const {
+	operator uint32_t() const {
 		switch (_currentType) {
 			case StoredType::Empty:
 			case StoredType::Void:
@@ -193,13 +193,13 @@ struct Variant {
 			case StoredType::UInt32:
 				return _primitiveData._uint;
 			case StoredType::Int64:
-				return static_cast<unsigned int>(_primitiveData._llong);
+				return static_cast<uint32_t>(_primitiveData._llong);
 			case StoredType::UInt64:
-				return static_cast<unsigned int>(_primitiveData._ullong);
+				return static_cast<uint32_t>(_primitiveData._ullong);
 			case StoredType::Float:
-				return static_cast<unsigned int>(_primitiveData._float);
+				return static_cast<uint32_t>(_primitiveData._float);
 			case StoredType::Double:
-				return static_cast<unsigned int>(_primitiveData._double);
+				return static_cast<uint32_t>(_primitiveData._double);
 		}
 		return 0;
 	};
@@ -319,10 +319,10 @@ struct Variant {
 
 	};
 
-	// Enum conversions (Enum values in a variant are stored as an int)
+	// Enum conversions (Enum values in a variant are stored as an int32_t)
 	template <typename E> requires IsIntegerEnum<E>
 	Variant(E data) noexcept {
-		_primitiveData._int = static_cast<int>(data);
+		_primitiveData._int = static_cast<int32_t>(data);
 		_currentType = StoredType::Int32;
 	}
 

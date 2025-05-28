@@ -13,9 +13,9 @@ bool Variant::_same(const Variant& v1, const Variant& v2)
 		case StoredType::Bool:
 			return v1.Value<bool>() == v2.Value<bool>();
 		case StoredType::Int32:
-			return v1.Value<int>() == v2.Value<int>();
+			return v1.Value<int32_t>() == v2.Value<int32_t>();
 		case StoredType::UInt32:
-			return v1.Value<unsigned int>() == v2.Value<unsigned int>();
+			return v1.Value<uint32_t>() == v2.Value<uint32_t>();
 		case StoredType::Int64:
 			return v1.Value<int64_t>() == v2.Value<int64_t>();
 		case StoredType::UInt64:
@@ -42,12 +42,12 @@ void Variant::CastTo(StoredType newType)
 			break;
 		}
 		case StoredType::Int32: {
-			int newI = operator int();
+			int32_t newI = operator int32_t();
 			_primitiveData._int = newI;
 			break;
 		}
 		case StoredType::UInt32: {
-			unsigned int newUI = operator unsigned int();
+			uint32_t newUI = operator uint32_t();
 			_primitiveData._uint = newUI;
 			break;
 		}
@@ -97,14 +97,14 @@ char* Variant::BinarySerialise(Variant v)
 			buffer[VARIANT_ENUM_SIZE] = v.Value<bool>() ? 0xFF : 0x00;
 			return buffer;
 		case StoredType::Int32:
-			buffer = new char[VARIANT_ENUM_SIZE + sizeof(int)];
+			buffer = new char[VARIANT_ENUM_SIZE + sizeof(int32_t)];
 			memcpy(buffer, &typeVal, VARIANT_ENUM_SIZE);
-			memcpy(buffer + VARIANT_ENUM_SIZE, &v._primitiveData, sizeof(int));
+			memcpy(buffer + VARIANT_ENUM_SIZE, &v._primitiveData, sizeof(int32_t));
 			return buffer;
 		case StoredType::UInt32:
-			buffer = new char[VARIANT_ENUM_SIZE + sizeof(unsigned int)];
+			buffer = new char[VARIANT_ENUM_SIZE + sizeof(uint32_t)];
 			memcpy(buffer, &typeVal, VARIANT_ENUM_SIZE);
-			memcpy(buffer + VARIANT_ENUM_SIZE, &v._primitiveData, sizeof(unsigned int));
+			memcpy(buffer + VARIANT_ENUM_SIZE, &v._primitiveData, sizeof(uint32_t));
 			return buffer;
 		case StoredType::Int64:
 			buffer = new char[VARIANT_ENUM_SIZE + sizeof(int64_t)];
@@ -127,22 +127,22 @@ char* Variant::BinarySerialise(Variant v)
 			memcpy(buffer + VARIANT_ENUM_SIZE, &v._primitiveData, sizeof(double));
 			return buffer;
 		case StoredType::String:
-			int size = static_cast<int>(v._primitiveData._stringPtr->size());
-			buffer = new char[VARIANT_ENUM_SIZE + sizeof(int) + size];
+			int32_t size = static_cast<int32_t>(v._primitiveData._stringPtr->size());
+			buffer = new char[VARIANT_ENUM_SIZE + sizeof(int32_t) + size];
 			memcpy(buffer, &typeVal, VARIANT_ENUM_SIZE);
-			memcpy(buffer + VARIANT_ENUM_SIZE, &size, sizeof(int));
-			memcpy(buffer + VARIANT_ENUM_SIZE + sizeof(int), v._primitiveData._stringPtr->data(), size);
+			memcpy(buffer + VARIANT_ENUM_SIZE, &size, sizeof(int32_t));
+			memcpy(buffer + VARIANT_ENUM_SIZE + sizeof(int32_t), v._primitiveData._stringPtr->data(), size);
 			return buffer;
 	}
 	throw runtime_error("");
 }
 
-int Variant::BinarySerialisationLength(char* bin) {
+int32_t Variant::BinarySerialisationLength(char* bin) {
 	short* typeBin = new short;
 	memcpy(typeBin, bin, VARIANT_ENUM_SIZE);
 	Variant::StoredType type = static_cast<Variant::StoredType>(*typeBin);
 	delete typeBin;
-	int len = 0;
+	int32_t len = 0;
 	switch (type) {
 		case StoredType::Empty:
 		case StoredType::Void:
@@ -152,10 +152,10 @@ int Variant::BinarySerialisationLength(char* bin) {
 			len = sizeof(char);
 			break;
 		case StoredType::Int32:
-			len = sizeof(int);
+			len = sizeof(int32_t);
 			break;
 		case StoredType::UInt32:
-			len = sizeof(unsigned int);
+			len = sizeof(uint32_t);
 			break;
 		case StoredType::Int64:
 			len = sizeof(int64_t);
@@ -170,9 +170,9 @@ int Variant::BinarySerialisationLength(char* bin) {
 			len = sizeof(double);
 			break;
 		case StoredType::String:
-			int size = 0;
-			memcpy(&size, bin + VARIANT_ENUM_SIZE, sizeof(int));
-			len = sizeof(int) + sizeof(char) * size;
+			int32_t size = 0;
+			memcpy(&size, bin + VARIANT_ENUM_SIZE, sizeof(int32_t));
+			len = sizeof(int32_t) + sizeof(char) * size;
 			break;
 	}
 	return len + VARIANT_ENUM_SIZE;
@@ -188,9 +188,9 @@ std::string Variant::StringSerialise(Variant v)
 		case StoredType::Bool:
 			return v.Value<bool>() ? "true" : "false";
 		case StoredType::Int32:
-			return "Int32" + std::to_string(v.Value<int>());
+			return "Int32" + std::to_string(v.Value<int32_t>());
 		case StoredType::UInt32:
-			return "UInt32" + std::to_string(v.Value<unsigned int>());
+			return "UInt32" + std::to_string(v.Value<uint32_t>());
 		case StoredType::Int64:
 			return "Llong" + std::to_string(v.Value<int64_t>());
 		case StoredType::UInt64:
@@ -227,7 +227,7 @@ Variant Variant::FromString(std::string* str)
 		return Variant(std::stoi(content));
 	}
 	else if (type == "UInt32") {
-		return Variant(static_cast<unsigned int>(std::stoul(content)));
+		return Variant(static_cast<uint32_t>(std::stoul(content)));
 	}
 	else if (type == "LLong") {
 		return Variant(std::stoll(content));
@@ -255,12 +255,12 @@ Variant::Variant(bool data) {
 	_currentType = StoredType::Bool;
 }
 
-Variant::Variant(int data) {
+Variant::Variant(int32_t data) {
 	_primitiveData._int = data; 
 	_currentType = StoredType::Int32;
 }
 
-Variant::Variant(unsigned int data) {
+Variant::Variant(uint32_t data) {
 	_primitiveData._uint = data; 
 	_currentType = StoredType::UInt32;
 }

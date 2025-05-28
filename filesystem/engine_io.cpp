@@ -60,13 +60,13 @@ Variant EngineIO::ObjectLoader::LoadBinaryVariant(File* input)
 	delete typeBin;
 
 	char valB = 0;
-	int valInt = 0;
-	unsigned int valUInt = 0;
+	int32_t valInt = 0;
+	uint32_t valUInt = 0;
 	int64_t valLLong = 0;
 	uint64_t valULLong = 0;
 	float valFl = 0;
 	double valDb = 0;
-	int strSize = 0;
+	int32_t strSize = 0;
 
 	switch (type) {
 		case Variant::Empty:
@@ -76,10 +76,10 @@ Variant EngineIO::ObjectLoader::LoadBinaryVariant(File* input)
 			inStream->read(&valB, 1);
 			return valB == 0xFF;
 		case Variant::Int32:
-			inStream->read((char*)&valInt, sizeof(int));
+			inStream->read((char*)&valInt, sizeof(int32_t));
 			return valInt;
 		case Variant::UInt32:
-			inStream->read((char*)&valUInt, sizeof(unsigned int));
+			inStream->read((char*)&valUInt, sizeof(uint32_t));
 			return valUInt;
 		case Variant::Int64:
 			inStream->read((char*)&valLLong, sizeof(int64_t));
@@ -94,7 +94,7 @@ Variant EngineIO::ObjectLoader::LoadBinaryVariant(File* input)
 			inStream->read((char*)&valDb, sizeof(double));
 			return valDb;
 		case Variant::String:
-			inStream->read((char*)&strSize, sizeof(int));
+			inStream->read((char*)&strSize, sizeof(int32_t));
 			char* valStr = new char[strSize+1];
 			inStream->read(valStr, strSize);
 			valStr[strSize] = 0x00;

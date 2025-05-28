@@ -26,6 +26,7 @@ void resources::Shader::_register_type() {
 	type_registry::class_expose_method(ObjectMethodDefinition("GetLanguage", Variant::StoredType::Int32), &Shader::GetLanguage);
 	type_registry::class_expose_method(ObjectMethodDefinition("GetStage", Variant::StoredType::Int32), &Shader::GetStage);
 	
+
 	ObjectRTTIModel::ObjectPropertyDefinition langProp = ObjectPropertyDefinition("Language", Variant::StoredType::Int32, ObjectPropertyDefinition::INTERNAL_SAVE, "GetLanguage");
 	ObjectRTTIModel::ObjectPropertyDefinition stageProp = ObjectPropertyDefinition("Stage", Variant::StoredType::Int32, ObjectPropertyDefinition::INTERNAL_SAVE, "GetStage");
 	type_registry::class_define_property(langProp);
@@ -35,7 +36,7 @@ void resources::Shader::_register_type() {
 
 resources::Shader* resources::Shader::Create(const std::string& source, ShaderLanguage lang, ShaderStage type)
 {
-	std::vector<unsigned int> spirv;
+	std::vector<uint32_t> spirv;
 	std::string	info_log;
 	glslang::InitializeProcess();
 

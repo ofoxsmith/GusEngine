@@ -2,7 +2,7 @@
 #include "core/engine.h"
 #include "core/globals.h"
 #include <iostream>
-int main(int argc, char* argv[]) {
+int32_t main(int32_t argc, char* argv[]) {
 	std::string current_exec = argv[0];
 	std::vector<std::string> args;
 	if (argc > 1) {

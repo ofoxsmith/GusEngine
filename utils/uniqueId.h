@@ -5,9 +5,9 @@
 class Id {
 	friend class IdGen;
 	private:
-	unsigned int _id;
-	unsigned int _genId;
-	Id(unsigned int id, unsigned int genId): _id(id), _genId(genId) {}
+	uint32_t _id;
+	uint32_t _genId;
+	Id(uint32_t id, uint32_t genId): _id(id), _genId(genId) {}
 
 	public:
 	Id() : _id(-1), _genId(-1) {}
@@ -19,9 +19,9 @@ class Id {
 
 class IdGen {
 	private:
-	unsigned int _currentId;
-	unsigned int _genId;
-	static unsigned int _nextGenId;
+	uint32_t _currentId;
+	uint32_t _genId;
+	static uint32_t _nextGenId;
 
 	public:
 	IdGen() {

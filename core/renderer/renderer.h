@@ -24,7 +24,7 @@
 #include "utils/uniqueId.h"
 
 using namespace vkAllocator;
-const int MAX_FRAMES_IN_FLIGHT = 2;
+const int32_t MAX_FRAMES_IN_FLIGHT = 2;
 
 using QueueType = vkb::QueueType;
 
@@ -127,7 +127,7 @@ class Renderer {
 	VkPipelineLayout pipelineLayout = nullptr;
 	VkRenderPass renderPass = nullptr;
 	VkPipeline graphicsPipeline = nullptr;
-	unsigned int frameNum = 0;
+	uint32_t frameNum = 0;
 	
 	std::map<QueueType, VkQueue> queues{};
 	std::map<QueueType, VkCommandPool> commandPools{};
@@ -160,6 +160,6 @@ class Renderer {
 	VkCommandBuffer createOneTimeCommandBuffer(QueueType queue);
 	void submitOneTimeCommandBuffer(VkCommandBuffer buffer, QueueType queue);
 
-	void recordFrameCmdBuffer(VkCommandBuffer commandBuffer, unsigned int imageIndex);
-	void updateUniformBuffer(unsigned int currentImage);
+	void recordFrameCmdBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+	void updateUniformBuffer(uint32_t currentImage);
 };

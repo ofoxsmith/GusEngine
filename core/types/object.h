@@ -8,7 +8,7 @@ namespace ObjectRTTIModel {
 
 	struct ObjectPropertyDefinition {
 
-		enum PropertyFlags : int {
+		enum PropertyFlags : int32_t {
 			NONE = 0,
 			// The property is readonly.
 			READ_ONLY = 1 << 0,
@@ -19,7 +19,7 @@ namespace ObjectRTTIModel {
 		};
 
 		string propertyName = "";
-		int flags = 0;
+		int32_t flags = 0;
 		Variant::StoredType type = Variant::StoredType::Void;
 		string getterName = "";
 		string setterName = "";
@@ -36,10 +36,10 @@ namespace ObjectRTTIModel {
 	struct ObjectMethodDefinition {
 		string methodName = "";
 		Variant::StoredType returnType = Variant::StoredType::Void;
-		int requiredArgCount = 0;
+		int32_t requiredArgCount = 0;
 		vector<Variant> defaultArgValues{};
 		ObjectMethodDefinition() {}
-		ObjectMethodDefinition(string name, Variant::StoredType rType, int reqArgCount = 0, vector<Variant> defaultArgs = {}) {
+		ObjectMethodDefinition(string name, Variant::StoredType rType, int32_t reqArgCount = 0, vector<Variant> defaultArgs = {}) {
 			methodName = name;
 			returnType = rType;
 			requiredArgCount = reqArgCount;

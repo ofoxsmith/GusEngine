@@ -13,7 +13,7 @@ private:
 	bool _framebufferChanged;
 
 	void initWindow();
-	static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
+	static void framebufferResizeCallback(GLFWwindow* window, int32_t width, int32_t height);
 
 
 	void Init();

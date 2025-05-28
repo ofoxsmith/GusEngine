@@ -1,2 +1,2 @@
 #include "uniqueId.h"
-unsigned int IdGen::_nextGenId = 1;
+uint32_t IdGen::_nextGenId = 1;

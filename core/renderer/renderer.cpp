@@ -93,7 +93,7 @@ void Renderer::drawFrame() {
 	FrameData current_frame = get_current_frame();
 	VK_ASSERT(vkWaitForFences(_device, 1, &current_frame.renderFence, VK_TRUE, UINT64_MAX));
 
-	unsigned int imageIndex;
+	uint32_t imageIndex;
 	VkResult result = vkAcquireNextImageKHR(_device, _swapchain, UINT64_MAX, current_frame.imageSemaphore, VK_NULL_HANDLE, &imageIndex);
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
@@ -177,7 +177,7 @@ void Renderer::drawFrame() {
 	frameNum++;
 }
 
-void Renderer::updateUniformBuffer(unsigned int current) {
+void Renderer::updateUniformBuffer(uint32_t current) {
 	static auto startTime = std::chrono::high_resolution_clock::now();
 
 	auto currentTime = std::chrono::high_resolution_clock::now();
@@ -246,7 +246,7 @@ void Renderer::Cleanup() {
 }
 
 void Renderer::createSwapchain() {
-	unsigned int imageCount = MAX_FRAMES_IN_FLIGHT;
+	uint32_t imageCount = MAX_FRAMES_IN_FLIGHT;
 	vkb::SwapchainBuilder swapchain_builder{ _device };
 	swapchain_builder.use_default_format_selection().use_default_present_mode_selection().use_default_image_usage_flags();
 	swapchain_builder.set_desired_min_image_count(imageCount);
@@ -459,7 +459,7 @@ void Renderer::createFrameObjects() {
 	}
 }
 
-void Renderer::recordFrameCmdBuffer(VkCommandBuffer commandBuffer, unsigned int imageIndex) {
+void Renderer::recordFrameCmdBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
 
 
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
@@ -484,7 +484,7 @@ void Renderer::recordFrameCmdBuffer(VkCommandBuffer commandBuffer, unsigned int 
 	vkCmdBindIndexBuffer(commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &_frames[frameNum % MAX_FRAMES_IN_FLIGHT].descriptorSet, 0, nullptr);
 
-	vkCmdDrawIndexed(commandBuffer, static_cast<unsigned int>(indices.size()), 1, 0, 0, 0);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 }
 
 void Renderer::createInstanceAndDevice() {
@@ -508,7 +508,7 @@ void Renderer::createInstanceAndDevice() {
 		ibuilder.use_default_debug_messenger();
 	}
 	
-	unsigned int glfwExtensionCount = 0;
+	uint32_t glfwExtensionCount = 0;
 	const char** glfwExtensions;
 	glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 	std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);

@@ -22,15 +22,15 @@ Image* Image::CreateFromFile(string filePath) {
 	vector<uint8_t> fileData = file.ReadAllBinary();
 	Image* im = new Image();
 
-	int bitsPerPixel = 0;
-	bool success = stbi_info_from_memory(fileData.data(), static_cast<int>(fileData.size()), &im->_width, &im->_height, &im->_channels);
+	int32_t bitsPerPixel = 0;
+	bool success = stbi_info_from_memory(fileData.data(), static_cast<int32_t>(fileData.size()), &im->_width, &im->_height, &im->_channels);
 	if (!success) {
 		Log.Error("Image", "Failed to create image from file '" + filePath + "'");
 		delete im;
 		return nullptr;
 	}
 
-	bitsPerPixel = stbi_is_16_bit_from_memory(fileData.data(), static_cast<int>(fileData.size())) ? 16 : 8;
+	bitsPerPixel = stbi_is_16_bit_from_memory(fileData.data(), static_cast<int32_t>(fileData.size())) ? 16 : 8;
 	switch (im->_channels) {
 		case 1:
 			im->_format = bitsPerPixel == 16 ? ImageFormat::FORMAT_16L : ImageFormat::FORMAT_8L;
@@ -46,7 +46,7 @@ Image* Image::CreateFromFile(string filePath) {
 			break;
 	}
 
-	unsigned char* pixels = stbi_load_from_memory(fileData.data(), static_cast<int>(fileData.size()), &im->_width, &im->_height, &im->_channels, 0);
+	unsigned char* pixels = stbi_load_from_memory(fileData.data(), static_cast<int32_t>(fileData.size()), &im->_width, &im->_height, &im->_channels, 0);
 	if (!pixels) {
 		string errMsg = string(stbi_failure_reason());
 		Log.Error("Image", "Failed to create image from file '" + filePath + "' -" + errMsg);
@@ -54,7 +54,7 @@ Image* Image::CreateFromFile(string filePath) {
 		return nullptr;
 	}
 
-	int imageSize = im->_width * im->_height * im->_channels;
+	int32_t imageSize = im->_width * im->_height * im->_channels;
 	im->_pixelData.resize(imageSize);
 	memcpy(im->_pixelData.data(), pixels, imageSize);
 
