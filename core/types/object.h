@@ -61,8 +61,8 @@ class Object {
 	map<string, ObjectRTTIModel::ObjectMethodDefinition> _GetMethodList();
 	bool _HasMethod(string methodName);
 	template <typename... Args>
-	Variant _Call(string methodName, const Args... args) {
-		std::vector<Variant> argVector = { args... };
+	Variant _Call(string methodName, Args... args) {
+		std::vector<Variant> argVector { Variant(args)... };
 		return _callInternal(methodName, argVector);
 	};
 

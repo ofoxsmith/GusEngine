@@ -14,8 +14,8 @@ VkShaderModule resources::Shader::GetShaderModule(VkDevice device)
 	if (vkCreateShaderModule(device, &createInfo, nullptr, &_shaderModule) != VK_SUCCESS) {
 		Log.FatalError("Vulkan", "Failed to create shader module.");
 	}
-	return _shaderModule;
 
+	return _shaderModule;	
 }
 
 void resources::Shader::_register_type() {
@@ -25,7 +25,7 @@ void resources::Shader::_register_type() {
 	type_registry::register_new_class("Shader", "Resource");
 	type_registry::class_expose_method(ObjectMethodDefinition("GetLanguage", Variant::StoredType::Int32), &Shader::GetLanguage);
 	type_registry::class_expose_method(ObjectMethodDefinition("GetStage", Variant::StoredType::Int32), &Shader::GetStage);
-	
+	//type_registry::class_expose_method(ObjectMethodDefinition("GetShaderSPIRV", Variant::StoredType::UInt32), &Shader::GetShaderSPIRV);
 
 	ObjectRTTIModel::ObjectPropertyDefinition langProp = ObjectPropertyDefinition("Language", Variant::StoredType::Int32, ObjectPropertyDefinition::INTERNAL_SAVE, "GetLanguage");
 	ObjectRTTIModel::ObjectPropertyDefinition stageProp = ObjectPropertyDefinition("Stage", Variant::StoredType::Int32, ObjectPropertyDefinition::INTERNAL_SAVE, "GetStage");
